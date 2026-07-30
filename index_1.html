@@ -1,0 +1,2459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>RheumPad — Charting Companion</title>
+<style>
+  :root{
+    --bg:#f8f5ef; --card:#fffefb; --ink:#2a2f3a; --muted:#7d7e74;
+    --accent:#33507a; --accent-soft:#e7ecf5; --accent-ink:#243a5c;
+    --line:#e7e1d4; --tender:#d97706; --tender-soft:#fef3c7;
+    --swollen:#2563eb; --swollen-soft:#dbeafe; --both:#dc2626; --both-soft:#fee2e2;
+    --ok:#15803d; --ok-soft:#e2f0dc; --radius:12px;
+    --shadow:0 1px 3px rgba(50,55,70,.08), 0 4px 14px rgba(50,55,70,.05);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{font-size:15px;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.5; padding-bottom:80px;}
+  button{font-family:inherit; cursor:pointer;}
+  input,select,textarea{font-family:inherit; font-size:.95rem; color:var(--ink);}
+
+  header.app{position:sticky; top:0; z-index:50; background:#fffefb; border-bottom:1px solid var(--line);
+    padding:10px 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+  .brand{display:flex; align-items:baseline; gap:8px;}
+  .brand h1{font-size:1.15rem; letter-spacing:-.01em;}
+  .brand h1 .pad{color:var(--accent);}
+  .brand small{color:var(--muted); font-size:.72rem;}
+  .searchwrap{flex:1; min-width:220px; max-width:520px; position:relative;}
+  .searchwrap input{width:100%; padding:8px 12px 8px 34px; border:1px solid var(--line); border-radius:999px;
+    background:var(--bg); outline:none;}
+  .searchwrap input:focus{border-color:var(--accent); background:#fff;}
+  .searchwrap .mag{position:absolute; left:12px; top:8px; color:var(--muted); font-size:.9rem;}
+  .hdr-actions{display:flex; gap:8px;}
+  .btn{border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:8px;
+    padding:7px 13px; font-size:.85rem; transition:all .12s;}
+  .btn:hover{border-color:var(--accent); color:var(--accent);}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .btn.primary:hover{background:var(--accent-ink); color:#fff;}
+  .btn.small{padding:4px 10px; font-size:.78rem;}
+  .btn.danger:hover{border-color:var(--both); color:var(--both);}
+
+  nav.tabs{display:flex; gap:4px; padding:10px 20px 0; max-width:1180px; margin:0 auto; flex-wrap:wrap;}
+  nav.tabs button{border:none; background:transparent; padding:9px 15px; border-radius:9px 9px 0 0;
+    font-size:.92rem; color:var(--muted); border-bottom:2.5px solid transparent;}
+  nav.tabs button:hover{color:var(--ink); background:#efeadf;}
+  nav.tabs button.active{color:var(--accent-ink); border-bottom-color:var(--accent); font-weight:600; background:#fff;}
+
+  #favbar{max-width:1180px; margin:0 auto; padding:10px 20px 0; display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  #favbar .favlabel{font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;}
+  #favbar:not(:has(.chip)){display:none;}
+
+  main{max-width:1180px; margin:0 auto; padding:16px 20px;}
+  section.tab{display:none;}
+  section.tab.active{display:block;}
+  .tab-intro{color:var(--muted); font-size:.88rem; margin-bottom:14px;}
+
+  .chip{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); background:#fff;
+    border-radius:999px; padding:5px 13px; font-size:.85rem; transition:all .12s; user-select:none;}
+  .chip:hover{border-color:var(--accent); color:var(--accent); box-shadow:var(--shadow);}
+  .chip.on{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .chip.cat{background:var(--bg);}
+  .chip.cat.on{background:var(--accent); color:#fff;}
+
+  .cardgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 16px; box-shadow:var(--shadow); cursor:pointer; transition:all .12s; position:relative;}
+  .card:hover{border-color:var(--accent); transform:translateY(-1px);}
+  .card h3{font-size:.95rem; margin-bottom:2px; padding-right:26px;}
+  .card .dot{font-size:.75rem; color:var(--accent); font-weight:600;}
+  .card .cat{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;}
+  .card p.preview{font-size:.8rem; color:var(--muted); margin-top:6px; display:-webkit-box;
+    -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .card .star{position:absolute; top:10px; right:12px; font-size:1rem; color:#d8ccbc; background:none; border:none; padding:2px;}
+  .card .star.faved{color:#f59e0b;}
+  .card .star:hover{color:#f59e0b;}
+  .catrow{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
+  h2.sect{font-size:1.05rem; margin:18px 0 10px;}
+  .empty{color:var(--muted); font-size:.88rem; padding:24px; text-align:center; border:1.5px dashed var(--line); border-radius:var(--radius);}
+
+  /* Modal */
+  #overlay{position:fixed; inset:0; background:rgba(30,36,50,.45); z-index:100; display:none;
+    align-items:flex-start; justify-content:center; padding:5vh 16px 16px; overflow-y:auto;}
+  #overlay.open{display:flex;}
+  #modal{background:#fff; border-radius:14px; max-width:760px; width:100%; padding:22px 24px;
+    box-shadow:0 10px 40px rgba(30,36,50,.25);}
+  #modal h3{font-size:1.05rem; margin-bottom:2px;}
+  #modal .cat{font-size:.75rem; color:var(--muted); margin-bottom:12px;}
+  .filled{background:#fbf9f4; border:1px solid var(--line); border-radius:10px; padding:14px 16px;
+    font-size:.92rem; white-space:pre-wrap; margin:10px 0; line-height:1.9;}
+  .filled input[type=text]{border:none; border-bottom:1.5px solid var(--accent); background:var(--accent-soft);
+    border-radius:4px 4px 0 0; padding:2px 7px; min-width:70px; outline:none;}
+  .filled select{border:1.5px solid var(--accent); background:var(--accent-soft); border-radius:6px; padding:2px 6px; outline:none;}
+  .modal-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap;}
+
+  #toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:9px 20px; border-radius:999px; font-size:.85rem;
+    opacity:0; pointer-events:none; transition:all .25s; z-index:200;}
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* Composer */
+  #composer .comp-section{background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 18px; margin-bottom:12px; box-shadow:var(--shadow);}
+  #composer .comp-section h4{font-size:.85rem; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--accent-ink); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
+  .comp-body{font-size:.92rem; white-space:pre-wrap; line-height:2;}
+  .comp-body input[type=text]{border:none; border-bottom:1.5px solid var(--accent); background:var(--accent-soft);
+    border-radius:4px 4px 0 0; padding:2px 7px; min-width:70px; outline:none;}
+  .comp-body select{border:1.5px solid var(--accent); background:var(--accent-soft); border-radius:6px; padding:2px 6px; outline:none;}
+  .comp-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .comp-top h2{font-size:1.1rem;}
+
+  /* Joint exam */
+  #je-wrap{display:grid; grid-template-columns:minmax(300px,430px) 1fr; gap:18px; align-items:start;}
+  @media(max-width:800px){#je-wrap{grid-template-columns:1fr;}}
+  #je-svgcard{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:12px; box-shadow:var(--shadow);}
+  .je-modes{display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+  .joint{cursor:pointer; stroke:#9aa3b0; stroke-width:1.2; fill:#fff; transition:all .1s;}
+  .joint:hover{stroke:var(--accent); stroke-width:2;}
+  .joint.tender{fill:var(--tender-soft); stroke:var(--tender); stroke-width:2;}
+  .joint.swollen{fill:var(--swollen-soft); stroke:var(--swollen); stroke-width:2;}
+  .joint.both{fill:var(--both-soft); stroke:var(--both); stroke-width:2;}
+  .je-legend{display:flex; gap:14px; font-size:.78rem; color:var(--muted); margin-top:8px; flex-wrap:wrap;}
+  .je-legend span::before{content:""; display:inline-block; width:11px; height:11px; border-radius:50%; margin-right:5px; vertical-align:-1px;}
+  .je-legend .lt::before{background:var(--tender-soft); border:2px solid var(--tender);}
+  .je-legend .ls::before{background:var(--swollen-soft); border:2px solid var(--swollen);}
+  .je-legend .lb::before{background:var(--both-soft); border:2px solid var(--both);}
+  #je-counts{display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+  .stat{background:#fff; border:1px solid var(--line); border-radius:10px; padding:8px 16px; box-shadow:var(--shadow);}
+  .stat b{font-size:1.3rem; color:var(--accent-ink);}
+  .stat span{font-size:.75rem; color:var(--muted); display:block;}
+  #je-out{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px;
+    font-size:.9rem; white-space:pre-wrap; box-shadow:var(--shadow); min-height:90px;}
+
+  /* Pre-chart */
+  .pc-card{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px;
+    margin-bottom:14px; box-shadow:var(--shadow);}
+  .pc-head{display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;}
+  .pc-num{background:var(--accent); color:#fff; border-radius:9px; width:34px; height:34px;
+    display:flex; align-items:center; justify-content:center; font-weight:700;}
+  .pc-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media(max-width:700px){.pc-grid{grid-template-columns:1fr;}}
+  .pc-field label{font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); display:block; margin-bottom:4px;}
+  .pc-field input[type=text],.pc-field select,.pc-field textarea{width:100%; border:1px solid var(--line);
+    border-radius:8px; padding:7px 10px; outline:none; background:#fbf9f4;}
+  .pc-field textarea{min-height:56px; resize:vertical;}
+  .pc-field input:focus,.pc-field textarea:focus,.pc-field select:focus{border-color:var(--accent);}
+  .pc-chips{display:flex; gap:6px; flex-wrap:wrap;}
+  .pc-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap;}
+
+  /* Settings */
+  .set-block{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px;
+    margin-bottom:14px; box-shadow:var(--shadow);}
+  .set-block h3{font-size:1rem; margin-bottom:6px;}
+  .set-block p.hint{font-size:.83rem; color:var(--muted); margin-bottom:10px;}
+  .ed-row{display:flex; gap:8px; align-items:center; padding:7px 4px; border-bottom:1px solid var(--line); font-size:.88rem;}
+  .ed-row:last-child{border-bottom:none;}
+  .ed-row .nm{flex:1; font-weight:600;}
+  .ed-row .ct{color:var(--muted); font-size:.78rem;}
+  .ed-form{display:grid; gap:10px; margin-top:10px;}
+  .ed-form label{font-size:.78rem; color:var(--muted); display:block; margin-bottom:3px;}
+  .ed-form input[type=text],.ed-form select,.ed-form textarea{width:100%; border:1px solid var(--line);
+    border-radius:8px; padding:7px 10px; outline:none;}
+  .ed-form textarea{min-height:110px; resize:vertical; font-size:.88rem;}
+  code.syn{background:var(--accent-soft); color:var(--accent-ink); border-radius:5px; padding:1px 6px; font-size:.8rem;}
+  .savebadge{font-size:.75rem; color:var(--ok); background:var(--ok-soft); border-radius:999px; padding:3px 10px;}
+  .warnbadge{font-size:.75rem; color:#92400e; background:#fef3c7; border-radius:999px; padding:3px 10px;}
+
+  .statinput{width:58px; border:none; font-size:1.3rem; color:var(--accent-ink); font-weight:700;
+    background:transparent; outline:none; border-bottom:1.5px dashed var(--line);}
+  .statinput:focus{border-bottom-color:var(--accent);}
+
+  /* Quick launcher */
+  #qwrap{position:fixed; inset:0; background:rgba(30,36,50,.35); z-index:150; display:none;
+    align-items:flex-start; justify-content:center; padding-top:12vh;}
+  #qwrap.open{display:flex;}
+  #qbox{background:#fff; border-radius:12px; width:min(560px,92vw); box-shadow:0 10px 40px rgba(30,36,50,.3); overflow:hidden;}
+  #qinput{width:100%; border:none; outline:none; padding:14px 18px; font-size:1.05rem; border-bottom:1px solid var(--line);}
+  #qlist{max-height:320px; overflow-y:auto;}
+  .qrow{padding:9px 18px; display:flex; gap:10px; align-items:baseline; cursor:pointer; font-size:.92rem;}
+  .qrow.sel{background:var(--accent-soft);}
+  .qrow .qdot{color:var(--accent); font-weight:600; min-width:92px;}
+  .qrow .qkind{margin-left:auto; color:var(--muted); font-size:.75rem;}
+  #qhint{padding:8px 18px; color:var(--muted); font-size:.75rem; border-top:1px solid var(--line);}
+
+  /* Drug cards */
+  .drugblock{margin-bottom:10px;}
+  .drugblock b{font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--accent-ink); display:block; margin-bottom:2px;}
+  .drugblock.warn b{color:var(--both);}
+  .drugblock p{font-size:.9rem;}
+  .langtoggle{display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; margin-bottom:4px;}
+  .langtoggle button{border:none; background:#fff; padding:4px 14px; font-size:.8rem; color:var(--muted);}
+  .langtoggle button.on{background:var(--accent); color:#fff;}
+
+  #backupbar{display:none; max-width:1180px; margin:10px auto 0; padding:9px 16px; border-radius:10px;
+    background:#fef3c7; border:1px solid #f2d48a; color:#92400e; font-size:.85rem;
+    align-items:center; gap:10px; flex-wrap:wrap;}
+  #backupbar.show{display:flex;}
+  #backupbar span{flex:1; min-width:200px;}
+
+  .helpblock{margin-bottom:12px;}
+  .helpblock b{display:block; font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--accent-ink); margin-bottom:2px;}
+  .helpblock p{font-size:.9rem;}
+  .modfoot{font-size:.78rem; color:var(--muted); margin:14px 4px 4px;}
+  .guidetag{display:inline-block; font-size:.7rem; color:var(--muted); border:1px solid var(--line);
+    border-radius:999px; padding:2px 10px; margin-top:8px;}
+  .actbadge{font-size:.72rem; font-weight:700; border-radius:999px; padding:3px 11px; text-transform:uppercase; letter-spacing:.05em;}
+  .actbadge.go{background:var(--ok-soft); color:var(--ok);}
+  .actbadge.hold{background:var(--tender-soft); color:#92400e;}
+  .actbadge.time{background:var(--swollen-soft); color:#1d4ed8;}
+  .po-dates{display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;}
+  .po-dates div{font-size:.85rem;}
+  .po-dates b{display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);}
+  kbd{background:var(--bg); border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:1px 6px; font-size:.8rem; font-family:inherit;}
+
+  /* Small screens */
+  @media(max-width:720px){
+    html{font-size:14px;}
+    header.app{padding:8px 12px; gap:8px;}
+    .brand small{display:none;}
+    nav.tabs{flex-wrap:nowrap; overflow-x:auto; padding:8px 12px 0; gap:2px; scrollbar-width:none;}
+    nav.tabs::-webkit-scrollbar{display:none;}
+    nav.tabs button{white-space:nowrap; padding:8px 11px; flex:0 0 auto;}
+    main{padding:12px;}
+    #favbar, #backupbar{padding-left:12px; padding-right:12px;}
+    .searchwrap{min-width:130px;}
+    #modal{padding:16px;}
+    .pc-grid{grid-template-columns:1fr;}
+  }
+
+  /* Print */
+  #printsheet{display:none;}
+  @media print{
+    body > *:not(#printsheet){display:none !important;}
+    #printsheet{display:block !important; color:#000; font-size:12pt; padding:10px;}
+    #printsheet h1{font-size:15pt; margin-bottom:2px;}
+    #printsheet .clin{font-size:10pt; color:#333; border-bottom:1.5px solid #333; padding-bottom:6px; margin-bottom:14px;}
+    #printsheet pre{white-space:pre-wrap; font-family:inherit; font-size:12pt; line-height:1.65;}
+    #printsheet .foot{margin-top:18px; font-size:9pt; color:#555; border-top:1px solid #999; padding-top:6px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI</small></div>
+  <div class="searchwrap"><span class="mag">&#128269;</span>
+    <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
+  </div>
+  <div class="hdr-actions">
+    <button class="btn small" title="How RheumPad works" onclick="App.help()">?</button>
+    <button class="btn small" onclick="App.exportData()">Export</button>
+    <button class="btn small" onclick="document.getElementById('importfile').click()">Import</button>
+    <input type="file" id="importfile" accept=".json" style="display:none" onchange="App.importData(this)">
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="phrases" class="active">Phrases</button>
+  <button data-tab="templates">Note Templates</button>
+  <button data-tab="picklists">Pick Lists</button>
+  <button data-tab="jointexam">Joint Exam</button>
+  <button data-tab="taper">Taper Builder</button>
+  <button data-tab="periop">Peri-Op</button>
+  <button data-tab="preg">Pregnancy</button>
+  <button data-tab="prechart">Pre-Chart</button>
+  <button data-tab="instructions">Patient Instructions</button>
+  <button data-tab="drugs">Drug Cards</button>
+  <button data-tab="codes">Codes & Billing</button>
+  <button data-tab="settings">Settings</button>
+</nav>
+
+<div id="favbar"><span class="favlabel">Pinned</span></div>
+<div id="backupbar">
+  <span>It has been over a week since your last backup. Your library lives only in this browser until you export a copy.</span>
+  <button class="btn small primary" onclick="App.exportData()">Export now</button>
+  <button class="btn small" onclick="App.snoozeBackup()">Remind me later</button>
+</div>
+
+<main>
+  <section class="tab active" id="tab-phrases">
+    <p class="tab-intro">Your SmartPhrase library. Tap a card, fill any blanks, copy, paste into Meditech. Star a phrase to pin it to the top bar.</p>
+    <div class="catrow" id="phrase-cats"></div>
+    <div class="cardgrid" id="phrase-grid"></div>
+  </section>
+
+  <section class="tab" id="tab-templates">
+    <div id="template-list">
+      <p class="tab-intro">Full note skeletons. Pick one to open the composer: fill the blanks section by section, then copy each section or the whole note.</p>
+      <div id="template-groups"></div>
+    </div>
+    <div id="composer" style="display:none"></div>
+  </section>
+
+  <section class="tab" id="tab-picklists">
+    <p class="tab-intro">Click-to-build sentences. Toggle the options, the sentence writes itself, copy when done. Work several lists, then grab everything at once.</p>
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button class="btn primary" onclick="PL.copyAll()">Copy all selected</button>
+      <button class="btn" onclick="PL.clearAll()">Clear all</button>
+    </div>
+    <div id="picklist-wrap"></div>
+  </section>
+
+  <section class="tab" id="tab-jointexam">
+    <p class="tab-intro">Tap a joint to cycle: tender &rarr; swollen &rarr; both &rarr; clear. Counts and exam text update as you go.</p>
+    <div id="je-counts">
+      <div class="stat"><b id="tjc">0</b><span>TJC-28</span></div>
+      <div class="stat"><b id="sjc">0</b><span>SJC-28</span></div>
+      <div class="stat"><b id="tjc-all">0</b><span>Tender (all)</span></div>
+      <div class="stat"><b id="sjc-all">0</b><span>Swollen (all)</span></div>
+      <div class="stat"><input id="je-pga" type="number" min="0" max="10" step="0.5" placeholder="&ndash;" class="statinput"><span>Patient global 0&ndash;10</span></div>
+      <div class="stat"><input id="je-ega" type="number" min="0" max="10" step="0.5" placeholder="&ndash;" class="statinput"><span>Provider global 0&ndash;10</span></div>
+      <div class="stat"><b id="je-cdai">&ndash;</b><span>CDAI</span></div>
+    </div>
+    <div id="je-wrap">
+      <div id="je-svgcard">
+        <div class="je-modes">
+          <button class="btn small" onclick="JE.clearAll()">Clear all</button>
+          <button class="btn small" onclick="JE.setNormal()">Mark exam normal</button>
+        </div>
+        <div id="je-svg"></div>
+        <div class="je-legend"><span class="lt">Tender</span><span class="ls">Swollen</span><span class="lb">Both</span></div>
+      </div>
+      <div>
+        <div id="je-out"></div>
+        <div class="modal-actions" style="justify-content:flex-start">
+          <button class="btn primary" onclick="JE.copy()">Copy exam text</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-taper">
+    <p class="tab-intro">Build a steroid taper. Set the numbers and the dated schedule writes itself twice: once for the note, once for the patient.</p>
+    <div class="comp-section">
+      <div class="pc-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
+        <div class="pc-field"><label>Drug</label>
+          <select id="tp-drug"><option>prednisone</option><option>prednisolone</option><option>methylprednisolone</option><option>hydrocortisone</option></select></div>
+        <div class="pc-field"><label>Start dose (mg/day)</label><input id="tp-start" type="number" min="0" step="0.5" value="40"></div>
+        <div class="pc-field"><label>Decrease by (mg)</label><input id="tp-step" type="number" min="0.5" step="0.5" value="5"></div>
+        <div class="pc-field"><label>Every</label>
+          <div style="display:flex;gap:6px;"><input id="tp-int" type="number" min="1" value="1" style="width:60px;">
+          <select id="tp-unit"><option value="weeks">weeks</option><option value="days">days</option></select></div></div>
+        <div class="pc-field"><label>Down to (mg, 0 = stop)</label><input id="tp-target" type="number" min="0" step="0.5" value="0"></div>
+        <div class="pc-field"><label>Start date</label><input id="tp-date" type="date"></div>
+      </div>
+    </div>
+    <div class="comp-section"><h4><span>For the note</span><button class="btn small primary" onclick="Taper.copy('note')">Copy</button></h4>
+      <div id="taper-note" class="filled" style="margin:0;"></div></div>
+    <div class="comp-section"><h4><span>For the patient</span><button class="btn small primary" onclick="Taper.copy('pt')">Copy</button></h4>
+      <div id="taper-pt" class="filled" style="margin:0;"></div></div>
+  </section>
+
+  <section class="tab" id="tab-periop">
+    <p class="tab-intro">Perioperative antirheumatic drug planning for elective total hip and knee arthroplasty. Pick the medications, set the surgery date, get a hold/continue card per drug. <b>ACR/AAHKS 2022 guideline.</b></p>
+    <div class="comp-section">
+      <h4><span>Surgery details</span></h4>
+      <div class="pc-grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));">
+        <div class="pc-field"><label>Surgery date</label><input id="po-date" type="date"></div>
+        <div class="pc-field"><label>Severe SLE</label><div class="pc-chips"><button class="chip" id="po-sle">Severe SLE (organ-threatening)</button></div></div>
+      </div>
+    </div>
+    <div class="comp-section"><h4><span>Medications (tap all that apply)</span>
+      <button class="btn small" onclick="PO.clear()">Clear</button></h4>
+      <div id="po-drugs"></div></div>
+    <div id="po-cards"></div>
+    <div class="modal-actions" style="justify-content:flex-start;">
+      <button class="btn primary" onclick="PO.copySummary()">Copy plan for the note</button>
+    </div>
+    <p class="modfoot">Decision support only, clinical judgment overrides every output. Based on the ACR/AAHKS 2022 guideline for elective THA/TKA.</p>
+  </section>
+
+  <section class="tab" id="tab-preg">
+    <p class="tab-intro">Medication compatibility for conception, pregnancy, and lactation. Pick the drug and the patient's status. <b>ACR 2020 reproductive health guideline.</b></p>
+    <div class="comp-section">
+      <h4><span>Patient status</span></h4>
+      <div class="pc-chips" id="pg-status"></div>
+    </div>
+    <div class="comp-section">
+      <h4><span>Medication</span></h4>
+      <div class="pc-chips" id="pg-drugs"></div>
+    </div>
+    <div id="pg-card"></div>
+    <div class="modal-actions" style="justify-content:flex-start;">
+      <button class="btn primary" onclick="PG.copyCard()">Copy guidance for the note</button>
+      <button class="btn" onclick="PG.printHandout()">Print bilingual patient handout</button>
+    </div>
+    <p class="modfoot">Decision support only, clinical judgment overrides every output. Based on the ACR 2020 reproductive health guideline.</p>
+  </section>
+
+  <section class="tab" id="tab-prechart">
+    <p class="tab-intro">Tomorrow's clinic, one card per slot. No names, no identifiers: slot numbers only, matched to your schedule order. Saved in this browser until you clear the day.</p>
+    <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+      <button class="btn primary" onclick="PC.addSlot()">+ Add patient slot</button>
+      <button class="btn" onclick="PC.copyAll()">Copy full day summary</button>
+      <button class="btn danger" onclick="PC.clearDay()">Clear day</button>
+    </div>
+    <div id="pc-list"></div>
+  </section>
+
+  <section class="tab" id="tab-instructions">
+    <p class="tab-intro">After-visit instructions you hand to patients. Tap to fill and copy.</p>
+    <div class="cardgrid" id="instr-grid"></div>
+  </section>
+
+  <section class="tab" id="tab-drugs">
+    <p class="tab-intro">Quick reference for the drugs you prescribe daily: dosing, what to monitor and when, common side effects, and the red flags. Tap a card for the full view.</p>
+    <div id="drug-groups"></div>
+  </section>
+
+  <section class="tab" id="tab-codes">
+    <p class="tab-intro">Document what you actually did, completely, so the visit bills at the level it truly earned. Toggle the elements present in today's visit; the helper shows the supported level and what documentation would legitimately support the next one.</p>
+    <div class="comp-section">
+      <h4><span>E/M level helper (2021+ outpatient rules)</span>
+        <div class="langtoggle"><button id="em-est" class="on">Established</button><button id="em-new">New patient</button></div></h4>
+      <div class="pc-grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); margin-bottom:12px;">
+        <div class="pc-field"><label>Problems addressed</label><div class="pc-chips" id="em-prob"></div></div>
+        <div class="pc-field"><label>Data reviewed / analyzed</label><div class="pc-chips" id="em-data"></div></div>
+        <div class="pc-field"><label>Risk of management</label><div class="pc-chips" id="em-risk"></div></div>
+      </div>
+      <div class="pc-grid" style="grid-template-columns:1fr 2fr;">
+        <div class="pc-field"><label>Total time today (min)</label><input id="em-min" type="number" min="0" placeholder="e.g. 32"></div>
+        <div id="em-out" class="filled" style="margin:0;"></div>
+      </div>
+      <div class="modal-actions" style="justify-content:flex-start; margin-top:10px;">
+        <button class="btn small primary" onclick="EM.copyMdm()">Copy MDM documentation line</button>
+        <button class="btn small" onclick="EM.copyTime()">Copy time attestation</button>
+        <button class="btn small" onclick="EM.clear()">Clear</button>
+      </div>
+    </div>
+    <div class="comp-section">
+      <h4><span>Rheum billing pearls</span></h4>
+      <div style="font-size:.9rem; line-height:1.7;">
+        DMARD and biologic therapy with lab monitoring is "drug therapy requiring intensive monitoring for toxicity": a HIGH risk element. Combined with a moderate or high problem level, many routine rheum follow-ups legitimately support 99214-99215 when documented.<br>
+        Name each lab you reviewed, each image you personally interpreted, and each outside record: every one is a data point.<br>
+        Deciding to CONTINUE a prescription is prescription drug management. Say it in the plan ("continue methotrexate 20 mg weekly after review of labs and disease activity").<br>
+        Level needs 2 of 3 columns. Time counts everything on the calendar day: chart review, documentation, orders, portal messages. Bill on time or MDM, whichever lands higher.<br>
+        This tool supports complete documentation of work you actually did; the level must always match the visit.
+      </div>
+    </div>
+    <div id="code-groups"></div>
+  </section>
+
+  <section class="tab" id="tab-settings">
+    <div class="set-block">
+      <h3>Your library <span id="storagebadge"></span></h3>
+      <p class="hint">Everything you edit here saves in this browser automatically. Use <b>Export</b> (top right) to back your library up to a file, and <b>Import</b> to load it on another computer. Do this whenever you make big edits: clinic workstations sometimes wipe browser data.</p>
+      <p class="hint">Blank syntax for phrase and template bodies: <code class="syn">{dose}</code> makes a fill-in box, <code class="syn">{severity:mild|moderate|severe}</code> makes a dropdown, <code class="syn">***</code> makes a generic blank, same as Epic.</p>
+      <div class="ed-form" style="max-width:420px; margin-top:6px;">
+        <div><label>Clinic name printed on patient handouts</label>
+        <input type="text" id="set-clinic" placeholder="e.g. Valley Rheumatology Clinic"></div>
+      </div>
+    </div>
+    <div class="set-block">
+      <h3>Phrases</h3>
+      <div id="ed-phrases"></div>
+      <button class="btn small" style="margin-top:8px" onclick="ED.newItem('phrases')">+ Add phrase</button>
+    </div>
+    <div class="set-block">
+      <h3>Note templates</h3>
+      <div id="ed-templates"></div>
+      <button class="btn small" style="margin-top:8px" onclick="ED.newItem('templates')">+ Add template</button>
+    </div>
+    <div class="set-block">
+      <h3>Pick lists</h3>
+      <div id="ed-picklists"></div>
+      <button class="btn small" style="margin-top:8px" onclick="ED.newItem('picklists')">+ Add pick list</button>
+    </div>
+    <div class="set-block">
+      <h3>Patient instructions</h3>
+      <div id="ed-instructions"></div>
+      <button class="btn small" style="margin-top:8px" onclick="ED.newItem('instructions')">+ Add instruction sheet</button>
+    </div>
+    <div class="set-block">
+      <h3>Drug cards</h3>
+      <div id="ed-drugs"></div>
+      <button class="btn small" style="margin-top:8px" onclick="ED.newItem('drugs')">+ Add drug card</button>
+    </div>
+    <div class="set-block">
+      <h3>Reset</h3>
+      <p class="hint">Restore the built-in starter library. Your own added items are removed. Export first if unsure.</p>
+      <button class="btn danger" onclick="ED.resetAll()">Reset to starter library</button>
+    </div>
+  </section>
+</main>
+
+<div id="overlay" onclick="if(event.target===this)App.closeModal()"><div id="modal"></div></div>
+<div id="qwrap" onclick="if(event.target===this)Launcher.close()">
+  <div id="qbox">
+    <input id="qinput" placeholder="Type a dot phrase or name&hellip;" autocomplete="off">
+    <div id="qlist"></div>
+    <div id="qhint">&uarr;&darr; to choose &middot; Enter to copy or fill &middot; Esc to close &middot; open anytime with . or Ctrl+K</div>
+  </div>
+</div>
+<div id="toast">Copied</div>
+<div id="printsheet"><h1 id="pr-title"></h1><div class="clin" id="pr-clinic"></div><pre id="pr-body"></pre><div class="foot" id="pr-foot"></div></div>
+
+<script>
+// ====================== STARTER LIBRARY ======================
+// Blank syntax: {label} = fill-in box · {label:opt1|opt2} = dropdown · *** = generic blank
+const DEFAULT_DATA = {
+  version: 5,
+  clinic: "",
+  phrases: [
+    {id:"p-mtxstart", name:"Methotrexate start counseling", dot:".mtxstart", cat:"Counseling", body:
+`Discussed methotrexate initiation at {dose:7.5 mg|10 mg|12.5 mg|15 mg|20 mg|25 mg} weekly with folic acid 1 mg daily. Reviewed common side effects (nausea, fatigue, oral ulcers, hair thinning) and rare serious risks (hepatotoxicity, cytopenias, pneumonitis). Counseled to avoid alcohol, report fever, dyspnea, or unusual bruising, and to hold the dose during active infection. Reviewed strict pregnancy avoidance and contraception requirements. Baseline CBC, CMP, hepatitis B and C serologies, and chest imaging reviewed or ordered. Labs every 2-4 weeks for the first 3 months, then every 8-12 weeks. Patient verbalized understanding and agreed to proceed.`},
+    {id:"p-hcqstart", name:"Hydroxychloroquine counseling", dot:".hcqstart", cat:"Counseling", body:
+`Discussed hydroxychloroquine {dose:200 mg daily|200 mg BID|300 mg daily|400 mg daily} (dosed at or below 5 mg/kg/day actual body weight). Reviewed expected 8-12 week onset, GI upset, rare skin pigmentation, and the small risk of retinal toxicity with long-term use. Baseline ophthalmologic exam within the first year, then annual screening after 5 years of use (sooner if risk factors). Patient verbalized understanding.`},
+    {id:"p-biopre", name:"Biologic pre-treatment screening", dot:".biopre", cat:"Plans", body:
+`Prior to initiating {agent}, completed pre-treatment screening: TB testing ({tb:QuantiFERON negative|QuantiFERON positive - see plan|PPD negative}), hepatitis B and C serologies {hep:negative|reviewed - see plan}, CBC and CMP reviewed. Counseled on infection risk, need to hold dosing during active infection or before surgery, and avoidance of live vaccines while on therapy. Age-appropriate vaccinations reviewed and updated where indicated, including recombinant zoster and pneumococcal vaccination.`},
+    {id:"p-predtaper", name:"Prednisone taper", dot:".predtaper", cat:"Plans", body:
+`Prednisone taper: {start:5 mg|10 mg|15 mg|20 mg|30 mg|40 mg} daily, decreasing by {step} every {interval:3 days|1 week|2 weeks|1 month} as tolerated, target {target:off|5 mg daily|lowest effective dose}. Counseled not to stop abruptly, to take with food in the morning, and to call if symptoms flare during the taper. Reviewed steroid side effects including hyperglycemia, mood and sleep changes, weight gain, and bone loss; calcium and vitamin D advised while on therapy.`},
+    {id:"p-dmardlabs", name:"DMARD monitoring labs", dot:".dmardlabs", cat:"Monitoring", body:
+`Safety labs reviewed today: CBC, CMP{extra:, ESR, CRP|, ESR, CRP, uric acid|}. No significant cytopenias, transaminase elevation, or renal dysfunction{caveat: |; see plan for abnormalities}. Continue monitoring every {interval:4 weeks|8 weeks|12 weeks|6 months} while on current therapy.`},
+    {id:"p-rosneg", name:"Negative rheum ROS", dot:".rosneg", cat:"Exam & ROS", body:
+`ROS: No fevers, chills, or unintentional weight loss. No new rash, photosensitivity, oral or nasal ulcers, or alopecia. No Raynaud phenomenon, sicca symptoms, pleuritic chest pain, or dyspnea. No new headache, jaw claudication, or visual change. No dysuria or hematuria. No new weakness or paresthesias. Remainder of a complete 10-system review is negative except as noted in the HPI.`},
+    {id:"p-mskexam", name:"Normal MSK exam", dot:".mskexam", cat:"Exam & ROS", body:
+`MSK: No active synovitis of the small joints of the hands, wrists, elbows, shoulders, knees, ankles, or feet. Full range of motion without pain. No joint effusions, deformities, or enthesitis. No dactylitis. Spine with normal range of motion, nontender. Muscle strength 5/5 proximally and distally. Gait normal.`},
+    {id:"p-goutflare", name:"Gout flare treatment", dot:".goutflare", cat:"Plans", body:
+`Acute gout flare: treated with {tx:colchicine 1.2 mg then 0.6 mg one hour later, then 0.6 mg daily-BID|prednisone 30-40 mg daily x 5 days|naproxen 500 mg BID with food x 5-7 days|intra-articular steroid injection today}. Continue urate-lowering therapy without interruption during the flare. Counseled on hydration, limiting alcohol and high-purine foods, and starting flare treatment at first symptoms.`},
+    {id:"p-ultstart", name:"Urate-lowering therapy start", dot:".ultstart", cat:"Plans", body:
+`Initiating allopurinol {dose:100 mg|50 mg} daily, titrating every 2-4 weeks to a serum urate goal of {goal:<6.0 mg/dL|<5.0 mg/dL (tophaceous)}. Flare prophylaxis with {ppx:colchicine 0.6 mg daily|naproxen 250 mg BID|low-dose prednisone} for the first 3-6 months. Counseled on the temporary rise in flares as urate falls, the need for adherence, and to report any rash promptly.`},
+    {id:"p-lifestyle", name:"Lifestyle medicine counseling", dot:".lifestyle", cat:"Counseling", body:
+`Lifestyle counseling provided this visit: reviewed an anti-inflammatory, predominantly whole-food plant-forward eating pattern; regular physical activity as tolerated with a goal of 150 minutes weekly plus resistance training twice weekly; sleep hygiene with a 7-9 hour target; stress management strategies; and tobacco and alcohol reduction where applicable. Discussed the evidence linking these habits to disease activity, cardiovascular risk, and overall outcomes in rheumatic disease. Patient identified the following initial goal: {goal}.`},
+    {id:"p-terato", name:"Teratogen / contraception counseling", dot:".terato", cat:"Counseling", body:
+`Counseled regarding the teratogenic potential of {drug:methotrexate|leflunomide|mycophenolate|cyclophosphamide}. Reviewed the need for reliable contraception while on therapy and the required washout before conception. Advised to notify the office promptly if pregnancy is being planned or suspected so therapy can be adjusted to a pregnancy-compatible regimen.`},
+    {id:"p-vax", name:"Vaccines on immunosuppression", dot:".vax", cat:"Counseling", body:
+`Reviewed vaccination status. Recommended: annual influenza, COVID-19 per current schedule, recombinant zoster series (age 18+ on immunosuppression), and pneumococcal vaccination per ACIP. Counseled to avoid live vaccines while on {tx:biologic therapy|JAK inhibitor|high-dose steroids|current immunosuppression}. Primary care to coordinate administration.`},
+    {id:"p-timebill", name:"Time-based billing", dot:".timebill", cat:"Attestation", body:
+`Total time on the date of this encounter: {min} minutes, greater than 50% spent in counseling and care coordination, including review of records and results, medication counseling, shared decision-making, and documentation.`},
+    {id:"p-sdm", name:"Shared decision-making", dot:".sdm", cat:"Attestation", body:
+`Options, risks, benefits, and alternatives, including no change in therapy, were discussed. Questions were answered. Through shared decision-making the patient elected to proceed with the plan as documented.`},
+    {id:"p-steroidwarn", name:"Steroid risk counseling", dot:".steroidse", cat:"Counseling", body:
+`Counseled on glucocorticoid risks with ongoing use: bone loss, hyperglycemia, weight gain, hypertension, cataracts, skin fragility, infection, and adrenal suppression. Plan targets the lowest effective dose for the shortest duration. Calcium and vitamin D advised; bone density assessment {dexa:up to date|ordered|to be scheduled} given anticipated steroid exposure.`},
+    {id:"p-fu", name:"Follow-up plan", dot:".fu", cat:"Plans", body:
+`Return to clinic in {interval:4 weeks|6 weeks|8 weeks|3 months|4 months|6 months|1 year} with labs beforehand, sooner for flare or medication intolerance. Patient knows to contact the office through the portal or by phone with concerns.`}
+  ],
+
+  templates: [
+    {id:"t-newconsult", name:"New Rheumatology Consult", cat:"New Patient", sections:[
+      {title:"Reason for Consult", body:`Referred by {referrer} for evaluation of {reason}.`},
+      {title:"HPI", body:`{age}-year-old {sex:female|male} presenting with {complaint} for {duration}. Symptoms are {pattern:intermittent|persistent|progressive|migratory}. Morning stiffness {stiffness:none|<15 minutes|15-30 minutes|30-60 minutes|>1 hour}. Joint involvement: {joints}. Associated symptoms: {assoc}. Prior treatment tried: {priortx:none|NSAIDs with partial relief|NSAIDs without relief|steroids with improvement|***}. Functional impact: {impact}.`},
+      {title:"ROS", body:`Constitutional, skin, mucosal, ocular, cardiopulmonary, GI, GU, neurologic, and vascular review performed. Pertinent positives: {positives:none|***}. Otherwise negative.`},
+      {title:"Relevant History", body:`PMH: {pmh}. Family history: {fh:noncontributory|***}. Social: tobacco {tob:never|former|current}, alcohol {etoh:none|occasional|moderate}. Occupation: {occ}.`},
+      {title:"Exam", body:`Vitals reviewed. General: well-appearing, no acute distress. Skin: {skin:no rash|***}. MSK: {msk}. Remainder of exam unremarkable except as noted.`},
+      {title:"Data Review", body:`Labs reviewed: {labs}. Imaging reviewed: {imaging:none available|***}. Outside records reviewed where available.`},
+      {title:"Assessment", body:`{assessment}. Differential considerations include {ddx}.`},
+      {title:"Plan", body:`1. Labs: {planlabs}.
+2. Imaging: {planimaging:none today|hand and foot radiographs|***}.
+3. Medications: {planmeds}.
+4. Education provided regarding the working diagnosis and next steps.
+5. Return in {fu:2 weeks|4 weeks|6 weeks|8 weeks} to review results and finalize the treatment plan.`}
+    ]},
+    {id:"t-fugeneral", name:"General Rheum Follow-Up", cat:"Follow-Up", sections:[
+      {title:"Interval History", body:`Established patient with {dx}, here for routine follow-up. Since the last visit the patient reports feeling {status:improved|stable|worse}. Current symptoms: {sx}. Medication adherence {adh:good|partial|poor}; side effects {se:none|***}.`},
+      {title:"Exam", body:`Vitals reviewed. General: well-appearing. MSK: {msk}. Remainder of focused exam unremarkable except as noted.`},
+      {title:"Data", body:`Interval labs reviewed: {labs}.`},
+      {title:"Assessment & Plan", body:`{dx2}: {activity:in remission|low disease activity|moderate disease activity|high disease activity} on current therapy.
+1. {plan1:Continue current regimen|Adjust therapy as below|Escalate therapy as below}.
+2. {plan2}
+3. Monitoring labs before next visit.
+4. Return in {fu:6 weeks|3 months|4 months|6 months}.`}
+    ]},
+    {id:"t-fura", name:"RA Follow-Up", cat:"Follow-Up", sections:[
+      {title:"Interval History", body:`Established patient with {sero:seropositive|seronegative} rheumatoid arthritis, here for follow-up. Overall {status:improved|stable|worse} since last visit. Morning stiffness {stiffness:none|<15 minutes|15-30 minutes|30-60 minutes|>1 hour}. Flares since last visit: {flares:none|one, self-limited|***}. Patient global assessment {pga}/10. Current therapy: {tx}, adherence {adh:good|partial|poor}, side effects {se:none|***}.`},
+      {title:"Exam", body:`{msk}`},
+      {title:"Disease Activity", body:`TJC28 {tjc}, SJC28 {sjc}, patient global {pga2}/10, provider global {ega}/10. CDAI {cdai} ({level:remission|low|moderate|high} disease activity).`},
+      {title:"Data", body:`CBC, CMP reviewed without significant abnormality{labnote: |; see below}. ESR {esr}, CRP {crp}.`},
+      {title:"Assessment & Plan", body:`Rheumatoid arthritis, {activity:in remission|low disease activity|moderate disease activity|high disease activity} on current therapy.
+1. {plan1:Continue current regimen, treat-to-target reviewed|Escalate therapy as discussed|Taper as discussed}.
+2. {plan2}
+3. DMARD safety labs before next visit.
+4. Lifestyle measures reviewed: activity, anti-inflammatory eating pattern, sleep, tobacco avoidance.
+5. Return in {fu:6 weeks|3 months|4 months|6 months}.`}
+    ]},
+    {id:"t-fulupus", name:"Lupus / CTD Follow-Up", cat:"Follow-Up", sections:[
+      {title:"Interval History", body:`Established patient with {dx:SLE|SLE with lupus nephritis|Sjogren syndrome|systemic sclerosis|MCTD|dermatomyositis|undifferentiated CTD}, here for follow-up, overall {status:improved|stable|worse}. Organ-based review: skin {skin:clear|rash - see exam}, mucosal ulcers {ulcers:none|present}, alopecia {alo:none|present}, arthralgias/arthritis {joints:none|present - see exam}, serositis symptoms {serositis:none|present}, Raynaud {raynaud:stable|worse|none}, sicca {sicca:stable|none|present}. Constitutional: {const:no fevers or weight loss|***}. Current therapy: {tx}, adherence {adh:good|partial|poor}.`},
+      {title:"Exam", body:`General: well-appearing. Skin: {skinex:no active rash|***}. Oral mucosa without ulcers. MSK: {msk}. CV/pulm: no rubs, clear breath sounds. Edema: {edema:none|***}.`},
+      {title:"Data", body:`CBC, CMP, urinalysis with protein assessment reviewed: {ua:no proteinuria or active sediment|***}. Complements {c34:normal|low}, dsDNA {dsdna:stable|rising|negative}.`},
+      {title:"Assessment & Plan", body:`{dx2}, currently {activity:quiescent|mildly active|active - see plan}.
+1. {plan1:Continue hydroxychloroquine; annual eye exam up to date|Adjust therapy as below}.
+2. {plan2}
+3. Sun protection, vaccination status, and cardiovascular risk reviewed.
+4. Labs including urine protein before next visit.
+5. Return in {fu:6 weeks|3 months|4 months|6 months}.`}
+    ]},
+    {id:"t-fupsa", name:"PsA / Axial SpA Follow-Up", cat:"Follow-Up", sections:[
+      {title:"Interval History", body:`Established patient with {dx:psoriatic arthritis|axial spondyloarthritis|peripheral spondyloarthritis}, here for follow-up, overall {status:improved|stable|worse}. Peripheral joint symptoms: {joints:none|***}. Inflammatory back symptoms: {back:none|morning stiffness >30 min, improves with activity|stable|worse}. Skin/psoriasis: {skin:clear|stable plaques|worse}. Enthesitis: {enth:none|present - see exam}. Dactylitis: {dact:none|present}. Current therapy: {tx}, adherence {adh:good|partial|poor}, side effects {se:none|***}.`},
+      {title:"Exam", body:`Skin: {skinex:no psoriatic plaques|plaques at ***}. Nails: {nails:normal|pitting/onycholysis}. MSK: {msk}. Entheses: {enthex:nontender|tender at ***}. Spine: {spine:full range of motion|restricted ***}.`},
+      {title:"Data", body:`Labs reviewed: CBC, CMP without significant abnormality. CRP {crp}.`},
+      {title:"Assessment & Plan", body:`{dx2}, {activity:minimal disease activity|low disease activity|active disease}.
+1. {plan1:Continue current biologic/DMARD|Escalate therapy as discussed}.
+2. {plan2}
+3. Home exercise and posture program reinforced.
+4. Return in {fu:3 months|4 months|6 months}.`}
+    ]},
+    {id:"t-fugout", name:"Gout Follow-Up", cat:"Follow-Up", sections:[
+      {title:"Interval History", body:`Established patient with gout on {ult:allopurinol|febuxostat|no urate-lowering therapy} {dose}, here for follow-up. Flares since last visit: {flares:none|one|two or more}. Adherence {adh:good|partial|poor}. Tophi: {tophi:none|stable|regressing}. Dietary and alcohol review: {diet}.`},
+      {title:"Exam", body:`MSK: {msk:no active synovitis, no tophi appreciated|***}.`},
+      {title:"Data", body:`Serum urate today: {urate} mg/dL (goal {goal:<6.0|<5.0}). CBC, CMP reviewed.`},
+      {title:"Assessment & Plan", body:`Gout, {control:at urate goal and flare-free - well controlled|above urate goal - titrating|clinically active}.
+1. {plan1:Continue current urate-lowering dose|Increase allopurinol by 100 mg and recheck urate|Start urate-lowering therapy as discussed}.
+2. Flare plan reviewed and in place.
+3. {ppx:Continue flare prophylaxis|Discontinue prophylaxis - flare-free interval achieved|N/A}.
+4. Repeat urate in {int:2 weeks|4 weeks|6 weeks|3 months}. Return in {fu:6 weeks|3 months|6 months|1 year}.`}
+    ]},
+    {id:"t-fupmr", name:"PMR / GCA Follow-Up", cat:"Follow-Up", sections:[
+      {title:"Interval History", body:`Established patient with {dx:polymyalgia rheumatica|giant cell arteritis|PMR with GCA}, on prednisone {dose} daily, here for follow-up. Shoulder/hip girdle symptoms: {girdle:resolved|improved|recurrent}. GCA symptom screen: headache {ha:none|present}, jaw claudication {jaw:none|present}, visual symptoms {vis:none|present - urgent evaluation}. Steroid side effects: {se:none|***}.`},
+      {title:"Exam", body:`General: well-appearing. Temporal arteries: {ta:nontender, pulses intact|***}. Shoulder and hip range of motion: {rom:full and painless|***}. MSK otherwise: {msk:no synovitis|***}.`},
+      {title:"Data", body:`ESR {esr}, CRP {crp} ({trend:normalized|improving|rising}). Glucose and bone health parameters reviewed.`},
+      {title:"Assessment & Plan", body:`{dx2}, {control:in clinical and laboratory remission on taper|controlled, continuing taper|flare during taper - see plan}.
+1. Prednisone: {taper}.
+2. {sparing:No steroid-sparing agent indicated at this time|Continue methotrexate|Continue tocilizumab|Initiate steroid-sparing therapy as discussed}.
+3. Bone protection: calcium/vitamin D; DEXA {dexa:up to date|ordered}.
+4. Strict return precautions for visual symptoms reviewed.
+5. Labs and return in {fu:2 weeks|4 weeks|6 weeks|3 months}.`}
+    ]},
+    {id:"t-fuop", name:"Osteoporosis Follow-Up", cat:"Follow-Up", sections:[
+      {title:"Interval History", body:`Established patient with {dx:osteoporosis|osteopenia|glucocorticoid-induced osteoporosis} on {tx:alendronate weekly|denosumab q6 months|zoledronic acid annually|teriparatide daily|no pharmacologic therapy}. Interval fractures: {fx:none|***}. Falls since last visit: {falls:none|***}. Adherence and tolerance: {adh:good|GI upset|injection site reaction|***}. Calcium/vitamin D intake: {cavd:adequate|reviewed and adjusted}.`},
+      {title:"Exam", body:`Height today: {height} ({htchange:stable|loss from prior}). Gait and balance: {gait:steady|***}. Spine: {spine:nontender|***}.`},
+      {title:"Data", body:`Most recent DEXA {dexadate}: T-scores spine {tspine}, hip {thip} ({trend:stable|improved|declined} from prior). Vitamin D level {vitd}.`},
+      {title:"Assessment & Plan", body:`{dx2}, on treatment year {year}.
+1. {plan1:Continue current therapy|Drug holiday discussed and initiated|Transition therapy as discussed}.
+2. Weight-bearing and resistance exercise, fall prevention, protein intake reviewed.
+3. Repeat DEXA {nextdexa:in 2 years|in 1 year|per drug holiday protocol}.
+4. Return in {fu:6 months|1 year}.`}
+    ]},
+    {id:"t-medcheck", name:"Medication Check", cat:"Short Visits", sections:[
+      {title:"Note", body:`Brief visit for medication monitoring. Patient on {drug} for {dx}. Doing {status:well without side effects|well with minor side effects: ***|poorly - see plan}. Safety labs reviewed: {labs:CBC and CMP without significant abnormality|***}. No active disease symptoms reported today{caveat: |; see below}.
+Plan: {plan:continue current dose|dose adjusted as below|hold and reassess}. Next labs in {int:4 weeks|8 weeks|12 weeks}. Return to regular follow-up as scheduled.`}
+    ]},
+    {id:"t-infusion", name:"Infusion Clearance", cat:"Short Visits", sections:[
+      {title:"Note", body:`Pre-infusion assessment for {drug:infliximab|rituximab|tocilizumab|abatacept|zoledronic acid|belimumab|cyclophosphamide} for {dx}. Since last infusion: {interval:no infections, no new symptoms|***}. No current fever or active infection. Recent labs reviewed and acceptable{labnote: |: ***}. Vitals reviewed.
+Cleared to proceed with infusion today at standard dose. Premedication per protocol. Next infusion in {next:4 weeks|6 weeks|8 weeks|6 months}.`}
+    ]},
+    {id:"t-pabiologic", name:"Biologic / Targeted DMARD Medical Necessity", cat:"Prior Authorization", sections:[
+      {title:"Request", body:`To Whom It May Concern:
+
+I am requesting prior authorization for {drug:adalimumab|etanercept|infliximab|certolizumab pegol|golimumab|tocilizumab|sarilumab|abatacept|rituximab|tofacitinib|upadacitinib|baricitinib|secukinumab|ixekizumab|bimekizumab|guselkumab|risankizumab|ustekinumab|apremilast|belimumab|anifrolumab|voclosporin} for my patient with {dx:rheumatoid arthritis|psoriatic arthritis|axial spondyloarthritis|systemic lupus erythematosus|lupus nephritis|juvenile idiopathic arthritis|adult-onset Still disease}, ICD-10 {icd}. Requested dosing: {dose}. Patient: ***. DOB: ***. Member ID: ***.`},
+      {title:"Clinical Summary", body:`I am a board-certified rheumatologist and have followed this patient since {since}. The diagnosis is established by {basis:clinical examination, serologies, and imaging|clinical examination and serologies|clinical examination and imaging|biopsy and clinical course}. Despite treatment to date, the patient has {activity:moderate|high} disease activity, with {findings}. Objective measures: {measures}. Disease impact on function and work: {impact}.`},
+      {title:"Prior Therapies", body:`The patient has had an adequate trial of the following therapies at appropriate doses and durations: {priors}. These were discontinued due to {reason:inadequate response|loss of response|intolerance|adverse effects|a combination of inadequate response and intolerance}. Continuing the current regimen alone would leave active disease inadequately treated.`},
+      {title:"Medical Necessity", body:`{drug2} is indicated and consistent with current ACR guidelines for {dx2:rheumatoid arthritis|psoriatic arthritis|axial spondyloarthritis|systemic lupus erythematosus} after failure of first-line therapy. Untreated or undertreated disease carries a substantial risk of irreversible joint damage, functional decline, and accumulated organ damage. Pre-treatment screening is complete: TB testing {tb:negative|addressed - see records}, hepatitis B and C serologies {hep:negative|addressed - see records}, and vaccination review done.`},
+      {title:"Closing", body:`This request represents medically necessary care for this patient. Please contact my office at *** with any questions or to arrange a peer-to-peer discussion. I appreciate your prompt review.
+
+Sincerely,
+***, MD
+Board-Certified Rheumatologist`}
+    ]},
+    {id:"t-paosteo", name:"Osteoporosis Medication Medical Necessity", cat:"Prior Authorization", sections:[
+      {title:"Request", body:`To Whom It May Concern:
+
+I am requesting prior authorization for {drug:denosumab|teriparatide|abaloparatide|romosozumab|zoledronic acid} for my patient with {dx:osteoporosis|glucocorticoid-induced osteoporosis|osteoporosis with recent fragility fracture}, ICD-10 {icd:M81.0|M80.08XA|M81.8}. Patient: ***. DOB: ***. Member ID: ***.`},
+      {title:"Clinical Justification", body:`Fracture risk is {risk:high|very high} based on: {basis}. Most recent DEXA T-scores: spine {tspine}, hip {thip}. Fragility fracture history: {fx:none|vertebral|hip|wrist|multiple - see records}. FRAX 10-year risk: major osteoporotic {frax1}%, hip {frax2}%. Additional risk factors: {factors:chronic glucocorticoid use|aromatase inhibitor therapy|falls|family history|multiple - see records|none additional}.`},
+      {title:"Prior Therapies", body:`Prior therapy: {priors:oral bisphosphonate - inadequate response with continued bone loss or fracture|oral bisphosphonate - GI intolerance|oral bisphosphonate - contraindicated due to renal function or esophageal disease|treatment-naive but very high fracture risk warranting anabolic-first therapy per guidelines}. Details: {details}.`},
+      {title:"Medical Necessity", body:`The requested agent is consistent with current AACE and Endocrine Society guidance for patients at {risk2:high|very high} fracture risk in this clinical setting. Delay in effective treatment leaves the patient exposed to preventable fracture, hospitalization, and loss of independence. Please contact my office at *** for questions or peer-to-peer review.
+
+Sincerely,
+***, MD`}
+    ]},
+    {id:"t-paappeal", name:"Appeal of Denial", cat:"Prior Authorization", sections:[
+      {title:"Appeal", body:`RE: Appeal of denial, reference number {ref}. Patient: ***. Member ID: ***.
+
+I am writing to formally appeal the denial of {drug} for {dx}, communicated on {date}. The stated denial reason was: {reason}.`},
+      {title:"Response to Denial Rationale", body:`This denial does not reflect the clinical facts of this case. {point1}. The record documents: {evidence}. The requested therapy is supported by {support:ACR guideline recommendations|FDA labeling for this indication|peer-reviewed evidence and specialty guidelines|the plan's own published criteria, which this patient meets}.`},
+      {title:"Consequences of Denial", body:`Without the requested therapy this patient faces {harm:progressive joint damage and functional loss|organ damage from uncontrolled disease|fracture and its complications|continued flares requiring repeated glucocorticoid exposure}. Glucocorticoid bridging is not a safe long-term alternative and carries well-documented cumulative toxicity.`},
+      {title:"Closing", body:`I request that this denial be overturned and the therapy approved. I am available for a peer-to-peer discussion at ***. Please treat this appeal with urgency given active disease.
+
+Sincerely,
+***, MD
+Board-Certified Rheumatologist`}
+    ]},
+    {id:"t-papeer", name:"Peer-to-Peer Prep Sheet", cat:"Prior Authorization", sections:[
+      {title:"Case Facts", body:`Drug requested: {drug}. Diagnosis: {dx}, ICD-10 {icd}. Denial reason on file: {denial}. Reviewer specialty (if known): {reviewer}.`},
+      {title:"Key Points to State", body:`1. Diagnosis basis: {basis}.
+2. Current disease activity: {activity} - cite objective measures: {measures}.
+3. Prior therapies, doses, durations, and outcomes: {priors}.
+4. Why the requested agent, not the plan's preferred alternative: {why:preferred agent previously failed|preferred agent contraindicated|comorbidity drives selection|dosing or route required for adherence}.
+5. Guideline anchor: {guideline:ACR RA guideline|ACR/NPF PsA guideline|ACR axSpA guideline|ACR SLE guideline|AACE osteoporosis guideline}.`},
+      {title:"Anticipated Pushback", body:`If asked about step therapy: {step}. If asked about biosimilar or preferred product: {biosim:no objection to biosimilar substitution|prior biosimilar failure documented|not interchangeable in this clinical situation}. Bottom line to hold: {bottom}.`},
+      {title:"Outcome", body:`Call date/time: ***. Reviewer name: ***. Outcome: {outcome:approved|approved with modification|upheld denial - written appeal to follow}. Notes: {notes}.`}
+    ]},
+    {id:"t-injection", name:"Joint Injection / Aspiration", cat:"Procedures", sections:[
+      {title:"Procedure Note", body:`Procedure: {proc:corticosteroid injection|aspiration|aspiration and injection} of the {side:right|left} {joint:knee|shoulder (glenohumeral)|shoulder (subacromial)|wrist|elbow|ankle|first MTP|trochanteric bursa|CMC joint}.
+Indication: {indication}.
+Consent: Risks including infection, bleeding, post-injection flare, skin changes, and tendon injury were discussed. Verbal and written consent obtained.
+Technique: Site identified {guidance:by anatomic landmarks|under ultrasound guidance}. Skin prepped in sterile fashion. Local anesthesia with {anesthetic:ethyl chloride spray|1% lidocaine|none required}. Using a {needle:25-gauge|22-gauge|21-gauge|18-gauge} needle. Aspirate: {volume:none|1-2 mL|3-5 mL|5-10 mL|more than 10 mL} of {fluid:N/A|clear yellow|cloudy yellow|turbid|bloody} fluid. Injected {med:triamcinolone 40 mg|triamcinolone 20 mg|methylprednisolone 40 mg|methylprednisolone 80 mg} with {lido:1 mL|2 mL|3 mL} of 1% lidocaine.
+The patient tolerated the procedure well without immediate complication. Post-procedure instructions provided{fluidplan:; fluid sent for cell count, crystals, and culture|}.`}
+    ]}
+  ],
+
+  picklists: [
+    {id:"l-stiff", name:"Morning stiffness", mode:"single", prefix:"Morning stiffness: ", suffix:".",
+      options:["none","less than 15 minutes","15-30 minutes","30-60 minutes","more than 1 hour"]},
+    {id:"l-activity", name:"Disease activity", mode:"single", prefix:"Disease activity: ", suffix:".",
+      options:["remission","low","moderate","high"]},
+    {id:"l-jointpattern", name:"Joint involvement", mode:"multi", prefix:"Joint involvement: ", suffix:".", joiner:", ",
+      options:["small joints of the hands","wrists","elbows","shoulders","hips","knees","ankles","small joints of the feet","cervical spine","lumbar spine","TMJ","symmetric distribution","asymmetric distribution"]},
+    {id:"l-rospos", name:"ROS positives", mode:"multi", prefix:"Pertinent positives: ", suffix:".", joiner:", ",
+      options:["fatigue","fevers","weight loss","rash","photosensitivity","oral ulcers","alopecia","Raynaud phenomenon","dry eyes","dry mouth","pleuritic chest pain","dyspnea","headache","jaw claudication","visual changes","paresthesias","muscle weakness","dysphagia","reflux","hematuria"]},
+    {id:"l-tolerance", name:"Medication tolerance", mode:"single", prefix:"Current therapy is ", suffix:".",
+      options:["well tolerated without side effects","tolerated with mild GI upset","tolerated with fatigue post-dose","limited by side effects - see plan","not tolerated - discontinuing"]},
+    {id:"l-planactions", name:"Plan actions", mode:"multi", prefix:"Plan: ", suffix:".", joiner:"; ",
+      options:["continue current regimen","escalate DMARD therapy as discussed","taper prednisone as outlined","joint injection performed today","imaging ordered","referral placed","physical therapy referral","patient education provided","lifestyle counseling provided","vaccination review completed","labs before next visit","medication adherence reviewed"]},
+    {id:"l-priortx", name:"Prior therapies tried", mode:"multi", prefix:"Prior therapies tried and discontinued: ", suffix:".", joiner:", ",
+      options:["methotrexate","leflunomide","sulfasalazine","hydroxychloroquine","adalimumab","etanercept","infliximab","certolizumab","golimumab","tocilizumab","abatacept","rituximab","tofacitinib","upadacitinib","secukinumab","ixekizumab","ustekinumab","guselkumab","apremilast","NSAIDs at maximal dose","oral bisphosphonate","denosumab"]},
+    {id:"l-labsordered", name:"Labs ordered", mode:"multi", prefix:"Labs ordered: ", suffix:".", joiner:", ",
+      options:["CBC","CMP","ESR","CRP","uric acid","RF","anti-CCP","ANA with reflex","dsDNA","C3/C4","urinalysis with protein","HLA-B27","QuantiFERON","hepatitis B and C serologies","CK","aldolase","TSH","vitamin D","lipid panel","HbA1c"]}
+  ],
+
+  instructions: [
+    {id:"i-mtx", name:"Starting methotrexate", body:
+`STARTING METHOTREXATE
+- Take methotrexate ONCE A WEEK on the same day each week, dose: {dose}.
+- Take folic acid 1 mg every day. This reduces side effects.
+- Avoid alcohol while on this medication.
+- Do not take if you could be or are planning to become pregnant. Use reliable contraception.
+- Get your lab tests on schedule. They keep this medication safe.
+- Call the office for: fever, cough or shortness of breath, unusual bruising or bleeding, mouth sores that do not heal, or yellowing of the skin.
+- Expect benefits to begin in 6-12 weeks. Do not stop without calling us.`, bodyEs:
+`COMENZANDO METOTREXATO
+- Tome el metotrexato UNA VEZ POR SEMANA, el mismo día cada semana, dosis: {dose}.
+- Tome ácido fólico 1 mg todos los días. Esto reduce los efectos secundarios.
+- Evite el alcohol mientras tome este medicamento.
+- No lo tome si está embarazada o planea embarazarse. Use un método anticonceptivo confiable.
+- Hágase los análisis de sangre según el calendario. Son los que mantienen este medicamento seguro.
+- Llame al consultorio si tiene: fiebre, tos o falta de aire, moretones o sangrado inusual, llagas en la boca que no sanan, o color amarillento en la piel.
+- El beneficio comienza en 6 a 12 semanas. No lo suspenda sin llamarnos.`},
+    {id:"i-hcq", name:"Starting hydroxychloroquine", body:
+`STARTING HYDROXYCHLOROQUINE (PLAQUENIL)
+- Take {dose} with food to reduce stomach upset.
+- Benefits build slowly. Expect 2-3 months before improvement.
+- Schedule a baseline eye exam within the first year, then yearly exams after 5 years of use.
+- Call the office for: new visual changes, rash, or muscle weakness.
+- This medication is generally safe long term and protects against flares. Take daily.`, bodyEs:
+`COMENZANDO HIDROXICLOROQUINA (PLAQUENIL)
+- Tome {dose} con comida para reducir las molestias de estómago.
+- El beneficio llega poco a poco. Espere 2 a 3 meses para notar mejoría.
+- Programe un examen de la vista durante el primer año, y luego un examen anual después de 5 años de uso.
+- Llame al consultorio si nota: cambios en la vista, sarpullido o debilidad muscular.
+- Este medicamento es seguro a largo plazo y protege contra los brotes. Tómelo todos los días.`},
+    {id:"i-taper", name:"Prednisone taper schedule", body:
+`YOUR PREDNISONE TAPER
+- Take prednisone in the morning with food.
+- Schedule: {schedule}
+- Do NOT stop suddenly. Your body needs time to adjust.
+- Call the office if your symptoms return during the taper. Do not increase the dose on your own.
+- While on prednisone: watch for increased blood sugar, trouble sleeping, and mood changes. Take calcium and vitamin D daily.`, bodyEs:
+`SU PLAN PARA BAJAR LA PREDNISONA
+- Tome la prednisona por la mañana con comida.
+- Calendario: {schedule}
+- NO la suspenda de golpe. Su cuerpo necesita tiempo para ajustarse.
+- Llame al consultorio si sus síntomas regresan mientras baja la dosis. No aumente la dosis por su cuenta.
+- Mientras tome prednisona: vigile el azúcar en la sangre, el sueño y los cambios de ánimo. Tome calcio y vitamina D todos los días.`},
+    {id:"i-goutflare", name:"Gout flare home plan", body:
+`GOUT FLARE PLAN
+- Start treatment at the FIRST sign of a flare: {tx}
+- Keep taking your daily urate-lowering medication (allopurinol/febuxostat) during a flare. Do not stop.
+- Rest and elevate the joint. Ice 20 minutes at a time.
+- Drink plenty of water. Avoid alcohol and sugary drinks during a flare.
+- Call the office if: the flare lasts more than a few days despite treatment, you have a fever, or the joint is red and hot with severe pain.`, bodyEs:
+`PLAN PARA ATAQUES DE GOTA
+- Comience el tratamiento con la PRIMERA señal de un ataque: {tx}
+- Siga tomando su medicamento diario para el ácido úrico (alopurinol/febuxostat) durante el ataque. No lo suspenda.
+- Repose y eleve la articulación. Aplique hielo 20 minutos a la vez.
+- Tome mucha agua. Evite el alcohol y las bebidas azucaradas durante el ataque.
+- Llame al consultorio si: el ataque dura más de unos días a pesar del tratamiento, tiene fiebre, o la articulación está roja y caliente con dolor intenso.`},
+    {id:"i-inject", name:"After your joint injection", body:
+`AFTER YOUR JOINT INJECTION
+- Rest the joint for the remainder of today. Avoid heavy use for 48 hours.
+- Some soreness for 1-2 days is normal. Ice 15-20 minutes as needed.
+- A temporary "steroid flare" of pain in the first 24-48 hours happens occasionally and settles on its own.
+- The steroid benefit usually begins in 3-7 days.
+- Call the office for: fever, spreading redness or warmth, severe worsening pain, or drainage at the site.`, bodyEs:
+`DESPUÉS DE SU INFILTRACIÓN
+- Repose la articulación el resto del día. Evite el uso fuerte por 48 horas.
+- Es normal tener molestia por 1 a 2 días. Aplique hielo 15 a 20 minutos según necesite.
+- A veces hay un "brote por el esteroide" con más dolor en las primeras 24 a 48 horas; se calma solo.
+- El beneficio del esteroide suele comenzar en 3 a 7 días.
+- Llame al consultorio si tiene: fiebre, enrojecimiento o calor que se extiende, dolor que empeora mucho, o secreción en el sitio.`},
+    {id:"i-labs", name:"Your lab schedule", body:
+`YOUR LAB SCHEDULE
+- While on {drug}, you need safety labs every {interval}.
+- These check your blood counts, liver, and kidneys.
+- You may use any lab location; results come to us automatically.
+- Get labs 3-7 days BEFORE your next appointment so we review them together.
+- We will contact you if anything needs attention. No news within a week of testing means results were acceptable.`, bodyEs:
+`SU CALENDARIO DE ANÁLISIS
+- Mientras tome {drug}, necesita análisis de seguridad cada {interval}.
+- Estos revisan sus células de la sangre, el hígado y los riñones.
+- Puede usar cualquier laboratorio; los resultados nos llegan automáticamente.
+- Hágase los análisis 3 a 7 días ANTES de su próxima cita para revisarlos juntos.
+- Le avisaremos si algo necesita atención. Si no hay noticias en una semana, los resultados fueron aceptables.`},
+    {id:"i-bone", name:"Bone health basics", body:
+`PROTECTING YOUR BONES
+- Calcium: aim for 1,000-1,200 mg daily, food sources first (dairy, fortified foods, greens, tofu).
+- Vitamin D: {vitd} daily.
+- Exercise: weight-bearing activity (walking, stairs) most days plus resistance training 2-3 times weekly.
+- Fall-proof your home: clear floors, good lighting, secure rugs, footwear with grip.
+- Limit alcohol; do not smoke. Both weaken bone.
+- Take your bone medication exactly as prescribed: {med}.`, bodyEs:
+`PROTEGIENDO SUS HUESOS
+- Calcio: procure 1,000 a 1,200 mg al día, primero de los alimentos (lácteos, alimentos fortificados, verduras de hoja verde, tofu).
+- Vitamina D: {vitd} al día.
+- Ejercicio: actividad con carga de peso (caminar, subir escaleras) la mayoría de los días, más ejercicios de fuerza 2 a 3 veces por semana.
+- Prevenga caídas en casa: pisos despejados, buena iluminación, tapetes fijos, calzado con buen agarre.
+- Limite el alcohol; no fume. Ambos debilitan el hueso.
+- Tome su medicamento para los huesos exactamente como se le indicó: {med}.`},
+    {id:"i-call", name:"When to call the office", body:
+`WHEN TO CALL OUR OFFICE
+Call promptly for:
+- Fever over 100.4 F while on immune-suppressing medication
+- A new or rapidly worsening swollen, hot joint
+- New rash, mouth sores, or unusual bruising
+- Shortness of breath or new cough
+- Vision changes or severe new headache
+- Any concern about a medication side effect
+Portal messages are answered within {response} business days. For emergencies call 911 or go to the nearest emergency department.`, bodyEs:
+`CUÁNDO LLAMAR AL CONSULTORIO
+Llame pronto si tiene:
+- Fiebre de más de 38 °C (100.4 °F) mientras toma medicamentos que bajan las defensas
+- Una articulación hinchada y caliente, nueva o que empeora rápido
+- Sarpullido nuevo, llagas en la boca o moretones inusuales
+- Falta de aire o tos nueva
+- Cambios en la vista o dolor de cabeza intenso y nuevo
+- Cualquier duda sobre un efecto secundario de un medicamento
+Los mensajes por el portal se responden en {response} días hábiles. En una emergencia llame al 911 o vaya a la sala de emergencias más cercana.`}
+  ],
+
+  drugs: [
+    {id:"d-mtx", name:"Methotrexate", cls:"Conventional DMARDs",
+      dosing:"7.5-25 mg PO or SC once weekly, with folic acid 1 mg daily.",
+      monitor:"CBC, CMP (LFTs, creatinine) every 2-4 wk for first 3 months, then every 8-12 wk. Baseline: hepatitis B/C, chest imaging.",
+      se:"Nausea, fatigue day after dose, oral ulcers, hair thinning, mild transaminitis.",
+      serious:"Cytopenias, hepatotoxicity, pneumonitis (new dyspnea/cough = hold and evaluate). Teratogen.",
+      pearls:"Hold during active infection. Limit alcohol. Split the dose or switch to SC for nausea. Stop 3 months before conception (either partner)."},
+    {id:"d-hcq", name:"Hydroxychloroquine", cls:"Conventional DMARDs",
+      dosing:"200-400 mg daily; keep at or below 5 mg/kg/day actual body weight.",
+      monitor:"No routine labs. Baseline eye exam within first year, then annual screening after 5 years of use (sooner if renal disease or tamoxifen).",
+      se:"GI upset, rash, skin hyperpigmentation, vivid dreams.",
+      serious:"Retinal toxicity (dose and duration dependent), rare cardiomyopathy and QT prolongation.",
+      pearls:"Pregnancy-compatible; continue in SLE indefinitely. Full effect takes 2-3 months. Take with food."},
+    {id:"d-ssz", name:"Sulfasalazine", cls:"Conventional DMARDs",
+      dosing:"Start 500 mg BID, titrate to 1-1.5 g BID.",
+      monitor:"CBC, LFTs every 2-4 wk for 3 months, then every 3 months. Consider G6PD in at-risk patients.",
+      se:"GI upset, headache, rash, orange-tinted urine, reversible low sperm count.",
+      serious:"Agranulocytosis (usually early), DRESS, hepatitis.",
+      pearls:"Caution with sulfa allergy. Pregnancy-compatible; give folic acid. Enteric-coated helps GI tolerance."},
+    {id:"d-lef", name:"Leflunomide", cls:"Conventional DMARDs",
+      dosing:"10-20 mg daily.",
+      monitor:"CBC, LFTs, creatinine every 4 wk for 6 months, then every 8-12 wk. Blood pressure each visit.",
+      se:"Diarrhea, hair thinning, transaminitis, hypertension.",
+      serious:"Hepatotoxicity, cytopenias, peripheral neuropathy. Potent teratogen with a very long washout.",
+      pearls:"Cholestyramine 8 g TID x 11 days for rapid washout (pregnancy planning or toxicity)."},
+    {id:"d-aza", name:"Azathioprine", cls:"Conventional DMARDs",
+      dosing:"1.5-2.5 mg/kg daily.",
+      monitor:"TPMT (or NUDT15) before starting. CBC, LFTs every 2 wk around dose changes, then every 3 months.",
+      se:"Nausea, fatigue, mild transaminitis.",
+      serious:"Severe myelosuppression (TPMT-deficient), pancreatitis, lymphoma risk.",
+      pearls:"Major interaction: allopurinol and febuxostat (avoid, or cut dose ~75%). Pregnancy-compatible option."},
+    {id:"d-mmf", name:"Mycophenolate", cls:"Conventional DMARDs",
+      dosing:"1-1.5 g BID (mofetil).",
+      monitor:"CBC every 1-2 wk initially, then monthly x3, then every 3 months. LFTs periodically.",
+      se:"GI upset, diarrhea, cytopenias.",
+      serious:"Infections; teratogen (REMS - two contraception methods).",
+      pearls:"Six-week washout before conception; usual pregnancy switch is to azathioprine. Separate from antacids."},
+    {id:"d-pred", name:"Prednisone", cls:"Glucocorticoid",
+      dosing:"Lowest effective dose. Bridging/flares 10-20 mg; PMR 12.5-25 mg; GCA 40-60 mg.",
+      monitor:"Glucose, BP, lipids. Bone density if ≥2.5 mg daily for ≥3 months anticipated.",
+      se:"Insomnia, mood change, appetite/weight gain, hyperglycemia, bruising, fluid retention.",
+      serious:"Adrenal suppression, osteoporosis, avascular necrosis, infections, cataracts and glaucoma.",
+      pearls:"Calcium + vitamin D for everyone on chronic steroids; add bisphosphonate if moderate/high fracture risk. Taper, never stop abruptly after >2-3 weeks."},
+    {id:"d-colch", name:"Colchicine", cls:"Gout & crystal",
+      dosing:"Flare: 1.2 mg then 0.6 mg one hour later. Prophylaxis: 0.6 mg daily-BID.",
+      monitor:"Baseline creatinine; CBC and CK if long-term use. Renal dose adjustment.",
+      se:"Diarrhea, nausea, cramping.",
+      serious:"Myotoxicity and neuromyopathy (statins, CKD), cytopenias. Dangerous with strong CYP3A4/P-gp inhibitors (clarithromycin) in renal/hepatic impairment.",
+      pearls:"Reduce dose in CKD. Review the med list for interactions before every prescription."},
+    {id:"d-allo", name:"Allopurinol", cls:"Gout & crystal",
+      dosing:"Start 100 mg daily (50 mg in CKD 3+), titrate every 2-4 wk to urate goal (<6.0, <5.0 if tophi). Max 800 mg.",
+      monitor:"Urate every 2-4 wk during titration, then every 6-12 months. CBC, LFTs, creatinine periodically.",
+      se:"Rash, GI upset.",
+      serious:"Hypersensitivity syndrome / DRESS / SJS. HLA-B*58:01 screening for Han Chinese, Thai, Korean (CKD 3+), and African-descent patients.",
+      pearls:"Continue during flares. CKD slows titration but does not cap the target-directed dose. Stop immediately for any rash early on."},
+    {id:"d-febux", name:"Febuxostat", cls:"Gout & crystal",
+      dosing:"40 mg daily, increase to 80 mg if urate above goal at 2-4 wk.",
+      monitor:"Urate, LFTs at baseline and periodically.",
+      se:"Transaminitis, rash, arthralgia.",
+      serious:"Boxed warning: cardiovascular mortality signal vs allopurinol (CARES). Never combine with azathioprine or 6-MP.",
+      pearls:"Second-line after allopurinol intolerance/failure. No dose change in mild-moderate CKD."},
+    {id:"d-voclo", name:"Voclosporin (Lupkynis)", cls:"Targeted synthetic",
+      dosing:"23.7 mg BID for lupus nephritis, with mycophenolate and low-dose steroids. Dose-adjust for eGFR changes.",
+      monitor:"eGFR and BP every 2 wk for first month, then every 4 wk. Potassium and glucose periodically. No routine drug levels.",
+      se:"Hypertension, eGFR decline, tremor, GI upset, hyperkalemia.",
+      serious:"Nephrotoxicity, serious infections, QT prolongation at supratherapeutic doses. Avoid strong CYP3A4 inhibitors.",
+      pearls:"Reduce or hold for confirmed eGFR drop >20% from baseline. Three-year AURORA data support sustained renal response with stable eGFR."},
+    {id:"d-peglo", name:"Pegloticase (Krystexxa)", cls:"Gout & crystal",
+      dosing:"8 mg IV every 2 wk for refractory or tophaceous gout.",
+      monitor:"Serum urate BEFORE every infusion: stop if >6 mg/dL on two consecutive checks (signals anti-drug antibodies and infusion-reaction risk). G6PD before starting.",
+      se:"Infusion reactions, early gout flares.",
+      serious:"Anaphylaxis (risk highest once urate rises), hemolysis and methemoglobinemia in G6PD deficiency.",
+      pearls:"Co-administer weekly methotrexate (MIRROR) to blunt antibody formation and extend response. Stop other oral urate-lowering drugs - they mask the rising-urate warning signal. Premedicate every infusion."},
+    {id:"d-tnf", name:"TNF inhibitors (adalimumab, etanercept, infliximab, golimumab, certolizumab)", cls:"Biologics",
+      dosing:"Adalimumab 40 mg SC q2wk; etanercept 50 mg SC weekly; infliximab 3-10 mg/kg IV q4-8wk.",
+      monitor:"Baseline TB test + hepatitis B/C; annual TB if ongoing risk. CBC, CMP every 3-6 months.",
+      se:"Injection site or infusion reactions, upper respiratory infections, headache.",
+      serious:"Serious and opportunistic infections, TB and hepatitis B reactivation, demyelinating disease, heart failure worsening, drug-induced lupus.",
+      pearls:"Hold for active infection and around major surgery (one dosing cycle). No live vaccines. Certolizumab has minimal placental transfer."},
+    {id:"d-il6", name:"IL-6 inhibitors (tocilizumab, sarilumab)", cls:"Biologics",
+      dosing:"Tocilizumab 162 mg SC weekly or q2wk, or 4-8 mg/kg IV q4wk.",
+      monitor:"CBC, LFTs every 4-8 wk initially then every 3 months; lipid panel at 4-8 wk. Baseline TB/hepatitis.",
+      se:"Transaminitis, neutropenia, hyperlipidemia, injection reactions.",
+      serious:"GI perforation (diverticulitis history + steroids), serious infections. CRP is suppressed - do not rely on it to detect infection.",
+      pearls:"Steroid-sparing agent of choice in GCA. Hold for ANC <1000, platelets <100k, or LFTs >3x ULN."},
+    {id:"d-jak", name:"JAK inhibitors (tofacitinib, upadacitinib, baricitinib)", cls:"Targeted synthetic",
+      dosing:"Tofacitinib 5 mg BID or 11 mg XR daily; upadacitinib 15 mg daily; baricitinib 2-4 mg daily.",
+      monitor:"CBC, LFTs at 4-8 wk then every 3 months; lipids at 8-12 wk. Baseline TB/hepatitis.",
+      se:"Upper respiratory infections, nausea, acne (upadacitinib), CPK elevation.",
+      serious:"Boxed warnings: MACE, VTE, malignancy, mortality in age >50 with CV risk factors. Herpes zoster - vaccinate first.",
+      pearls:"Give Shingrix before or soon after starting. Oral option when needles are a barrier; dose adjust with strong CYP3A4 inhibitors."},
+    {id:"d-abat", name:"Abatacept", cls:"Biologics",
+      dosing:"125 mg SC weekly, or weight-based IV q4wk.",
+      monitor:"Baseline TB + hepatitis B/C. CBC, CMP periodically.",
+      se:"Headache, upper respiratory infections, nausea.",
+      serious:"Serious infections; COPD exacerbations reported.",
+      pearls:"Often chosen when infection risk is a concern. Seropositive RA may respond best."},
+    {id:"d-rtx", name:"Rituximab", cls:"Biologics",
+      dosing:"1 g IV x2, days 0 and 14; repeat course ~q6 months by response.",
+      monitor:"Hepatitis B core antibody AND surface antigen before first dose. CBC, quantitative immunoglobulins before each course.",
+      se:"First-infusion reactions, upper respiratory infections.",
+      serious:"Hepatitis B reactivation (can be fatal - always screen), PML (rare), late-onset neutropenia, hypogammaglobulinemia with recurrent infections.",
+      pearls:"Give needed vaccines ≥4 wk before a course; vaccine responses are blunted after. Premedicate. Check IgG if infections recur."},
+    {id:"d-il17", name:"IL-17 inhibitors (secukinumab, ixekizumab)", cls:"Biologics",
+      dosing:"Secukinumab 150-300 mg SC q4wk after loading; ixekizumab 80 mg SC q4wk after loading.",
+      monitor:"Baseline TB. Watch clinically for candidiasis.",
+      se:"Upper respiratory infections, oral/genital candidiasis, injection reactions.",
+      serious:"New or worsened inflammatory bowel disease - avoid in Crohn/UC. Serious infections.",
+      pearls:"Strong choice for PsA and axSpA with significant psoriasis. Screen for IBD symptoms before starting."},
+    {id:"d-bime", name:"Bimekizumab (Bimzelx)", cls:"Biologics",
+      dosing:"PsA and axSpA: 160 mg SC q4wk. Psoriasis: 320 mg q4wk x16 wk, then q8wk.",
+      monitor:"Baseline TB. LFTs at baseline and periodically (caution with liver disease or heavy alcohol use). Watch clinically for candidiasis.",
+      se:"Oral candidiasis (notably more than other IL-17s), upper respiratory infections, injection reactions.",
+      serious:"New or worsened inflammatory bowel disease - avoid in Crohn/UC. Serious infections. Monitor mood per label.",
+      pearls:"Dual IL-17A and IL-17F blockade. Treat mild thrush with fluconazole and continue therapy; counsel patients to report white oral patches early."},
+    {id:"d-beli", name:"Belimumab (Benlysta)", cls:"Biologics",
+      dosing:"200 mg SC weekly, or 10 mg/kg IV at weeks 0, 2, 4, then q4wk. Approved for SLE and lupus nephritis.",
+      monitor:"Baseline hepatitis B/C; TB per practice. Otherwise standard SLE labs (CBC, CMP, urine protein, complements, dsDNA).",
+      se:"Nausea, diarrhea, headache, insomnia, infusion or injection reactions.",
+      serious:"Serious infections, depression and suicidality signal - screen mood at visits, PML (rare).",
+      pearls:"Add-on to standard therapy; benefit accrues over months - do not judge at 8 weeks. Combines with HCQ and MMF. Avoid stacking with another biologic."},
+    {id:"d-anif", name:"Anifrolumab (Saphnelo)", cls:"Biologics",
+      dosing:"300 mg IV q4wk.",
+      monitor:"Baseline TB and hepatitis B/C. Standard SLE labs.",
+      se:"Infusion reactions, upper respiratory infections, bronchitis.",
+      serious:"Herpes zoster (notable signal - vaccinate before starting when feasible), serious infections. No live vaccines on therapy.",
+      pearls:"Type I interferon receptor blocker; particularly strong for skin and musculoskeletal SLE activity. Not studied in severe active nephritis or CNS lupus."},
+    {id:"d-il23", name:"IL-23 / IL-12-23 inhibitors (ustekinumab, guselkumab, risankizumab)", cls:"Biologics",
+      dosing:"Varies; e.g., guselkumab 100 mg SC q8wk after loading.",
+      monitor:"Baseline TB. Minimal routine lab burden.",
+      se:"Upper respiratory infections, injection site reactions.",
+      serious:"Serious infections (rates low overall).",
+      pearls:"Among the best-tolerated biologics; useful with infection concerns. Not effective for axial disease."},
+    {id:"d-dmab", name:"Denosumab", cls:"Bone health",
+      dosing:"60 mg SC every 6 months, on time.",
+      monitor:"Calcium and vitamin D replete before each dose; check calcium in CKD. Dental health review.",
+      se:"Musculoskeletal pain, hypocalcemia (mainly CKD).",
+      serious:"Rebound vertebral fractures if stopped without transition - never simply stop; ONJ and atypical femur fracture (rare).",
+      pearls:"If discontinuing, transition to a bisphosphonate. Late doses lose bone - build reminders."},
+    {id:"d-bis", name:"Bisphosphonates (alendronate, risedronate, zoledronic acid)", cls:"Bone health",
+      dosing:"Alendronate 70 mg PO weekly; zoledronic acid 5 mg IV yearly.",
+      monitor:"Calcium, vitamin D, creatinine before dosing. DEXA ~every 2 years. Reassess need at 3-5 years.",
+      se:"GI upset and esophagitis (oral), acute phase reaction after first IV dose.",
+      serious:"ONJ, atypical femur fracture with long use. Avoid if CrCl <30-35.",
+      pearls:"Oral: empty stomach, full glass of water, stay upright 30 min. Consider drug holiday after 5 yr oral / 3 yr IV if risk is no longer high."},
+    {id:"d-romo", name:"Romosozumab (Evenity)", cls:"Bone health",
+      dosing:"210 mg SC monthly (given as two 105 mg injections), for 12 months total.",
+      monitor:"Calcium and vitamin D replete before starting; monitor calcium in CKD. Dental review before starting.",
+      se:"Arthralgia, headache, injection site reactions, mild hypocalcemia.",
+      serious:"Boxed warning: MI, stroke, cardiovascular death - do not use within 1 year of MI or stroke. ONJ and atypical femur fracture (rare).",
+      pearls:"Builds and forms bone for exactly 12 months, then must be followed by an antiresorptive (bisphosphonate or denosumab) or the gains are lost. Screen CV history explicitly before prescribing."},
+    {id:"d-terip", name:"Teriparatide / Abaloparatide", cls:"Bone health",
+      dosing:"Teriparatide 20 mcg SC daily, up to 2 years.",
+      monitor:"Calcium, urate, creatinine periodically.",
+      se:"Dizziness, leg cramps, nausea, orthostasis, mild hypercalcemia.",
+      serious:"Avoid in Paget disease, prior skeletal radiation, unexplained high alkaline phosphatase, or bone malignancy.",
+      pearls:"Anabolic-first for very high fracture risk. Must follow with an antiresorptive or the gains are lost."}
+  ],
+
+  codes: [
+    {id:"c-ra", name:"Rheumatoid arthritis", items:[
+      {code:"M06.9", desc:"RA, unspecified"},
+      {code:"M05.79", desc:"RF-positive RA, multiple sites"},
+      {code:"M06.09", desc:"RF-negative RA, multiple sites"},
+      {code:"M06.4", desc:"Inflammatory polyarthropathy"}]},
+    {id:"c-ctd", name:"Lupus & connective tissue", items:[
+      {code:"M32.9", desc:"SLE, unspecified"},
+      {code:"M32.10", desc:"SLE, organ involvement unspecified"},
+      {code:"M32.14", desc:"SLE with glomerular disease"},
+      {code:"M35.00", desc:"Sjögren syndrome, unspecified"},
+      {code:"M34.9", desc:"Systemic sclerosis, unspecified"},
+      {code:"M33.90", desc:"Dermatopolymyositis, unspecified"},
+      {code:"M35.1", desc:"Overlap syndromes / MCTD"},
+      {code:"M35.9", desc:"CTD unspecified / UCTD"},
+      {code:"R76.0", desc:"Raised antibody titer (+ANA referral)"}]},
+    {id:"c-spa", name:"Psoriatic & axial SpA", items:[
+      {code:"L40.50", desc:"Arthropathic psoriasis, unspecified"},
+      {code:"L40.59", desc:"Other psoriatic arthropathy"},
+      {code:"M45.9", desc:"Ankylosing spondylitis, unspecified sites"},
+      {code:"M46.1", desc:"Sacroiliitis, NEC"}]},
+    {id:"c-crystal", name:"Gout & crystal", items:[
+      {code:"M10.9", desc:"Gout, unspecified"},
+      {code:"M1A.9XX0", desc:"Chronic gout, unspecified, without tophus"},
+      {code:"M11.29", desc:"Chondrocalcinosis (CPPD), other site"},
+      {code:"M11.9", desc:"Crystal arthropathy, unspecified"}]},
+    {id:"c-pmr", name:"PMR, GCA & vasculitis", items:[
+      {code:"M35.3", desc:"Polymyalgia rheumatica"},
+      {code:"M31.6", desc:"GCA without PMR"},
+      {code:"M31.5", desc:"GCA with PMR"},
+      {code:"M31.30", desc:"GPA without renal involvement"},
+      {code:"M31.9", desc:"Necrotizing vasculopathy, unspecified"}]},
+    {id:"c-bone", name:"Bone & OA", items:[
+      {code:"M81.0", desc:"Age-related osteoporosis, no current fracture"},
+      {code:"M80.08XA", desc:"Osteoporosis with current vertebral fracture, initial"},
+      {code:"M85.80", desc:"Osteopenia (other bone density disorder)"},
+      {code:"M19.90", desc:"Osteoarthritis, unspecified site"},
+      {code:"M15.0", desc:"Primary generalized osteoarthritis"}]},
+    {id:"c-sx", name:"Symptoms & long-term drug codes", items:[
+      {code:"M25.50", desc:"Joint pain, unspecified joint"},
+      {code:"M79.7", desc:"Fibromyalgia"},
+      {code:"M79.1", desc:"Myalgia"},
+      {code:"R53.83", desc:"Other fatigue"},
+      {code:"Z79.52", desc:"Long-term systemic steroids"},
+      {code:"Z79.899", desc:"Other long-term drug therapy (DMARD/biologic)"}]},
+    {id:"c-cpt", name:"Injection CPT codes", items:[
+      {code:"20600", desc:"Arthrocentesis, small joint, without ultrasound"},
+      {code:"20604", desc:"Small joint, with ultrasound"},
+      {code:"20605", desc:"Intermediate joint, without ultrasound"},
+      {code:"20606", desc:"Intermediate joint, with ultrasound"},
+      {code:"20610", desc:"Major joint, without ultrasound"},
+      {code:"20611", desc:"Major joint, with ultrasound"}]}
+  ]
+};
+// ====================== CORE ======================
+const KEY = "rheumpad_v1";
+let DATA, FAVS, PRECHART, META = {};
+let storageOK = true;
+
+function loadState(){
+  let stored = null;
+  try { stored = JSON.parse(localStorage.getItem(KEY)); } catch(e){ storageOK = false; }
+  if (stored && stored.data && stored.data.phrases) {
+    DATA = stored.data; FAVS = stored.favs || []; PRECHART = stored.prechart || []; META = stored.meta || {};
+    // Seed new built-in content added in later versions without touching user edits
+    if ((stored.seededVersion || 1) < DEFAULT_DATA.version) {
+      ["phrases","templates","picklists","instructions","drugs","codes"].forEach(coll=>{
+        if (!DATA[coll]) DATA[coll] = [];
+        const have = new Set(DATA[coll].map(x=>x.id));
+        DEFAULT_DATA[coll].forEach(item=>{ if (!have.has(item.id)) DATA[coll].push(JSON.parse(JSON.stringify(item))); });
+      });
+      DEFAULT_DATA.instructions.forEach(d=>{
+        const s = DATA.instructions.find(x=>x.id===d.id);
+        if (s && d.bodyEs && !s.bodyEs) s.bodyEs = d.bodyEs;
+      });
+      // v4: bimekizumab moved from the combined IL-17 card to its own card
+      const il17 = (DATA.drugs || []).find(x=>x.id === "d-il17");
+      if (il17 && /bimekizumab/i.test(il17.name + " " + il17.se)) {
+        const def = DEFAULT_DATA.drugs.find(x=>x.id === "d-il17");
+        il17.name = def.name; il17.dosing = def.dosing; il17.se = def.se;
+      }
+    }
+    if (DATA.clinic === undefined) DATA.clinic = "";
+  } else {
+    DATA = JSON.parse(JSON.stringify(DEFAULT_DATA)); FAVS = []; PRECHART = []; META = {};
+  }
+  if (!META.firstRun) META.firstRun = Date.now();
+}
+function saveState(){
+  try { localStorage.setItem(KEY, JSON.stringify({data:DATA, favs:FAVS, prechart:PRECHART, meta:META, seededVersion:DEFAULT_DATA.version})); storageOK = true; }
+  catch(e){ storageOK = false; }
+  const b = document.getElementById("storagebadge");
+  if (b) b.innerHTML = storageOK ? '<span class="savebadge">saving in this browser</span>'
+    : '<span class="warnbadge">this browser blocks saving - use Export to keep changes</span>';
+}
+function uid(p){ return p + "-" + Math.random().toString(36).slice(2,9); }
+function toast(msg){
+  const t = document.getElementById("toast"); t.textContent = msg || "Copied";
+  t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 1400);
+}
+function copyText(text){
+  const done = ()=>toast("Copied to clipboard");
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); done(); } catch(e){ toast("Copy failed - select and copy manually"); }
+  document.body.removeChild(ta);
+}
+
+// ---------- Fill-in rendering ----------
+const PH_RE = /\{([^{}|:]+):([^{}]*)\}|\{([^{}|:]+)\}|\*\*\*/g;
+function renderFillable(body, container){
+  container.textContent = "";
+  let last = 0, m;
+  PH_RE.lastIndex = 0;
+  while ((m = PH_RE.exec(body)) !== null) {
+    if (m.index > last) container.appendChild(document.createTextNode(body.slice(last, m.index)));
+    if (m[1] !== undefined) {           // {label:opt|opt}
+      const sel = document.createElement("select");
+      sel.title = m[1].trim();
+      m[2].split("|").forEach(opt=>{
+        const o = document.createElement("option");
+        o.value = opt; o.textContent = opt === "" ? "(blank)" : opt;
+        sel.appendChild(o);
+      });
+      container.appendChild(sel);
+    } else {                            // {label} or ***
+      const label = m[3] !== undefined ? m[3].trim() : "fill in";
+      const inp = document.createElement("input");
+      inp.type = "text"; inp.placeholder = label; inp.title = label;
+      inp.size = Math.max(label.length, 6);
+      inp.addEventListener("input", ()=>{ inp.size = Math.max(inp.value.length, label.length, 6); });
+      container.appendChild(inp);
+    }
+    last = PH_RE.lastIndex;
+  }
+  if (last < body.length) container.appendChild(document.createTextNode(body.slice(last)));
+}
+function collectText(node){
+  let out = "";
+  node.childNodes.forEach(ch=>{
+    if (ch.nodeType === 3) out += ch.data;
+    else if (ch.tagName === "INPUT") out += (ch.value.trim() || "***");
+    else if (ch.tagName === "SELECT") out += ch.value;
+    else if (ch.tagName === "BR") out += "\n";
+    else out += collectText(ch);
+  });
+  return out;
+}
+function preview(body){
+  return body.replace(PH_RE, (mm,a,b,c)=> a ? "["+a.trim()+"]" : (c ? "["+c.trim()+"]" : "[___]"));
+}
+
+// ====================== APP (tabs, modal, search, favorites) ======================
+const App = {
+  currentTab: "phrases",
+  showTab(name){
+    document.querySelectorAll("section.tab").forEach(s=>s.classList.remove("active"));
+    document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("active", b.dataset.tab === name));
+    const sec = document.getElementById("tab-" + name);
+    if (sec) sec.classList.add("active");
+    this.currentTab = name;
+    const sr = document.getElementById("tab-search"); if (sr) sr.classList.remove("active");
+  },
+  openModal(html){ document.getElementById("modal").innerHTML = ""; document.getElementById("overlay").classList.add("open"); },
+  closeModal(){ document.getElementById("overlay").classList.remove("open"); },
+
+  openFill(kind, id){
+    const coll = kind === "phrase" ? DATA.phrases : DATA.instructions;
+    const item = coll.find(x=>x.id === id); if (!item) return;
+    const modal = document.getElementById("modal"); modal.innerHTML = "";
+    const h = document.createElement("h3"); h.textContent = item.name; modal.appendChild(h);
+    const c = document.createElement("div"); c.className = "cat";
+    c.textContent = (item.dot ? item.dot + "  ·  " : "") + (item.cat || "Patient instructions"); modal.appendChild(c);
+    let lang = "en";
+    const curBody = ()=> lang === "es" && item.bodyEs ? item.bodyEs : item.body;
+    if (kind !== "phrase" && item.bodyEs) {
+      const tg = document.createElement("div"); tg.className = "langtoggle";
+      const be = document.createElement("button"); be.textContent = "English"; be.className = "on";
+      const bs = document.createElement("button"); bs.textContent = "Español";
+      be.onclick = ()=>{ lang = "en"; be.classList.add("on"); bs.classList.remove("on"); renderFillable(curBody(), fill); };
+      bs.onclick = ()=>{ lang = "es"; bs.classList.add("on"); be.classList.remove("on"); renderFillable(curBody(), fill); };
+      tg.appendChild(be); tg.appendChild(bs); modal.appendChild(tg);
+    }
+    const fill = document.createElement("div"); fill.className = "filled";
+    renderFillable(item.body, fill); modal.appendChild(fill);
+    const acts = document.createElement("div"); acts.className = "modal-actions";
+    const mk = (label, cls, fn)=>{ const b=document.createElement("button"); b.className="btn "+cls; b.textContent=label; b.onclick=fn; acts.appendChild(b); };
+    if (kind !== "phrase") mk("Print", "", ()=>App.printSheet(item.name, collectText(fill), lang));
+    mk("Copy with blanks (***)", "", ()=>{ copyText(curBody().replace(PH_RE, "***")); });
+    mk("Copy", "primary", ()=>{ copyText(collectText(fill)); App.closeModal(); });
+    mk("Close", "", ()=>App.closeModal());
+    modal.appendChild(acts);
+    document.getElementById("overlay").classList.add("open");
+    const f = fill.querySelector("input,select"); if (f) f.focus();
+  },
+  printSheet(title, text, lang){
+    document.getElementById("pr-title").textContent = title;
+    document.getElementById("pr-clinic").textContent = DATA.clinic || " ";
+    document.getElementById("pr-body").textContent = text.replace(/\*\*\*/g, "________");
+    document.getElementById("pr-foot").textContent =
+      (lang === "es" ? "Entregado el " : "Provided ") + new Date().toLocaleDateString() +
+      (lang === "es" ? ". Si tiene preguntas, llame al consultorio." : ". Questions? Call the office.");
+    window.print();
+  },
+
+  toggleFav(kind, id, ev){
+    if (ev) ev.stopPropagation();
+    const key = kind + ":" + id;
+    const i = FAVS.indexOf(key);
+    if (i >= 0) FAVS.splice(i,1); else FAVS.push(key);
+    saveState(); renderAll();
+  },
+  isFav(kind, id){ return FAVS.includes(kind + ":" + id); },
+
+  exportData(){
+    const blob = new Blob([JSON.stringify({data:DATA, favs:FAVS}, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "rheumpad-library.json";
+    a.click(); URL.revokeObjectURL(a.href);
+    META.lastExport = Date.now(); saveState(); App.checkBackup();
+    toast("Library exported");
+  },
+  checkBackup(){
+    const bar = document.getElementById("backupbar");
+    if (!bar) return;
+    const WEEK = 7 * 864e5, now = Date.now();
+    const anchor = META.lastExport || META.firstRun || now;
+    const due = storageOK && now - anchor > WEEK && now > (META.snoozeUntil || 0);
+    bar.classList.toggle("show", due);
+  },
+  snoozeBackup(){
+    META.snoozeUntil = Date.now() + 3 * 864e5; saveState(); App.checkBackup();
+  },
+  help(){
+    const modal = document.getElementById("modal"); modal.innerHTML = "";
+    const h = document.createElement("h3"); h.textContent = "How RheumPad works"; modal.appendChild(h);
+    const blocks = [
+      ["Quick launcher", "Press . (period) or Ctrl+K anywhere. Type a shortcut like .mtxstart or any name, hit Enter. Phrases without blanks copy instantly; everything else opens ready to fill. Arrow keys move through matches."],
+      ["Blanks", "In any phrase or template body: {dose} makes a fill-in box, {severity:mild|moderate|severe} makes a dropdown, *** makes a generic blank. Empty boxes copy as *** so you catch them in the note."],
+      ["Where your work saves", "Everything you edit saves in this browser only, on this computer. Export (top right) writes your whole library to a file; Import loads it anywhere. Moving between computers or backing up = Export here, Import there."],
+      ["Handouts", "Patient instruction sheets fill like phrases, toggle to Spanish where available, and Print gives a clean one-page sheet with your clinic name (set it in Settings)."],
+      ["No patient information", "The app stores no names, dates of birth, or identifiers by design. Pre-chart uses slot numbers matched to your schedule order. Keep it that way."],
+      ["Make it yours", "Settings edits every phrase, template, pick list, handout, and drug card. Star anything to pin it to the top bar."]
+    ];
+    blocks.forEach(([t, txt])=>{
+      const b = document.createElement("div"); b.className = "helpblock";
+      const bt = document.createElement("b"); bt.textContent = t;
+      const p = document.createElement("p"); p.textContent = txt;
+      b.appendChild(bt); b.appendChild(p); modal.appendChild(b);
+    });
+    const acts = document.createElement("div"); acts.className = "modal-actions";
+    const cl = document.createElement("button"); cl.className = "btn primary"; cl.textContent = "Close";
+    cl.onclick = ()=>App.closeModal(); acts.appendChild(cl); modal.appendChild(acts);
+    document.getElementById("overlay").classList.add("open");
+  },
+  importData(inp){
+    const f = inp.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ()=>{
+      try {
+        const obj = JSON.parse(r.result);
+        if (!obj.data || !obj.data.phrases) throw new Error("bad file");
+        DATA = obj.data; FAVS = obj.favs || [];
+        saveState(); renderAll(); toast("Library imported");
+      } catch(e){ toast("Not a valid RheumPad file"); }
+    };
+    r.readAsText(f); inp.value = "";
+  },
+
+  search(q){
+    q = q.trim().toLowerCase();
+    let sec = document.getElementById("tab-search");
+    if (!sec) {
+      sec = document.createElement("section"); sec.className = "tab"; sec.id = "tab-search";
+      sec.innerHTML = '<p class="tab-intro">Search results</p><div class="cardgrid" id="search-grid"></div>';
+      document.querySelector("main").appendChild(sec);
+    }
+    if (!q) { sec.classList.remove("active"); this.showTab(this.currentTab); return; }
+    document.querySelectorAll("section.tab").forEach(s=>s.classList.remove("active"));
+    sec.classList.add("active");
+    const grid = document.getElementById("search-grid"); grid.innerHTML = "";
+    const hits = [];
+    DATA.phrases.forEach(p=>{ if ((p.name+" "+(p.dot||"")+" "+p.cat+" "+p.body).toLowerCase().includes(q)) hits.push({kind:"phrase", item:p, tag:p.dot || "phrase"}); });
+    DATA.templates.forEach(t=>{ if ((t.name+" "+t.cat+" "+t.sections.map(s=>s.title+" "+s.body).join(" ")).toLowerCase().includes(q)) hits.push({kind:"template", item:t, tag:"template"}); });
+    DATA.picklists.forEach(l=>{ if ((l.name+" "+l.options.join(" ")).toLowerCase().includes(q)) hits.push({kind:"picklist", item:l, tag:"pick list"}); });
+    DATA.instructions.forEach(i2=>{ if ((i2.name+" "+i2.body).toLowerCase().includes(q)) hits.push({kind:"instruction", item:i2, tag:"instructions"}); });
+    (DATA.drugs || []).forEach(d=>{ if ((d.name+" "+d.cls+" "+d.dosing+" "+d.monitor+" "+d.se+" "+d.serious+" "+d.pearls).toLowerCase().includes(q)) hits.push({kind:"drug", item:d, tag:"drug card"}); });
+    (DATA.codes || []).forEach(g=>g.items.forEach(it=>{ if ((it.code+" "+it.desc).toLowerCase().includes(q)) hits.push({kind:"code", item:{...it, name:it.code + " — " + it.desc, body:it.desc}, tag:"code"}); }));
+    if (!hits.length) { grid.innerHTML = '<div class="empty">No matches. Check Settings to add your own phrases.</div>'; return; }
+    hits.forEach(h=>{
+      const card = document.createElement("div"); card.className = "card";
+      card.innerHTML = '<h3></h3><div class="cat"></div><p class="preview"></p>';
+      card.querySelector("h3").textContent = h.item.name;
+      card.querySelector(".cat").textContent = h.tag;
+      card.querySelector(".preview").textContent = h.kind === "template" ? h.item.sections.map(s=>s.title).join(" · ") : (h.kind === "drug" ? h.item.dosing : preview(h.item.body || ""));
+      card.onclick = ()=>{
+        document.getElementById("globalsearch").value = "";
+        if (h.kind === "phrase") { App.showTab("phrases"); App.openFill("phrase", h.item.id); }
+        else if (h.kind === "code") { copyText(h.item.code); }
+        else if (h.kind === "drug") { App.showTab("drugs"); Drugs.openCard(h.item.id); }
+        else if (h.kind === "instruction") { App.showTab("instructions"); App.openFill("instruction", h.item.id); }
+        else if (h.kind === "template") { App.showTab("templates"); Composer.open(h.item.id); }
+        else { App.showTab("picklists"); const el = document.getElementById("pl-" + h.item.id); if (el) el.scrollIntoView({behavior:"smooth"}); }
+      };
+      grid.appendChild(card);
+    });
+  }
+};
+
+// ====================== RENDER: phrases / instructions / favorites ======================
+let phraseCatFilter = "All";
+function renderPhrases(){
+  const cats = ["All", ...new Set(DATA.phrases.map(p=>p.cat))];
+  const catrow = document.getElementById("phrase-cats"); catrow.innerHTML = "";
+  cats.forEach(c=>{
+    const b = document.createElement("button");
+    b.className = "chip cat" + (phraseCatFilter === c ? " on" : "");
+    b.textContent = c;
+    b.onclick = ()=>{ phraseCatFilter = c; renderPhrases(); };
+    catrow.appendChild(b);
+  });
+  const grid = document.getElementById("phrase-grid"); grid.innerHTML = "";
+  const list = DATA.phrases.filter(p=>phraseCatFilter === "All" || p.cat === phraseCatFilter);
+  if (!list.length) { grid.innerHTML = '<div class="empty">No phrases yet. Add yours in Settings.</div>'; return; }
+  list.forEach(p=>{
+    const card = document.createElement("div"); card.className = "card";
+    card.innerHTML = '<h3></h3><div><span class="dot"></span> <span class="cat"></span></div><p class="preview"></p>' +
+      '<button class="star" title="Pin to top bar">&#9733;</button>';
+    card.querySelector("h3").textContent = p.name;
+    card.querySelector(".dot").textContent = p.dot || "";
+    card.querySelector(".cat").textContent = p.cat;
+    card.querySelector(".preview").textContent = preview(p.body);
+    const star = card.querySelector(".star");
+    if (App.isFav("phrase", p.id)) star.classList.add("faved");
+    star.onclick = (e)=>App.toggleFav("phrase", p.id, e);
+    card.onclick = ()=>App.openFill("phrase", p.id);
+    grid.appendChild(card);
+  });
+}
+function renderInstructions(){
+  const grid = document.getElementById("instr-grid"); grid.innerHTML = "";
+  if (!DATA.instructions.length) { grid.innerHTML = '<div class="empty">No instruction sheets yet. Add yours in Settings.</div>'; return; }
+  DATA.instructions.forEach(p=>{
+    const card = document.createElement("div"); card.className = "card";
+    card.innerHTML = '<h3></h3><p class="preview"></p><button class="star" title="Pin to top bar">&#9733;</button>';
+    card.querySelector("h3").textContent = p.name;
+    card.querySelector(".preview").textContent = preview(p.body);
+    const star = card.querySelector(".star");
+    if (App.isFav("instruction", p.id)) star.classList.add("faved");
+    star.onclick = (e)=>App.toggleFav("instruction", p.id, e);
+    card.onclick = ()=>App.openFill("instruction", p.id);
+    grid.appendChild(card);
+  });
+}
+function renderFavbar(){
+  const bar = document.getElementById("favbar");
+  bar.querySelectorAll(".chip").forEach(c=>c.remove());
+  FAVS.forEach(key=>{
+    const [kind, id] = key.split(":");
+    let item, fn;
+    if (kind === "phrase") { item = DATA.phrases.find(x=>x.id===id); fn = ()=>App.openFill("phrase", id); }
+    else if (kind === "instruction") { item = DATA.instructions.find(x=>x.id===id); fn = ()=>App.openFill("instruction", id); }
+    else if (kind === "template") { item = DATA.templates.find(x=>x.id===id); fn = ()=>{ App.showTab("templates"); Composer.open(id); }; }
+    if (!item) return;
+    const b = document.createElement("button"); b.className = "chip";
+    b.innerHTML = "&#9733; "; b.appendChild(document.createTextNode(item.name));
+    b.onclick = fn;
+    bar.appendChild(b);
+  });
+}
+
+// ====================== TEMPLATES + COMPOSER ======================
+function renderTemplates(){
+  const wrap = document.getElementById("template-groups"); wrap.innerHTML = "";
+  const cats = [...new Set(DATA.templates.map(t=>t.cat))];
+  cats.forEach(cat=>{
+    const h = document.createElement("h2"); h.className = "sect"; h.textContent = cat; wrap.appendChild(h);
+    const grid = document.createElement("div"); grid.className = "cardgrid";
+    DATA.templates.filter(t=>t.cat===cat).forEach(t=>{
+      const card = document.createElement("div"); card.className = "card";
+      card.innerHTML = '<h3></h3><p class="preview"></p><button class="star" title="Pin to top bar">&#9733;</button>';
+      card.querySelector("h3").textContent = t.name;
+      card.querySelector(".preview").textContent = t.sections.map(s=>s.title).join(" · ");
+      const star = card.querySelector(".star");
+      if (App.isFav("template", t.id)) star.classList.add("faved");
+      star.onclick = (e)=>App.toggleFav("template", t.id, e);
+      card.onclick = ()=>Composer.open(t.id);
+      grid.appendChild(card);
+    });
+    wrap.appendChild(grid);
+  });
+}
+const Composer = {
+  open(id){
+    const t = DATA.templates.find(x=>x.id===id); if (!t) return;
+    App.showTab("templates");
+    document.getElementById("template-list").style.display = "none";
+    const comp = document.getElementById("composer");
+    comp.style.display = "block"; comp.innerHTML = "";
+    const top = document.createElement("div"); top.className = "comp-top";
+    const h2 = document.createElement("h2"); h2.textContent = t.name;
+    const btns = document.createElement("div"); btns.style.display = "flex"; btns.style.gap = "8px";
+    const back = document.createElement("button"); back.className = "btn"; back.textContent = "← All templates";
+    back.onclick = ()=>Composer.close();
+    const copyAll = document.createElement("button"); copyAll.className = "btn primary"; copyAll.textContent = "Copy full note";
+    copyAll.onclick = ()=>Composer.copyAll();
+    btns.appendChild(back); btns.appendChild(copyAll);
+    top.appendChild(h2); top.appendChild(btns); comp.appendChild(top);
+    t.sections.forEach((s, i)=>{
+      const sec = document.createElement("div"); sec.className = "comp-section";
+      const h4 = document.createElement("h4");
+      const span = document.createElement("span"); span.textContent = s.title;
+      const cbtn = document.createElement("button"); cbtn.className = "btn small"; cbtn.textContent = "Copy section";
+      h4.appendChild(span); h4.appendChild(cbtn); sec.appendChild(h4);
+      const body = document.createElement("div"); body.className = "comp-body"; body.dataset.title = s.title;
+      renderFillable(s.body, body); sec.appendChild(body);
+      cbtn.onclick = ()=>copyText(collectText(body));
+      body.querySelectorAll('input[title="msk"]').forEach(inp=>{
+        const jb = document.createElement("button"); jb.className = "btn small"; jb.style.marginLeft = "6px";
+        jb.textContent = "Use joint exam"; jb.title = "Insert the exam built on the Joint Exam tab";
+        jb.onclick = ()=>{
+          const txt = document.getElementById("je-out").textContent;
+          if (txt.startsWith("Tap joints")) { toast("Build the exam on the Joint Exam tab first"); return; }
+          inp.value = txt.replace(/\n/g, " "); inp.size = Math.min(inp.value.length, 80);
+        };
+        inp.after(jb);
+      });
+      comp.appendChild(sec);
+    });
+    const bottom = document.createElement("div"); bottom.className = "modal-actions"; bottom.style.justifyContent = "flex-start";
+    const copyAll2 = document.createElement("button"); copyAll2.className = "btn primary"; copyAll2.textContent = "Copy full note";
+    copyAll2.onclick = ()=>Composer.copyAll();
+    bottom.appendChild(copyAll2); comp.appendChild(bottom);
+    this.wireCdai(comp);
+    window.scrollTo({top:0});
+  },
+  wireCdai(comp){
+    const g = t => comp.querySelector('input[title="' + t + '"]');
+    const tj = g("tjc"), sj = g("sjc"), pg = g("pga2"), eg = g("ega"), cd = g("cdai");
+    if (!(tj && sj && pg && eg && cd)) return;
+    const lvl = comp.querySelector('select[title="level"]');
+    const recalc = ()=>{
+      const vals = [tj, sj, pg, eg].map(i=>parseFloat(i.value));
+      if (vals.some(isNaN)) return;
+      const cdai = Math.round(vals.reduce((a,b)=>a+b, 0) * 10) / 10;
+      cd.value = cdai; cd.size = Math.max(String(cdai).length, 4);
+      if (lvl) lvl.value = cdai <= 2.8 ? "remission" : cdai <= 10 ? "low" : cdai <= 22 ? "moderate" : "high";
+    };
+    [tj, sj, pg, eg].forEach(i=>i.addEventListener("input", recalc));
+    const jb = document.createElement("button"); jb.className = "btn small"; jb.style.marginLeft = "6px";
+    jb.textContent = "Use joint exam counts"; jb.title = "Fill TJC/SJC from the Joint Exam tab";
+    jb.onclick = ()=>{
+      tj.value = document.getElementById("tjc").textContent;
+      sj.value = document.getElementById("sjc").textContent;
+      recalc();
+    };
+    sj.after(jb);
+  },
+  close(){
+    document.getElementById("composer").style.display = "none";
+    document.getElementById("composer").innerHTML = "";
+    document.getElementById("template-list").style.display = "block";
+  },
+  copyAll(){
+    const parts = [];
+    document.querySelectorAll("#composer .comp-body").forEach(b=>{
+      parts.push(b.dataset.title.toUpperCase() + ":\n" + collectText(b));
+    });
+    copyText(parts.join("\n\n"));
+  }
+};
+
+// ====================== PICK LISTS ======================
+const plState = {};
+const PL = {
+  copyAll(){
+    const parts = [];
+    DATA.picklists.forEach(l=>{
+      if (!plState[l.id] || !plState[l.id].size) return;
+      const sel = l.options.filter(o=>plState[l.id].has(o));
+      if (sel.length) parts.push((l.prefix || "") + sel.join(l.joiner || ", ") + (l.suffix || ""));
+    });
+    if (!parts.length) { toast("Nothing selected in any list"); return; }
+    copyText(parts.join("\n"));
+  },
+  clearAll(){
+    Object.values(plState).forEach(s=>s.clear());
+    renderPicklists();
+  }
+};
+function renderPicklists(){
+  const wrap = document.getElementById("picklist-wrap"); wrap.innerHTML = "";
+  DATA.picklists.forEach(l=>{
+    if (!plState[l.id]) plState[l.id] = new Set();
+    const block = document.createElement("div"); block.className = "comp-section"; block.id = "pl-" + l.id;
+    const h4 = document.createElement("h4");
+    const span = document.createElement("span"); span.textContent = l.name + (l.mode === "multi" ? "  (pick any)" : "  (pick one)");
+    const right = document.createElement("div"); right.style.display = "flex"; right.style.gap = "6px";
+    const clr = document.createElement("button"); clr.className = "btn small"; clr.textContent = "Clear";
+    const cp = document.createElement("button"); cp.className = "btn small primary"; cp.textContent = "Copy";
+    right.appendChild(clr); right.appendChild(cp);
+    h4.appendChild(span); h4.appendChild(right); block.appendChild(h4);
+    const chips = document.createElement("div"); chips.className = "pc-chips"; chips.style.marginBottom = "10px";
+    const out = document.createElement("div"); out.className = "filled"; out.style.margin = "0";
+    const update = ()=>{
+      const sel = l.options.filter(o=>plState[l.id].has(o));
+      out.textContent = sel.length ? (l.prefix || "") + sel.join(l.joiner || ", ") + (l.suffix || "") : "Tap options above to build the sentence.";
+      chips.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", plState[l.id].has(c.dataset.opt)));
+    };
+    l.options.forEach(o=>{
+      const c = document.createElement("button"); c.className = "chip"; c.textContent = o; c.dataset.opt = o;
+      c.onclick = ()=>{
+        if (l.mode === "single") { const had = plState[l.id].has(o); plState[l.id].clear(); if (!had) plState[l.id].add(o); }
+        else { plState[l.id].has(o) ? plState[l.id].delete(o) : plState[l.id].add(o); }
+        update();
+      };
+      chips.appendChild(c);
+    });
+    clr.onclick = ()=>{ plState[l.id].clear(); update(); };
+    cp.onclick = ()=>{
+      const sel = l.options.filter(o=>plState[l.id].has(o));
+      if (!sel.length) { toast("Nothing selected"); return; }
+      copyText((l.prefix || "") + sel.join(l.joiner || ", ") + (l.suffix || ""));
+    };
+    block.appendChild(chips); block.appendChild(out); update();
+    wrap.appendChild(block);
+  });
+}
+
+// ====================== JOINT EXAM ======================
+const JE = {
+  joints: [], state: {}, normal: false,
+  build(){
+    const J = [];
+    const fingers = ["1","2","3","4","5"];
+    [["L","left",1],["R","right",-1]].forEach(([sd,side])=>{
+      const mirror = (x)=> sd === "L" ? x : 360 - x;
+      J.push({id:sd+"sho", label:side+" shoulder", in28:true, cx:mirror(123), cy:95, r:11});
+      J.push({id:sd+"elb", label:side+" elbow", in28:true, cx:mirror(100), cy:172, r:10});
+      J.push({id:sd+"wri", label:side+" wrist", in28:true, cx:mirror(84), cy:240, r:10});
+      J.push({id:sd+"hip", label:side+" hip", in28:false, cx:mirror(152), cy:272, r:11});
+      J.push({id:sd+"kne", label:side+" knee", in28:true, cx:mirror(146), cy:372, r:11});
+      J.push({id:sd+"ank", label:side+" ankle", in28:false, cx:mirror(141), cy:452, r:10});
+      fingers.forEach((f,i)=>{
+        const x = mirror(44 + i*16);
+        J.push({id:sd+"mcp"+f, label:side+" MCP "+f, in28:true, cx:x, cy:286, r:6.5});
+        J.push({id:sd+"pip"+f, label:side+(f==="1"?" thumb IP":" PIP "+f), in28:true, cx:x, cy:310, r:6.5});
+        if (f !== "1") J.push({id:sd+"dip"+f, label:side+" DIP "+f, in28:false, cx:x, cy:332, r:5});
+      });
+      fingers.forEach((f,i)=>{
+        const x = mirror(101 + i*15);
+        J.push({id:sd+"mtp"+f, label:side+" MTP "+f, in28:false, cx:x, cy:492, r:6});
+      });
+    });
+    this.joints = J;
+  },
+  render(){
+    this.build();
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 360 520");
+    svg.setAttribute("style", "width:100%; height:auto; display:block;");
+    // silhouette
+    const sil = document.createElementNS(NS, "g");
+    sil.setAttribute("fill", "#efece4"); sil.setAttribute("stroke", "#d9d3c6"); sil.setAttribute("stroke-width", "1.5");
+    const mk = (tag, attrs)=>{ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); sil.appendChild(e); };
+    mk("circle", {cx:180, cy:40, r:22});
+    mk("rect", {x:132, y:70, width:96, height:200, rx:34});                       // torso
+    mk("rect", {x:88, y:88, width:26, height:160, rx:13, transform:"rotate(9 101 168)"});   // left arm
+    mk("rect", {x:246, y:88, width:26, height:160, rx:13, transform:"rotate(-9 259 168)"}); // right arm
+    mk("rect", {x:34, y:270, width:84, height:74, rx:17});                        // left hand
+    mk("rect", {x:242, y:270, width:84, height:74, rx:17});                       // right hand
+    mk("rect", {x:134, y:262, width:38, height:200, rx:18});                      // left leg
+    mk("rect", {x:188, y:262, width:38, height:200, rx:18});                      // right leg
+    mk("rect", {x:88, y:470, width:88, height:34, rx:15});                        // left foot
+    mk("rect", {x:184, y:470, width:88, height:34, rx:15});                       // right foot
+    svg.appendChild(sil);
+    this.joints.forEach(j=>{
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", j.cx); c.setAttribute("cy", j.cy); c.setAttribute("r", j.r);
+      c.classList.add("joint"); c.id = "j-" + j.id;
+      const t = document.createElementNS(NS, "title"); t.textContent = j.label; c.appendChild(t);
+      c.addEventListener("click", ()=>JE.cycle(j.id));
+      svg.appendChild(c);
+    });
+    const host = document.getElementById("je-svg"); host.innerHTML = ""; host.appendChild(svg);
+    ["je-pga","je-ega"].forEach(id=>document.getElementById(id).addEventListener("input", ()=>JE.update()));
+    this.update();
+  },
+  cycle(id){
+    this.normal = false;
+    const cur = this.state[id] || 0;
+    this.state[id] = (cur + 1) % 4;   // 0 none, 1 tender, 2 swollen, 3 both
+    this.update();
+  },
+  clearAll(){ this.state = {}; this.normal = false; this.update(); },
+  setNormal(){ this.state = {}; this.normal = true; this.update(); },
+  update(){
+    this.joints.forEach(j=>{
+      const el = document.getElementById("j-" + j.id); if (!el) return;
+      el.classList.remove("tender","swollen","both");
+      const s = this.state[j.id] || 0;
+      if (s === 1) el.classList.add("tender");
+      if (s === 2) el.classList.add("swollen");
+      if (s === 3) el.classList.add("both");
+    });
+    const tender = this.joints.filter(j=>{const s=this.state[j.id]||0; return s===1||s===3;});
+    const swollen = this.joints.filter(j=>{const s=this.state[j.id]||0; return s===2||s===3;});
+    const t28 = tender.filter(j=>j.in28).length, s28 = swollen.filter(j=>j.in28).length;
+    document.getElementById("tjc").textContent = t28;
+    document.getElementById("sjc").textContent = s28;
+    document.getElementById("tjc-all").textContent = tender.length;
+    document.getElementById("sjc-all").textContent = swollen.length;
+    // CDAI: TJC28 + SJC28 + patient global + provider global
+    const pga = parseFloat(document.getElementById("je-pga").value);
+    const ega = parseFloat(document.getElementById("je-ega").value);
+    let cdaiTxt = "";
+    if (!isNaN(pga) && !isNaN(ega)) {
+      const cdai = Math.round((t28 + s28 + pga + ega) * 10) / 10;
+      const level = cdai <= 2.8 ? "remission" : cdai <= 10 ? "low" : cdai <= 22 ? "moderate" : "high";
+      document.getElementById("je-cdai").textContent = cdai;
+      cdaiTxt = "\nCDAI " + cdai + " (" + level + (level === "remission" ? "" : " disease activity") + ").";
+    } else {
+      document.getElementById("je-cdai").textContent = "–";
+    }
+    const out = document.getElementById("je-out");
+    if (this.normal) {
+      out.textContent = "Joint exam: No tender or swollen joints. TJC28 0, SJC28 0. No synovitis, effusions, or deformities appreciated. Full range of motion throughout." + cdaiTxt;
+    } else if (!tender.length && !swollen.length) {
+      out.textContent = "Tap joints on the diagram to build the exam, or use \"Mark exam normal\".";
+    } else {
+      let txt = "Joint exam: TJC28 " + t28 + ", SJC28 " + s28;
+      if (tender.length > t28 || swollen.length > s28) txt += " (all joints assessed: " + tender.length + " tender, " + swollen.length + " swollen)";
+      txt += ".";
+      if (tender.length) txt += "\nTender: " + tender.map(j=>j.label).join(", ") + ".";
+      if (swollen.length) txt += "\nSwollen: " + swollen.map(j=>j.label).join(", ") + ".";
+      txt += "\nNo other tender or swollen joints. Remainder of joints with full range of motion." + cdaiTxt;
+      out.textContent = txt;
+    }
+  },
+  copy(){
+    const out = document.getElementById("je-out").textContent;
+    if (out.startsWith("Tap joints")) { toast("Nothing marked yet"); return; }
+    copyText(out);
+  }
+};
+
+// ====================== DRUG CARDS ======================
+const Drugs = {
+  render(){
+    const wrap = document.getElementById("drug-groups"); wrap.innerHTML = "";
+    const drugs = DATA.drugs || [];
+    if (!drugs.length) { wrap.innerHTML = '<div class="empty">No drug cards yet. Add them in Settings.</div>'; return; }
+    [...new Set(drugs.map(d=>d.cls))].forEach(cls=>{
+      const h = document.createElement("h2"); h.className = "sect"; h.textContent = cls; wrap.appendChild(h);
+      const grid = document.createElement("div"); grid.className = "cardgrid";
+      drugs.filter(d=>d.cls===cls).forEach(d=>{
+        const card = document.createElement("div"); card.className = "card";
+        card.innerHTML = '<h3></h3><p class="preview"></p>';
+        card.querySelector("h3").textContent = d.name;
+        card.querySelector(".preview").textContent = "Monitor: " + d.monitor;
+        card.onclick = ()=>Drugs.openCard(d.id);
+        grid.appendChild(card);
+      });
+      wrap.appendChild(grid);
+    });
+  },
+  openCard(id){
+    const d = (DATA.drugs || []).find(x=>x.id===id); if (!d) return;
+    const modal = document.getElementById("modal"); modal.innerHTML = "";
+    const h = document.createElement("h3"); h.textContent = d.name; modal.appendChild(h);
+    const c = document.createElement("div"); c.className = "cat"; c.textContent = d.cls; modal.appendChild(c);
+    const blocks = [["Dosing", d.dosing], ["Monitoring", d.monitor], ["Common side effects", d.se],
+      ["Serious & red flags", d.serious, true], ["Pearls", d.pearls]];
+    blocks.forEach(([label, txt, warn])=>{
+      if (!txt) return;
+      const b = document.createElement("div"); b.className = "drugblock" + (warn ? " warn" : "");
+      const t = document.createElement("b"); t.textContent = label;
+      const p = document.createElement("p"); p.textContent = txt;
+      b.appendChild(t); b.appendChild(p); modal.appendChild(b);
+    });
+    const acts = document.createElement("div"); acts.className = "modal-actions";
+    const cp = document.createElement("button"); cp.className = "btn"; cp.textContent = "Copy card";
+    cp.onclick = ()=>copyText(d.name + "\n" + blocks.filter(b=>b[1]).map(b=>b[0].toUpperCase() + ": " + b[1]).join("\n"));
+    const cl = document.createElement("button"); cl.className = "btn primary"; cl.textContent = "Close";
+    cl.onclick = ()=>App.closeModal();
+    acts.appendChild(cp); acts.appendChild(cl); modal.appendChild(acts);
+    document.getElementById("overlay").classList.add("open");
+  }
+};
+
+// ====================== E/M LEVEL HELPER + CODES ======================
+const EM = {
+  ptype: "est",
+  PROB: [
+    {lv:2, label:"1 stable chronic illness (stable gout on ULT)"},
+    {lv:2, label:"Acute uncomplicated problem"},
+    {lv:3, label:"2+ stable chronic illnesses (RA + osteoporosis)"},
+    {lv:3, label:"Chronic illness with exacerbation (RA flare)"},
+    {lv:3, label:"New undiagnosed problem, uncertain prognosis (+ANA with symptoms)"},
+    {lv:4, label:"Chronic illness with SEVERE exacerbation (nephritis flare)"},
+    {lv:4, label:"Threat to life or organ (GCA with visual symptoms)"}
+  ],
+  DATAC: [
+    {lv:2, label:"Reviewed/ordered 2 unique tests"},
+    {lv:3, label:"Reviewed/ordered 3+ unique tests"},
+    {lv:3, label:"Independently interpreted imaging myself"},
+    {lv:3, label:"Discussed with external physician/source"},
+    {lv:4, label:"Two of: 3+ tests, own image interpretation, external discussion"}
+  ],
+  RISK: [
+    {lv:2, label:"OTC meds, PT, minor illness care"},
+    {lv:3, label:"Prescription drug management (start, adjust, or continue)"},
+    {lv:3, label:"Social determinants limiting diagnosis or treatment"},
+    {lv:4, label:"Drug therapy needing intensive toxicity monitoring (MTX, biologics, CYC)"},
+    {lv:4, label:"Decision regarding hospitalization"}
+  ],
+  CODE: {est:{1:"99212",2:"99213",3:"99214",4:"99215"}, new:{1:"99202",2:"99203",3:"99204",4:"99205"}},
+  TIME: {est:[[55,"99215 + 99417 (prolonged)"],[40,"99215"],[30,"99214"],[20,"99213"],[10,"99212"]],
+         new:[[75,"99205 + 99417 (prolonged)"],[60,"99205"],[45,"99204"],[30,"99203"],[15,"99202"]]},
+  LVLNAME: {1:"straightforward",2:"low",3:"moderate",4:"high"},
+  HINT: {
+    prob:{3:"problems column: document 2+ chronic illnesses addressed, or an exacerbation, or a new undiagnosed problem",
+          4:"problems column: a severe exacerbation or organ/life threat must truly be present (nephritis flare, GCA with visual symptoms)"},
+    data:{3:"data column: name 3+ unique tests reviewed/ordered, or personally interpret an image, or document an external discussion",
+          4:"data column: document two of the three moderate data categories"},
+    risk:{3:"risk column: state prescription drug management explicitly in the plan",
+          4:"risk column: if on MTX/biologic with safety-lab monitoring, document that intensive toxicity monitoring"}
+  },
+  init(){
+    const mk = (host, defs, col)=>{
+      const el = document.getElementById(host);
+      defs.forEach((d, i)=>{
+        const c = document.createElement("button"); c.className = "chip"; c.textContent = d.label;
+        c.dataset.lv = d.lv; c.dataset.col = col;
+        c.onclick = ()=>{ c.classList.toggle("on"); EM.update(); };
+        el.appendChild(c);
+      });
+    };
+    mk("em-prob", this.PROB, "prob"); mk("em-data", this.DATAC, "data"); mk("em-risk", this.RISK, "risk");
+    document.getElementById("em-est").onclick = ()=>{ this.ptype = "est"; document.getElementById("em-est").classList.add("on"); document.getElementById("em-new").classList.remove("on"); this.update(); };
+    document.getElementById("em-new").onclick = ()=>{ this.ptype = "new"; document.getElementById("em-new").classList.add("on"); document.getElementById("em-est").classList.remove("on"); this.update(); };
+    document.getElementById("em-min").addEventListener("input", ()=>this.update());
+    this.update();
+  },
+  colLevel(col){
+    let lv = 1;
+    document.querySelectorAll('#tab-codes .chip.on[data-col="' + col + '"]').forEach(c=>{ lv = Math.max(lv, parseInt(c.dataset.lv)); });
+    return lv;
+  },
+  selected(col){
+    return [...document.querySelectorAll('#tab-codes .chip.on[data-col="' + col + '"]')].map(c=>c.textContent);
+  },
+  mdm(){
+    const lv = [this.colLevel("prob"), this.colLevel("data"), this.colLevel("risk")];
+    const sorted = [...lv].sort((a,b)=>a-b);
+    return {cols:{prob:lv[0], data:lv[1], risk:lv[2]}, level: sorted[1]};
+  },
+  timeCode(){
+    const min = parseInt(document.getElementById("em-min").value);
+    if (isNaN(min) || min <= 0) return null;
+    for (const [th, code] of this.TIME[this.ptype]) if (min >= th) return code;
+    return "below time threshold - use MDM";
+  },
+  update(){
+    const m = this.mdm();
+    const anySel = document.querySelectorAll("#tab-codes .chip.on").length > 0;
+    const mdmCode = this.CODE[this.ptype][m.level];
+    let txt = "";
+    if (anySel) {
+      txt += "MDM: " + this.LVLNAME[m.level] + " → supports " + mdmCode + ".";
+      if (m.level < 4) {
+        const target = m.level + 1;
+        const below = Object.entries(m.cols).filter(([k, v])=>v < target);
+        const needMore = 2 - Object.values(m.cols).filter(v=>v >= target).length;
+        const hints = below.map(([k])=>this.HINT[k][target] || null).filter(Boolean);
+        if (hints.length) txt += "\nTo support " + this.CODE[this.ptype][target] + ", raise " + needMore + " column" + (needMore > 1 ? "s" : "") + " (only if clinically true): " + hints.slice(0, needMore).join("; ") + ".";
+      } else {
+        txt += "\nHighest MDM level.";
+      }
+    } else {
+      txt += "Toggle the elements of today's visit to see the supported level.";
+    }
+    const tc = this.timeCode();
+    if (tc) txt += "\nBy time: " + tc + ".";
+    if (anySel && tc && !tc.startsWith("below")) txt += "\nBill the higher of the two.";
+    document.getElementById("em-out").textContent = txt;
+  },
+  copyMdm(){
+    const p = this.selected("prob"), d = this.selected("data"), r = this.selected("risk");
+    if (!p.length && !d.length && !r.length) { toast("Toggle some elements first"); return; }
+    const m = this.mdm();
+    copyText("Medical decision making (" + this.LVLNAME[m.level] + "):" +
+      (p.length ? "\nProblems addressed: " + p.join("; ") + "." : "") +
+      (d.length ? "\nData reviewed/analyzed: " + d.join("; ") + "." : "") +
+      (r.length ? "\nRisk: " + r.join("; ") + "." : ""));
+  },
+  copyTime(){
+    const min = parseInt(document.getElementById("em-min").value);
+    if (isNaN(min) || min <= 0) { toast("Enter total minutes first"); return; }
+    copyText("Total time on the date of this encounter: " + min + " minutes, including chart and results review, the visit itself, care coordination, orders, and documentation.");
+  },
+  clear(){
+    document.querySelectorAll("#tab-codes .chip.on").forEach(c=>c.classList.remove("on"));
+    document.getElementById("em-min").value = "";
+    this.update();
+  }
+};
+const Codes = {
+  render(){
+    const wrap = document.getElementById("code-groups"); wrap.innerHTML = "";
+    (DATA.codes || []).forEach(g=>{
+      const block = document.createElement("div"); block.className = "comp-section";
+      const h4 = document.createElement("h4");
+      const sp = document.createElement("span"); sp.textContent = g.name; h4.appendChild(sp); block.appendChild(h4);
+      const chips = document.createElement("div"); chips.className = "pc-chips";
+      g.items.forEach(it=>{
+        const c = document.createElement("button"); c.className = "chip";
+        c.innerHTML = "<b></b>&nbsp;"; c.querySelector("b").textContent = it.code;
+        c.appendChild(document.createTextNode(it.desc));
+        c.title = "Copy " + it.code;
+        c.onclick = ()=>copyText(it.code);
+        chips.appendChild(c);
+      });
+      block.appendChild(chips); wrap.appendChild(block);
+    });
+  }
+};
+
+// ====================== QUICK LAUNCHER ======================
+const Launcher = {
+  items: [], sel: 0,
+  open(prefill){
+    document.getElementById("qwrap").classList.add("open");
+    const inp = document.getElementById("qinput");
+    inp.value = prefill || ""; inp.focus();
+    this.filter(inp.value);
+  },
+  close(){ document.getElementById("qwrap").classList.remove("open"); },
+  isOpen(){ return document.getElementById("qwrap").classList.contains("open"); },
+  filter(q){
+    q = q.trim().toLowerCase().replace(/^\./, "");
+    const pool = [];
+    DATA.phrases.forEach(p=>pool.push({kind:"phrase", tag:p.dot || "", name:p.name, item:p}));
+    DATA.instructions.forEach(i2=>pool.push({kind:"instruction", tag:"handout", name:i2.name, item:i2}));
+    DATA.templates.forEach(t=>pool.push({kind:"template", tag:"template", name:t.name, item:t}));
+    (DATA.drugs || []).forEach(d=>pool.push({kind:"drug", tag:"drug", name:d.name, item:d}));
+    (DATA.codes || []).forEach(g=>g.items.forEach(it=>pool.push({kind:"code", tag:it.code, name:it.desc, item:it})));
+    let hits;
+    if (!q) hits = pool.slice(0, 8);
+    else {
+      const scored = pool.map(x=>{
+        const dot = x.tag.replace(/^\./, "").toLowerCase(), nm = x.name.toLowerCase();
+        let s = -1;
+        if (dot && dot.startsWith(q)) s = 0;
+        else if (nm.startsWith(q)) s = 1;
+        else if (dot.includes(q) || nm.includes(q)) s = 2;
+        return {x, s};
+      }).filter(r=>r.s >= 0);
+      scored.sort((a,b)=>a.s - b.s);
+      hits = scored.slice(0, 8).map(r=>r.x);
+    }
+    this.items = hits; this.sel = 0; this.renderList();
+  },
+  renderList(){
+    const list = document.getElementById("qlist"); list.innerHTML = "";
+    if (!this.items.length) { list.innerHTML = '<div class="qrow" style="cursor:default;color:var(--muted)">No matches</div>'; return; }
+    this.items.forEach((x, i)=>{
+      const row = document.createElement("div"); row.className = "qrow" + (i === this.sel ? " sel" : "");
+      const dot = document.createElement("span"); dot.className = "qdot"; dot.textContent = x.tag || "—";
+      const nm = document.createElement("span"); nm.textContent = x.name;
+      const kd = document.createElement("span"); kd.className = "qkind";
+      kd.textContent = x.kind === "code" ? "copies code" : x.kind === "drug" ? "opens card" : x.kind === "phrase" ? (PH_RE.test(x.item.body) ? "fill + copy" : "copies instantly") : (x.kind === "template" ? "opens composer" : "fill + copy");
+      PH_RE.lastIndex = 0;
+      row.appendChild(dot); row.appendChild(nm); row.appendChild(kd);
+      row.onclick = ()=>{ this.sel = i; this.activate(); };
+      list.appendChild(row);
+    });
+  },
+  activate(){
+    const x = this.items[this.sel]; if (!x) return;
+    this.close();
+    if (x.kind === "template") { App.showTab("templates"); Composer.open(x.item.id); return; }
+    if (x.kind === "drug") { App.showTab("drugs"); Drugs.openCard(x.item.id); return; }
+    if (x.kind === "code") { copyText(x.item.code); return; }
+    PH_RE.lastIndex = 0;
+    if (PH_RE.test(x.item.body)) { PH_RE.lastIndex = 0; App.openFill(x.kind, x.item.id); }
+    else copyText(x.item.body);
+  },
+  key(e){
+    if (e.key === "Escape") { this.close(); return; }
+    if (e.key === "ArrowDown") { e.preventDefault(); this.sel = Math.min(this.sel + 1, this.items.length - 1); this.renderList(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); this.sel = Math.max(this.sel - 1, 0); this.renderList(); }
+    else if (e.key === "Enter") { e.preventDefault(); this.activate(); }
+  }
+};
+
+// ====================== TAPER BUILDER ======================
+const Taper = {
+  fmt(d){ return d.toLocaleDateString("en-US", {month:"short", day:"numeric"}); },
+  read(){
+    const v = id => document.getElementById(id).value;
+    return {
+      drug: v("tp-drug"), start: parseFloat(v("tp-start")), step: parseFloat(v("tp-step")),
+      int: parseInt(v("tp-int")) || 1, unit: v("tp-unit"), target: parseFloat(v("tp-target")) || 0,
+      date: v("tp-date") ? new Date(v("tp-date") + "T12:00:00") : new Date()
+    };
+  },
+  build(){
+    const p = this.read();
+    const noteEl = document.getElementById("taper-note"), ptEl = document.getElementById("taper-pt");
+    if (!(p.start > 0) || !(p.step > 0) || p.target >= p.start) {
+      noteEl.textContent = "Enter a start dose, a decrease amount, and a target below the start dose.";
+      ptEl.textContent = ""; return;
+    }
+    const days = p.int * (p.unit === "weeks" ? 7 : 1);
+    const rows = [];
+    let dose = p.start, cur = new Date(p.date);
+    while (dose > p.target && rows.length < 30) {
+      const from = new Date(cur), to = new Date(cur); to.setDate(to.getDate() + days - 1);
+      rows.push({dose: Math.round(dose * 10) / 10, from, to});
+      cur.setDate(cur.getDate() + days);
+      dose = Math.round((dose - p.step) * 10) / 10;
+    }
+    const unitTxt = p.unit === "weeks" ? (p.int === 1 ? "1 week" : p.int + " weeks") : (p.int === 1 ? "1 day" : p.int + " days");
+    const note = p.drug.charAt(0).toUpperCase() + p.drug.slice(1) + " taper starting " + this.fmt(p.date) + ": " +
+      rows.map(r=>r.dose + " mg daily x " + unitTxt + " (" + this.fmt(r.from) + "–" + this.fmt(r.to) + ")").join("; ") +
+      (p.target > 0 ? "; then continue " + p.target + " mg daily until reassessment." : "; then discontinue.") +
+      " Counseled not to stop abruptly and to call if symptoms recur during the taper.";
+    const pt = "YOUR " + p.drug.toUpperCase() + " SCHEDULE\n" +
+      rows.map((r,i)=>"Step " + (i+1) + " (" + this.fmt(r.from) + " to " + this.fmt(r.to) + "): take " + r.dose + " mg every morning").join("\n") +
+      "\n" + (p.target > 0 ? "After that: stay on " + p.target + " mg every morning until we talk." : "After that: stop.") +
+      "\nTake with food in the morning. Do not stop suddenly. Call us if your symptoms come back during the taper.";
+    noteEl.textContent = note; ptEl.textContent = pt;
+  },
+  copy(which){
+    const el = document.getElementById(which === "note" ? "taper-note" : "taper-pt");
+    if (!el.textContent || el.textContent.startsWith("Enter a start")) { toast("Fill the taper fields first"); return; }
+    copyText(el.textContent);
+  },
+  init(){
+    const d = new Date();
+    document.getElementById("tp-date").value = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+    ["tp-drug","tp-start","tp-step","tp-int","tp-unit","tp-target","tp-date"].forEach(id=>{
+      document.getElementById(id).addEventListener("input", ()=>this.build());
+    });
+    this.build();
+  }
+};
+
+// ====================== PRE-CHART ======================
+const PC = {
+  LABS: ["CBC","CMP","ESR","CRP","uric acid","dsDNA / C3 C4","UA protein","drug level","imaging result","DEXA"],
+  TASKS: ["refills due","order labs","order imaging","prior auth","DEXA due","vaccines","injection likely","discuss taper","discuss escalation","PT referral"],
+  VISITS: ["Follow-up","New consult","Med check","Infusion","Procedure"],
+  addSlot(){
+    PRECHART.push({visit:"Follow-up", dx:"", points:"", labs:[], meds:"", questions:"", tasks:[]});
+    saveState(); this.render();
+  },
+  removeSlot(i){ PRECHART.splice(i,1); saveState(); this.render(); },
+  clearDay(){
+    if (!PRECHART.length) return;
+    if (confirm("Clear all pre-chart slots for the day?")) { PRECHART = []; saveState(); this.render(); }
+  },
+  slotText(s, i){
+    const lines = ["PATIENT " + (i+1) + " — " + s.visit + (s.dx ? " — " + s.dx : "")];
+    if (s.points) lines.push("Key points: " + s.points);
+    if (s.labs.length) lines.push("Review labs: " + s.labs.join(", "));
+    if (s.meds) lines.push("Verify meds: " + s.meds);
+    if (s.questions) lines.push("Ask: " + s.questions);
+    if (s.tasks.length) lines.push("Tasks: " + s.tasks.join(", "));
+    return lines.join("\n");
+  },
+  copySlot(i){ copyText(this.slotText(PRECHART[i], i)); },
+  copyAll(){
+    if (!PRECHART.length) { toast("No slots yet"); return; }
+    copyText(PRECHART.map((s,i)=>this.slotText(s,i)).join("\n\n"));
+  },
+  render(){
+    const wrap = document.getElementById("pc-list"); wrap.innerHTML = "";
+    if (!PRECHART.length) { wrap.innerHTML = '<div class="empty">No slots yet. Add one per patient on tomorrow\'s schedule.</div>'; return; }
+    PRECHART.forEach((s, i)=>{
+      const card = document.createElement("div"); card.className = "pc-card";
+      const head = document.createElement("div"); head.className = "pc-head";
+      const num = document.createElement("div"); num.className = "pc-num"; num.textContent = i+1;
+      const vsel = document.createElement("select");
+      this.VISITS.forEach(v=>{ const o=document.createElement("option"); o.value=v; o.textContent=v; if (s.visit===v) o.selected=true; vsel.appendChild(o); });
+      vsel.onchange = ()=>{ s.visit = vsel.value; saveState(); };
+      vsel.style.cssText = "border:1px solid var(--line); border-radius:8px; padding:6px 10px; background:#fbfcff;";
+      const dx = document.createElement("input"); dx.type="text"; dx.placeholder="Diagnosis / visit focus (no identifiers)"; dx.value = s.dx;
+      dx.style.cssText = "flex:1; min-width:180px; border:1px solid var(--line); border-radius:8px; padding:6px 10px; background:#fbfcff;";
+      dx.oninput = ()=>{ s.dx = dx.value; saveState(); };
+      const del = document.createElement("button"); del.className = "btn small danger"; del.textContent = "Remove";
+      del.onclick = ()=>this.removeSlot(i);
+      head.appendChild(num); head.appendChild(vsel); head.appendChild(dx); head.appendChild(del);
+      card.appendChild(head);
+      const grid = document.createElement("div"); grid.className = "pc-grid";
+      const mkField = (label, el)=>{ const d=document.createElement("div"); d.className="pc-field"; const l=document.createElement("label"); l.textContent=label; d.appendChild(l); d.appendChild(el); return d; };
+      const pts = document.createElement("textarea"); pts.value = s.points; pts.placeholder = "e.g. flare at last visit, started new DMARD, taper in progress";
+      pts.oninput = ()=>{ s.points = pts.value; saveState(); };
+      grid.appendChild(mkField("Key points from last visit", pts));
+      const q = document.createElement("textarea"); q.value = s.questions; q.placeholder = "e.g. side effects? adherence? injection today?";
+      q.oninput = ()=>{ s.questions = q.value; saveState(); };
+      grid.appendChild(mkField("Questions to ask", q));
+      const labs = document.createElement("div"); labs.className = "pc-chips";
+      this.LABS.forEach(lb=>{
+        const c = document.createElement("button"); c.className = "chip" + (s.labs.includes(lb) ? " on" : ""); c.textContent = lb;
+        c.onclick = ()=>{ const ix = s.labs.indexOf(lb); ix>=0 ? s.labs.splice(ix,1) : s.labs.push(lb); c.classList.toggle("on"); saveState(); };
+        labs.appendChild(c);
+      });
+      grid.appendChild(mkField("Labs / results to review", labs));
+      const tasks = document.createElement("div"); tasks.className = "pc-chips";
+      this.TASKS.forEach(tk=>{
+        const c = document.createElement("button"); c.className = "chip" + (s.tasks.includes(tk) ? " on" : ""); c.textContent = tk;
+        c.onclick = ()=>{ const ix = s.tasks.indexOf(tk); ix>=0 ? s.tasks.splice(ix,1) : s.tasks.push(tk); c.classList.toggle("on"); saveState(); };
+        tasks.appendChild(c);
+      });
+      grid.appendChild(mkField("Tasks this visit", tasks));
+      const meds = document.createElement("input"); meds.type = "text"; meds.value = s.meds; meds.placeholder = "e.g. MTX 20 weekly, folic acid, HCQ 200 BID";
+      meds.oninput = ()=>{ s.meds = meds.value; saveState(); };
+      grid.appendChild(mkField("Meds to verify", meds));
+      card.appendChild(grid);
+      const acts = document.createElement("div"); acts.className = "pc-actions";
+      const cp = document.createElement("button"); cp.className = "btn small primary"; cp.textContent = "Copy prep summary";
+      cp.onclick = ()=>this.copySlot(i);
+      acts.appendChild(cp); card.appendChild(acts);
+      wrap.appendChild(card);
+    });
+  }
+};
+
+// ====================== SETTINGS EDITOR ======================
+const ED = {
+  labels: {phrases:"phrase", templates:"template", picklists:"pick list", instructions:"instruction sheet", drugs:"drug card"},
+  renderLists(){
+    ["phrases","templates","picklists","instructions","drugs"].forEach(coll=>{
+      if (!DATA[coll]) DATA[coll] = [];
+      const host = document.getElementById("ed-" + coll); host.innerHTML = "";
+      DATA[coll].forEach(item=>{
+        const row = document.createElement("div"); row.className = "ed-row";
+        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = item.name;
+        const ct = document.createElement("span"); ct.className = "ct";
+        ct.textContent = coll === "templates" || coll === "drugs" ? (item.cat || item.cls) : (item.dot || item.cat || (item.mode ? item.mode : ""));
+        const eb = document.createElement("button"); eb.className = "btn small"; eb.textContent = "Edit";
+        eb.onclick = ()=>ED.editItem(coll, item.id);
+        const db = document.createElement("button"); db.className = "btn small danger"; db.textContent = "Delete";
+        db.onclick = ()=>{
+          if (confirm("Delete \"" + item.name + "\"?")) {
+            DATA[coll] = DATA[coll].filter(x=>x.id!==item.id);
+            FAVS = FAVS.filter(k=>!k.endsWith(":"+item.id));
+            saveState(); renderAll();
+          }
+        };
+        row.appendChild(nm); row.appendChild(ct); row.appendChild(eb); row.appendChild(db);
+        host.appendChild(row);
+      });
+    });
+  },
+  newItem(coll){ this.editItem(coll, null); },
+  editItem(coll, id){
+    const item = id ? DATA[coll].find(x=>x.id===id) : null;
+    const modal = document.getElementById("modal"); modal.innerHTML = "";
+    const h = document.createElement("h3"); h.textContent = (item ? "Edit " : "New ") + this.labels[coll]; modal.appendChild(h);
+    const form = document.createElement("div"); form.className = "ed-form";
+    const field = (label, el)=>{ const d=document.createElement("div"); const l=document.createElement("label"); l.textContent=label; d.appendChild(l); d.appendChild(el); form.appendChild(d); return el; };
+    const txt = (v)=>{ const i=document.createElement("input"); i.type="text"; i.value=v||""; return i; };
+    const area = (v)=>{ const t=document.createElement("textarea"); t.value=v||""; return t; };
+    let els = {};
+    els.name = field("Name", txt(item && item.name));
+    if (coll === "phrases") {
+      els.dot = field("Shortcut (like .mtxstart) - optional", txt(item && item.dot));
+      els.cat = field("Category", txt(item ? item.cat : "General"));
+      els.body = field("Body  ·  {blank}  {pick:a|b|c}  ***", area(item && item.body));
+    } else if (coll === "instructions") {
+      els.body = field("Body (English)  ·  {blank}  {pick:a|b|c}  ***", area(item && item.body));
+      els.bodyEs = field("Body (Spanish) - optional, same {blanks}", area(item && item.bodyEs));
+    } else if (coll === "drugs") {
+      els.cls = field("Group (Conventional DMARDs, Biologics, Gout & crystal, Bone health...)", txt(item ? item.cls : "Conventional DMARDs"));
+      els.dosing = field("Dosing", area(item && item.dosing));
+      els.monitor = field("Monitoring (tests + intervals)", area(item && item.monitor));
+      els.se = field("Common side effects", area(item && item.se));
+      els.serious = field("Serious & red flags", area(item && item.serious));
+      els.pearls = field("Pearls", area(item && item.pearls));
+      [els.dosing, els.monitor, els.se, els.serious, els.pearls].forEach(t=>t.style.minHeight = "54px");
+    } else if (coll === "picklists") {
+      const sel = document.createElement("select");
+      [["multi","pick any (multi)"],["single","pick one (single)"]].forEach(([v,l])=>{ const o=document.createElement("option"); o.value=v; o.textContent=l; if(item && item.mode===v) o.selected=true; sel.appendChild(o); });
+      els.mode = field("Mode", sel);
+      els.prefix = field("Sentence starts with", txt(item ? item.prefix : ""));
+      els.joiner = field("Joined by (e.g. comma-space or semicolon)", txt(item ? (item.joiner||", ") : ", "));
+      els.suffix = field("Sentence ends with", txt(item ? item.suffix : "."));
+      els.body = field("Options - one per line", area(item ? item.options.join("\n") : ""));
+    } else if (coll === "templates") {
+      els.cat = field("Group (New Patient, Follow-Up, Short Visits, Procedures…)", txt(item ? item.cat : "Follow-Up"));
+      const combined = item ? item.sections.map(s=>"## " + s.title + "\n" + s.body).join("\n\n") : "## HPI\n\n## Exam\n\n## Assessment & Plan\n";
+      els.body = field("Sections - start each with ## Title on its own line", area(combined));
+      els.body.style.minHeight = "260px";
+    }
+    modal.appendChild(form);
+    const acts = document.createElement("div"); acts.className = "modal-actions";
+    const cancel = document.createElement("button"); cancel.className = "btn"; cancel.textContent = "Cancel"; cancel.onclick = ()=>App.closeModal();
+    const save = document.createElement("button"); save.className = "btn primary"; save.textContent = "Save";
+    save.onclick = ()=>{
+      const name = els.name.value.trim();
+      if (!name) { toast("Name is required"); return; }
+      let obj = item || {id: uid(coll.slice(0,2))};
+      obj.name = name;
+      if (coll === "phrases") { obj.dot = els.dot.value.trim(); obj.cat = els.cat.value.trim() || "General"; obj.body = els.body.value; }
+      else if (coll === "instructions") { obj.body = els.body.value; obj.bodyEs = els.bodyEs.value.trim(); }
+      else if (coll === "drugs") { obj.cls = els.cls.value.trim() || "Other"; obj.dosing = els.dosing.value; obj.monitor = els.monitor.value; obj.se = els.se.value; obj.serious = els.serious.value; obj.pearls = els.pearls.value; }
+      else if (coll === "picklists") {
+        obj.mode = els.mode.value; obj.prefix = els.prefix.value; obj.suffix = els.suffix.value; obj.joiner = els.joiner.value;
+        obj.options = els.body.value.split("\n").map(x=>x.trim()).filter(Boolean);
+        delete plState[obj.id];
+      }
+      else if (coll === "templates") {
+        obj.cat = els.cat.value.trim() || "Follow-Up";
+        const secs = []; let cur = null;
+        els.body.value.split("\n").forEach(line=>{
+          if (line.startsWith("## ")) { if (cur) { cur.body = cur.body.trim(); secs.push(cur); } cur = {title: line.slice(3).trim(), body: ""}; }
+          else if (cur) cur.body += line + "\n";
+        });
+        if (cur) { cur.body = cur.body.trim(); secs.push(cur); }
+        if (!secs.length) { toast("Add at least one ## Section"); return; }
+        obj.sections = secs;
+      }
+      if (!item) DATA[coll].push(obj);
+      saveState(); renderAll(); App.closeModal(); toast("Saved");
+    };
+    acts.appendChild(cancel); acts.appendChild(save); modal.appendChild(acts);
+    document.getElementById("overlay").classList.add("open");
+    els.name.focus();
+  },
+  resetAll(){
+    if (confirm("Replace your library with the built-in starter library? Your own items are removed. Export first if unsure.")) {
+      DATA = JSON.parse(JSON.stringify(DEFAULT_DATA)); FAVS = [];
+      saveState(); renderAll(); toast("Starter library restored");
+    }
+  }
+};
+
+// ====================== PERIOPERATIVE DMARD GUIDE (ACR/AAHKS 2022) ======================
+const PO = {
+  GUIDE: "ACR/AAHKS 2022 guideline — elective THA/TKA",
+  DRUGS: [
+    {id:"po-mtx", name:"Methotrexate", cls:"continue", grp:"Continue through surgery"},
+    {id:"po-hcq", name:"Hydroxychloroquine", cls:"continue", grp:"Continue through surgery"},
+    {id:"po-ssz", name:"Sulfasalazine", cls:"continue", grp:"Continue through surgery"},
+    {id:"po-lef", name:"Leflunomide", cls:"continue", grp:"Continue through surgery"},
+    {id:"po-apr", name:"Apremilast", cls:"continue", grp:"Continue through surgery"},
+    {id:"po-ada", name:"Adalimumab", cls:"bio", interval:14, grp:"Biologics"},
+    {id:"po-etn", name:"Etanercept", cls:"bio", interval:7, grp:"Biologics"},
+    {id:"po-ifx", name:"Infliximab", cls:"bio", interval:56, grp:"Biologics"},
+    {id:"po-czp", name:"Certolizumab", cls:"bio", interval:14, grp:"Biologics"},
+    {id:"po-gol", name:"Golimumab SC", cls:"bio", interval:28, grp:"Biologics"},
+    {id:"po-abaS", name:"Abatacept SC", cls:"bio", interval:7, grp:"Biologics"},
+    {id:"po-abaI", name:"Abatacept IV", cls:"bio", interval:28, grp:"Biologics"},
+    {id:"po-tczS", name:"Tocilizumab SC", cls:"bio", interval:14, grp:"Biologics"},
+    {id:"po-tczI", name:"Tocilizumab IV", cls:"bio", interval:28, grp:"Biologics"},
+    {id:"po-sec", name:"Secukinumab", cls:"bio", interval:28, grp:"Biologics"},
+    {id:"po-ust", name:"Ustekinumab", cls:"bio", interval:84, grp:"Biologics"},
+    {id:"po-ixe", name:"Ixekizumab", cls:"bio", interval:28, grp:"Biologics"},
+    {id:"po-gus", name:"Guselkumab", cls:"bio", interval:56, grp:"Biologics"},
+    {id:"po-ana", name:"Anakinra", cls:"bio", interval:1, grp:"Biologics"},
+    {id:"po-belS", name:"Belimumab SC", cls:"bio", interval:7, grp:"Biologics"},
+    {id:"po-belI", name:"Belimumab IV", cls:"bio", interval:28, grp:"Biologics"},
+    {id:"po-rtx", name:"Rituximab", cls:"rtx", grp:"Rituximab"},
+    {id:"po-tof", name:"Tofacitinib", cls:"jak", grp:"JAK inhibitors"},
+    {id:"po-bar", name:"Baricitinib", cls:"jak", grp:"JAK inhibitors"},
+    {id:"po-upa", name:"Upadacitinib", cls:"jak", grp:"JAK inhibitors"},
+    {id:"po-mmf", name:"Mycophenolate", cls:"sle", grp:"SLE immunosuppressants"},
+    {id:"po-aza", name:"Azathioprine", cls:"sle", grp:"SLE immunosuppressants"},
+    {id:"po-csa", name:"Cyclosporine", cls:"sle", grp:"SLE immunosuppressants"},
+    {id:"po-tac", name:"Tacrolimus", cls:"sle", grp:"SLE immunosuppressants"},
+    {id:"po-gc", name:"Glucocorticoids", cls:"steroid", grp:"Glucocorticoids"}
+  ],
+  sel: new Set(), severeSle: false,
+  fmt(d){ return d.toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"}); },
+  addDays(d, n){ const x = new Date(d); x.setDate(x.getDate() + n); return x; },
+  surgeryDate(){ const v = document.getElementById("po-date").value; return v ? new Date(v + "T12:00:00") : null; },
+  init(){
+    const host = document.getElementById("po-drugs");
+    let lastGrp = null;
+    this.DRUGS.forEach(d=>{
+      if (d.grp !== lastGrp) {
+        lastGrp = d.grp;
+        const h = document.createElement("div");
+        h.style.cssText = "font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:10px 0 6px;";
+        h.textContent = d.grp; host.appendChild(h);
+      }
+      const c = document.createElement("button"); c.className = "chip"; c.textContent = d.name; c.dataset.id = d.id;
+      c.style.marginRight = "6px"; c.style.marginBottom = "6px";
+      c.onclick = ()=>{ this.sel.has(d.id) ? this.sel.delete(d.id) : this.sel.add(d.id); c.classList.toggle("on"); this.render(); };
+      host.appendChild(c);
+    });
+    document.getElementById("po-sle").onclick = (e)=>{ this.severeSle = !this.severeSle; e.target.classList.toggle("on"); this.render(); };
+    document.getElementById("po-date").addEventListener("input", ()=>this.render());
+    this.render();
+  },
+  clear(){
+    this.sel.clear(); this.severeSle = false;
+    document.querySelectorAll("#po-drugs .chip.on, #po-sle").forEach(c=>c.classList.remove("on"));
+    document.getElementById("po-date").value = "";
+    this.render();
+  },
+  plan(d){
+    const s = this.surgeryDate();
+    const f = (x)=> s ? this.fmt(x) : null;
+    if (d.cls === "continue") return {act:"go", badge:"Continue",
+      last:"No hold needed", resume:"No interruption",
+      note:"Continue through surgery at the current dose."};
+    if (d.cls === "bio") return {act:"hold", badge:"Skip dose",
+      last: s ? "On or before " + f(this.addDays(s, -d.interval)) : "One dosing interval before surgery (" + d.interval + " days)",
+      resume: s ? "No earlier than " + f(this.addDays(s, 14)) : "Minimum 14 days post-op",
+      note:"Plan surgery at the end of the dosing interval (typical interval " + d.interval + " days) and skip the dose closest to surgery. Resume at a minimum of 14 days post-op once the wound is healed and there is no infection."};
+    if (d.cls === "rtx") return {act:"time", badge:"Time surgery",
+      last: s ? "Last infusion no later than " + f(this.addDays(s, -183)) : "Schedule surgery in month 7 after the last infusion",
+      resume: s ? "No earlier than " + f(this.addDays(s, 14)) + ", once healed" : "Minimum 14 days post-op once healed",
+      note:"Schedule surgery in month 7 after the last rituximab infusion. Resume once the wound is healed and there is no infection."};
+    if (d.cls === "jak") return {act:"hold", badge:"Hold 3 days",
+      last: s ? "Last dose " + f(this.addDays(s, -4)) + " (hold the 3 days before surgery)" : "Hold the 3 days before surgery",
+      resume:"Once the wound is healed and there is no infection",
+      note:"Hold 3 days before surgery. Resume once the wound shows healing and there is no infection."};
+    if (d.cls === "sle") {
+      if (this.severeSle) return {act:"go", badge:"Continue",
+        last:"No hold needed", resume:"No interruption",
+        note:"Severe SLE: continue through surgery."};
+      return {act:"hold", badge:"Hold 1 week",
+        last: s ? "Last dose " + f(this.addDays(s, -7)) : "One week before surgery",
+        resume: s ? f(this.addDays(s, 3)) + " to " + f(this.addDays(s, 5)) : "3 to 5 days post-op",
+        note:"Not severe SLE: hold 1 week before surgery, resume 3 to 5 days post-op."};
+    }
+    return {act:"go", badge:"Continue",
+      last:"No hold needed", resume:"No interruption",
+      note:"Continue the current daily dose through surgery. No stress dosing for patients on under 20 mg/day prednisone equivalent."};
+  },
+  render(){
+    const host = document.getElementById("po-cards"); host.innerHTML = "";
+    const chosen = this.DRUGS.filter(d=>this.sel.has(d.id));
+    if (!chosen.length) { host.innerHTML = '<div class="empty">Tap the patient\'s medications above to build the plan.</div>'; return; }
+    chosen.forEach(d=>{
+      const p = this.plan(d);
+      const card = document.createElement("div"); card.className = "comp-section";
+      const h4 = document.createElement("h4");
+      const nm = document.createElement("span"); nm.textContent = d.name;
+      const bg = document.createElement("span"); bg.className = "actbadge " + p.act; bg.textContent = p.badge;
+      h4.appendChild(nm); h4.appendChild(bg); card.appendChild(h4);
+      const dates = document.createElement("div"); dates.className = "po-dates";
+      const d1 = document.createElement("div"); d1.innerHTML = "<b>Last dose before surgery</b>"; d1.appendChild(document.createTextNode(p.last));
+      const d2 = document.createElement("div"); d2.innerHTML = "<b>Earliest resume</b>"; d2.appendChild(document.createTextNode(p.resume));
+      dates.appendChild(d1); dates.appendChild(d2); card.appendChild(dates);
+      const nt = document.createElement("p"); nt.style.cssText = "font-size:.85rem; margin-top:8px; color:var(--muted);"; nt.textContent = p.note;
+      card.appendChild(nt);
+      const tag = document.createElement("span"); tag.className = "guidetag"; tag.textContent = this.GUIDE;
+      card.appendChild(tag);
+      host.appendChild(card);
+    });
+  },
+  copySummary(){
+    const chosen = this.DRUGS.filter(d=>this.sel.has(d.id));
+    if (!chosen.length) { toast("Select medications first"); return; }
+    const s = this.surgeryDate();
+    const parts = chosen.map(d=>{
+      const p = this.plan(d);
+      if (p.act === "go") return "continue " + d.name.toLowerCase() + (d.cls === "steroid" ? " at the current daily dose (no stress dosing under 20 mg/day prednisone equivalent)" : " through surgery");
+      if (d.cls === "bio") return d.name.toLowerCase() + ": skip the dose closest to surgery (last dose " + p.last.toLowerCase() + "), resume " + p.resume.toLowerCase() + " once the wound is healed without infection";
+      if (d.cls === "rtx") return "rituximab: " + p.last.toLowerCase() + ", resume " + p.resume.toLowerCase();
+      if (d.cls === "jak") return d.name.toLowerCase() + ": " + p.last.toLowerCase() + ", resume once the wound is healed without infection";
+      return d.name.toLowerCase() + ": hold 1 week before surgery (last dose " + p.last.toLowerCase().replace("last dose ","") + "), resume " + p.resume.toLowerCase();
+    });
+    copyText("Perioperative antirheumatic plan" + (s ? " for surgery on " + this.fmt(s) : "") + " (per " + this.GUIDE + "): " + parts.join("; ") + ".");
+  }
+};
+
+// ====================== PREGNANCY & LACTATION REFERENCE (ACR 2020) ======================
+const PG = {
+  GUIDE: "ACR 2020 reproductive health guideline",
+  STATUSES: [["plan","Planning conception"],["t1","Pregnant — 1st trimester"],["t2","Pregnant — 2nd trimester"],["t3","Pregnant — 3rd trimester"],["lact","Lactating"]],
+  DRUGS: [
+    {id:"pg-hcq", name:"Hydroxychloroquine",
+      plan:"Compatible. Continue through conception attempts.",
+      preg:"Compatible throughout pregnancy. Continue — it lowers flare risk.",
+      lact:"Compatible with breastfeeding.",
+      en:{plan:"This medicine is safe while you try to get pregnant. Keep taking it.", preg:"This medicine is safe during pregnancy. Keeping your disease quiet protects you and your baby, so do not stop it on your own.", lact:"This medicine is safe while breastfeeding."},
+      es:{plan:"Este medicamento es seguro mientras intenta quedar embarazada. Siga tomándolo.", preg:"Este medicamento es seguro durante el embarazo. Mantener su enfermedad tranquila los protege a usted y a su bebé, así que no lo deje por su cuenta.", lact:"Este medicamento es seguro mientras amamanta."}},
+    {id:"pg-aza", name:"Azathioprine",
+      plan:"Compatible. May continue through conception.",
+      preg:"Compatible throughout pregnancy.",
+      lact:"Compatible with breastfeeding.",
+      en:{plan:"This medicine is considered safe while trying to get pregnant.", preg:"This medicine is considered safe during pregnancy at usual doses.", lact:"This medicine is considered safe while breastfeeding."},
+      es:{plan:"Este medicamento se considera seguro mientras intenta quedar embarazada.", preg:"Este medicamento se considera seguro durante el embarazo en las dosis habituales.", lact:"Este medicamento se considera seguro mientras amamanta."}},
+    {id:"pg-ssz", name:"Sulfasalazine",
+      plan:"Compatible. Continue with folic acid supplementation.",
+      preg:"Compatible throughout pregnancy with folic acid.",
+      lact:"Compatible, with caution in preterm or G6PD-deficient infants.",
+      en:{plan:"This medicine is safe while trying to get pregnant. Take folic acid every day with it.", preg:"This medicine is safe during pregnancy. Take folic acid every day with it.", lact:"This medicine is usually safe while breastfeeding. Tell your baby's doctor if your baby was born early or has G6PD deficiency."},
+      es:{plan:"Este medicamento es seguro mientras intenta quedar embarazada. Tome ácido fólico todos los días junto con él.", preg:"Este medicamento es seguro durante el embarazo. Tome ácido fólico todos los días junto con él.", lact:"Este medicamento suele ser seguro mientras amamanta. Avise al médico de su bebé si nació prematuro o tiene deficiencia de G6PD."}},
+    {id:"pg-col", name:"Colchicine",
+      plan:"Compatible.",
+      preg:"Compatible throughout pregnancy.",
+      lact:"Compatible with breastfeeding.",
+      en:{plan:"This medicine is considered safe while trying to get pregnant.", preg:"This medicine is considered safe during pregnancy.", lact:"This medicine is considered safe while breastfeeding."},
+      es:{plan:"Este medicamento se considera seguro mientras intenta quedar embarazada.", preg:"Este medicamento se considera seguro durante el embarazo.", lact:"Este medicamento se considera seguro mientras amamanta."}},
+    {id:"pg-pred", name:"Prednisone (low dose)",
+      plan:"Compatible at the lowest effective dose.",
+      preg:"Compatible at low dose; taper to the lowest dose controlling disease.",
+      lact:"Compatible. If the dose is over 20 mg, delay feeding 4 hours after the dose.",
+      en:{plan:"Low doses of this steroid are considered safe while trying to get pregnant. We aim for the lowest dose your disease allows.", preg:"Low doses of this steroid are considered safe in pregnancy. We aim for the lowest dose your disease allows.", lact:"This steroid is safe while breastfeeding. If your dose is over 20 mg, feed your baby first and wait 4 hours after taking it."},
+      es:{plan:"Las dosis bajas de este esteroide se consideran seguras mientras intenta quedar embarazada. Buscamos la dosis más baja posible.", preg:"Las dosis bajas de este esteroide se consideran seguras en el embarazo. Buscamos la dosis más baja posible.", lact:"Este esteroide es seguro mientras amamanta. Si su dosis es mayor de 20 mg, amamante primero y espere 4 horas después de tomarlo."}},
+    {id:"pg-czp", name:"Certolizumab",
+      plan:"Compatible. Preferred TNF inhibitor for pregnancy planning.",
+      preg:"Compatible for the FULL pregnancy — minimal placental transfer. Preferred TNF inhibitor.",
+      lact:"Compatible with breastfeeding.",
+      en:{plan:"This biologic is a preferred choice when planning pregnancy. It barely crosses to the baby.", preg:"This biologic can be continued through the whole pregnancy. Very little of it reaches the baby.", lact:"This biologic is safe while breastfeeding."},
+      es:{plan:"Este biológico es una opción preferida al planear un embarazo. Casi no pasa al bebé.", preg:"Este biológico puede continuarse durante todo el embarazo. Muy poco llega al bebé.", lact:"Este biológico es seguro mientras amamanta."}},
+    {id:"pg-tnf", name:"TNF inhibitors (other)",
+      plan:"Compatible. Continue through conception.",
+      preg:"Compatible; individualize continuation in the third trimester (placental transfer rises late).",
+      lact:"Compatible with breastfeeding.",
+      t3:"Third trimester: individualize — placental transfer increases late in pregnancy; discuss timing of the last dose.",
+      en:{plan:"This type of biologic is considered safe while trying to get pregnant.", preg:"This biologic is considered safe in pregnancy. Near the end of pregnancy, more can pass to the baby, so we decide together about the last doses.", lact:"This biologic is safe while breastfeeding."},
+      es:{plan:"Este tipo de biológico se considera seguro mientras intenta quedar embarazada.", preg:"Este biológico se considera seguro en el embarazo. Cerca del final del embarazo puede pasar más al bebé, así que decidiremos juntas sobre las últimas dosis.", lact:"Este biológico es seguro mientras amamanta."}},
+    {id:"pg-nsaid", name:"NSAIDs",
+      plan:"Usable before pregnancy; consider holding if difficulty conceiving.",
+      preg:"Stop by 20 weeks. Avoid after 20 weeks of pregnancy.",
+      lact:"Compatible; ibuprofen preferred.",
+      t1:"Usable in the first trimester when needed; plan to stop by 20 weeks.",
+      t2:"Stop by 20 weeks — avoid for the rest of pregnancy after that point.",
+      t3:"Avoid — do not use after 20 weeks.",
+      en:{plan:"Pain relievers like ibuprofen are okay for now. We will stop them by week 20 of pregnancy.", preg:"Stop pain relievers like ibuprofen and naproxen by week 20 of pregnancy. After 20 weeks they can affect the baby's kidneys and heart.", lact:"Pain relievers like ibuprofen are safe while breastfeeding. Ibuprofen is the best choice."},
+      es:{plan:"Analgésicos como el ibuprofeno están bien por ahora. Los suspenderemos antes de la semana 20 del embarazo.", preg:"Suspenda analgésicos como el ibuprofeno y el naproxeno antes de la semana 20 del embarazo. Después de la semana 20 pueden afectar los riñones y el corazón del bebé.", lact:"Analgésicos como el ibuprofeno son seguros mientras amamanta. El ibuprofeno es la mejor opción."}},
+    {id:"pg-mtx", name:"Methotrexate",
+      plan:"STOP 1 to 3 months before conception.",
+      preg:"NOT compatible — stop immediately and call the office if pregnancy occurs on this drug.",
+      lact:"NOT compatible with breastfeeding.",
+      en:{plan:"Stop this medicine 1 to 3 months before trying to get pregnant. It can cause birth defects.", preg:"This medicine is not safe in pregnancy. If you are pregnant and still taking it, stop now and call our office today.", lact:"Do not take this medicine while breastfeeding."},
+      es:{plan:"Deje este medicamento de 1 a 3 meses antes de intentar quedar embarazada. Puede causar defectos de nacimiento.", preg:"Este medicamento no es seguro en el embarazo. Si está embarazada y todavía lo toma, deje de tomarlo ahora y llame a nuestro consultorio hoy.", lact:"No tome este medicamento mientras amamanta."}},
+    {id:"pg-mmf", name:"Mycophenolate",
+      plan:"STOP 6 weeks before conception.",
+      preg:"NOT compatible — stop immediately and call the office if pregnancy occurs on this drug.",
+      lact:"NOT compatible with breastfeeding.",
+      en:{plan:"Stop this medicine at least 6 weeks before trying to get pregnant. It can cause birth defects.", preg:"This medicine is not safe in pregnancy. If you are pregnant and still taking it, stop now and call our office today.", lact:"Do not take this medicine while breastfeeding."},
+      es:{plan:"Deje este medicamento al menos 6 semanas antes de intentar quedar embarazada. Puede causar defectos de nacimiento.", preg:"Este medicamento no es seguro en el embarazo. Si está embarazada y todavía lo toma, deje de tomarlo ahora y llame a nuestro consultorio hoy.", lact:"No tome este medicamento mientras amamanta."}},
+    {id:"pg-cyc", name:"Cyclophosphamide",
+      plan:"STOP 3 months before conception.",
+      preg:"NOT compatible — reserved only for life-threatening disease after specialist discussion.",
+      lact:"NOT compatible with breastfeeding.",
+      en:{plan:"Stop this medicine 3 months before trying to get pregnant.", preg:"This medicine is not safe in pregnancy except in rare emergencies your doctors would discuss with you.", lact:"Do not take this medicine while breastfeeding."},
+      es:{plan:"Deje este medicamento 3 meses antes de intentar quedar embarazada.", preg:"Este medicamento no es seguro en el embarazo salvo en emergencias raras que sus médicos hablarían con usted.", lact:"No tome este medicamento mientras amamanta."}},
+    {id:"pg-lef", name:"Leflunomide",
+      plan:"STOP before conception with cholestyramine washout and CONFIRMED undetectable drug levels.",
+      preg:"NOT compatible — if pregnancy occurs, start cholestyramine washout immediately and call the office.",
+      lact:"NOT compatible with breastfeeding.",
+      en:{plan:"This medicine stays in your body a very long time. Before trying to get pregnant you need a special washout medicine (cholestyramine) and a blood test proving the drug is gone.", preg:"This medicine is not safe in pregnancy. If you are pregnant, call our office today — we will start a washout medicine right away.", lact:"Do not take this medicine while breastfeeding."},
+      es:{plan:"Este medicamento permanece en su cuerpo por mucho tiempo. Antes de intentar quedar embarazada necesita un medicamento de lavado (colestiramina) y un análisis de sangre que confirme que el medicamento ya no está.", preg:"Este medicamento no es seguro en el embarazo. Si está embarazada, llame a nuestro consultorio hoy; comenzaremos el medicamento de lavado de inmediato.", lact:"No tome este medicamento mientras amamanta."}}
+  ],
+  status: "plan", drug: null,
+  init(){
+    const sh = document.getElementById("pg-status");
+    this.STATUSES.forEach(([v, label])=>{
+      const c = document.createElement("button"); c.className = "chip" + (v === this.status ? " on" : "");
+      c.textContent = label; c.dataset.v = v;
+      c.onclick = ()=>{ this.status = v; sh.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on", x.dataset.v === v)); this.render(); };
+      sh.appendChild(c);
+    });
+    const dh = document.getElementById("pg-drugs");
+    this.DRUGS.forEach(d=>{
+      const c = document.createElement("button"); c.className = "chip"; c.textContent = d.name; c.dataset.id = d.id;
+      c.onclick = ()=>{ this.drug = d.id; dh.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on", x.dataset.id === d.id)); this.render(); };
+      dh.appendChild(c);
+    });
+    this.render();
+  },
+  current(){ return this.DRUGS.find(d=>d.id === this.drug); },
+  guidance(d){
+    if (this.status === "plan") return d.plan;
+    if (this.status === "lact") return d.lact;
+    return (d[this.status] || d.preg);
+  },
+  statusLabel(){ return this.STATUSES.find(s=>s[0] === this.status)[1]; },
+  render(){
+    const host = document.getElementById("pg-card"); host.innerHTML = "";
+    const d = this.current();
+    if (!d) { host.innerHTML = '<div class="empty">Pick a medication above.</div>'; return; }
+    const g = this.guidance(d);
+    const bad = /NOT compatible|STOP|Avoid —|Stop by 20/i.test(g);
+    const card = document.createElement("div"); card.className = "comp-section";
+    const h4 = document.createElement("h4");
+    const nm = document.createElement("span"); nm.textContent = d.name + " — " + this.statusLabel();
+    const bg = document.createElement("span"); bg.className = "actbadge " + (bad ? "hold" : "go");
+    bg.textContent = bad ? "Caution / stop" : "Compatible";
+    h4.appendChild(nm); h4.appendChild(bg); card.appendChild(h4);
+    const p = document.createElement("p"); p.style.fontSize = ".92rem"; p.textContent = g; card.appendChild(p);
+    const all = document.createElement("p"); all.style.cssText = "font-size:.8rem; color:var(--muted); margin-top:8px;";
+    all.textContent = "Full picture — Conception: " + d.plan + " Pregnancy: " + d.preg + " Lactation: " + d.lact;
+    card.appendChild(all);
+    const tag = document.createElement("span"); tag.className = "guidetag"; tag.textContent = this.GUIDE; card.appendChild(tag);
+    host.appendChild(card);
+  },
+  copyCard(){
+    const d = this.current();
+    if (!d) { toast("Pick a medication first"); return; }
+    copyText(d.name + " (" + this.statusLabel().toLowerCase() + "): " + this.guidance(d) + " Per " + this.GUIDE + ". Discussed with the patient; questions answered.");
+  },
+  printHandout(){
+    const d = this.current();
+    if (!d) { toast("Pick a medication first"); return; }
+    const key = this.status === "plan" ? "plan" : this.status === "lact" ? "lact" : "preg";
+    const closing = {en:"Always talk with your rheumatologist before starting or stopping any medicine.",
+      es:"Siempre hable con su reumatólogo antes de comenzar o dejar cualquier medicamento."};
+    const text = "ENGLISH\n" + d.en[key] + "\n" + closing.en +
+      "\n\nESPAÑOL\n" + d.es[key] + "\n" + closing.es;
+    document.getElementById("pr-title").textContent = d.name + " — " + this.statusLabel();
+    document.getElementById("pr-clinic").textContent = DATA.clinic || " ";
+    document.getElementById("pr-body").textContent = text;
+    document.getElementById("pr-foot").textContent = this.GUIDE + " · Decision support only, your doctor's judgment comes first · " + new Date().toLocaleDateString();
+    window.print();
+  }
+};
+
+// ====================== BOOT ======================
+function renderAll(){
+  renderPhrases(); renderTemplates(); renderPicklists(); renderInstructions(); Drugs.render(); Codes.render();
+  renderFavbar(); ED.renderLists(); PC.render();
+  const ci = document.getElementById("set-clinic");
+  if (ci && document.activeElement !== ci) ci.value = DATA.clinic || "";
+  saveState();
+}
+document.addEventListener("DOMContentLoaded", ()=>{
+  loadState();
+  document.querySelectorAll("nav.tabs button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      document.getElementById("globalsearch").value = "";
+      if (b.dataset.tab === "templates") Composer.close();
+      App.showTab(b.dataset.tab);
+    });
+  });
+  document.getElementById("globalsearch").addEventListener("input", (e)=>App.search(e.target.value));
+  const qinput = document.getElementById("qinput");
+  qinput.addEventListener("input", ()=>Launcher.filter(qinput.value));
+  qinput.addEventListener("keydown", (e)=>Launcher.key(e));
+  document.addEventListener("keydown", (e)=>{
+    if (e.key === "Escape") { App.closeModal(); Launcher.close(); return; }
+    if (Launcher.isOpen()) return;
+    const t = e.target;
+    const typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); Launcher.open(""); return; }
+    if (!typing && e.key === "." && !e.ctrlKey && !e.metaKey && !e.altKey &&
+        !document.getElementById("overlay").classList.contains("open")) {
+      e.preventDefault(); Launcher.open(".");
+    }
+  });
+  document.getElementById("set-clinic").addEventListener("input", (e)=>{ DATA.clinic = e.target.value; saveState(); });
+  JE.render();
+  Taper.init();
+  EM.init();
+  PO.init();
+  PG.init();
+  renderAll();
+  App.checkBackup();
+});
+</script>
+</body>
+</html>
