@@ -198,6 +198,13 @@
   .micbtn{background:var(--accent-soft); border-color:var(--accent); color:var(--accent-ink); font-weight:600; white-space:nowrap;}
   .micbtn.rec{background:var(--both); border-color:var(--both); color:#fff; animation:micpulse 1.2s infinite;}
   .micbtn-off{opacity:.6;}
+  .calc-attr{margin:0 0 10px; padding:11px 15px; border-radius:10px; background:#fffefb;
+    border:1px solid var(--line); font-size:.79rem; line-height:1.5; color:var(--muted);}
+  .calc-attr h5{font-size:.68rem; text-transform:uppercase; letter-spacing:.07em; color:var(--accent-ink); margin-bottom:6px;}
+  .calc-attr p{margin:0 0 5px;}
+  .calc-attr p:last-child{margin-bottom:0;}
+  .calc-attr b{color:var(--ink); font-weight:600;}
+  .calc-attr .lic{color:var(--accent-ink);}
   #dictbar{margin-bottom:12px; padding:9px 14px; border-radius:10px; font-size:.85rem;
     background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent-ink);}
   #dictbar.bad{background:#fef3c7; border-color:#f2d48a; color:#92400e;}
@@ -254,7 +261,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v2.4</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v2.5</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -348,7 +355,10 @@
     <div class="comp-section"><div id="calc-body" class="pc-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));"></div></div>
     <div class="comp-section"><h4><span>Result</span><button class="btn small primary" onclick="Calc.copy()">Copy for the note</button></h4>
       <div id="calc-out" class="filled" style="margin:0;"></div></div>
-    <p class="modfoot">Decision support only, clinical judgment overrides every output. Verify scores used for treatment decisions.</p>
+    <div id="calc-attr" class="calc-attr"></div>
+    <p class="modfoot">Decision support only, clinical judgment overrides every output. Verify scores used for treatment decisions.
+      These are calculation aids. Each source instrument remains the property of its copyright holder and is credited above.
+      Administer every instrument using the validated wording from a copy you are licensed to use.</p>
   </section>
 
   <section class="tab" id="tab-taper">
@@ -1928,6 +1938,48 @@ const Calc = {
     [2,"Low complement"],[2,"Elevated dsDNA"],
     [1,"Fever >38°C"],[1,"Thrombocytopenia (<100k)"],[1,"Leukopenia (<3k)"]
   ],
+  ATTR: {
+    das28: [
+      ["DAS28", "Prevoo ML, van 't Hof MA, Kuper HH, et al. Modified disease activity scores that include twenty-eight-joint counts. Arthritis Rheum. 1995;38(1):44-48.",
+       "Copyright Prof. P.L.C.M. van Riel. Licensing handled by Mapi Research Trust through ePROVIDE. Free licenses are granted for non-commercial clinical and academic use on request."],
+      ["CDAI", "Aletaha D, Nell VPK, Stamm T, et al. Acute phase reactants add little to composite disease activity indices for rheumatoid arthritis. Arthritis Res Ther. 2005;7(4):R796-R806.",
+       "No license fee. Free for clinical and research use."],
+      ["SDAI", "Smolen JS, Breedveld FC, Schiff MH, et al. A simplified disease activity index for rheumatoid arthritis for use in clinical practice. Rheumatology (Oxford). 2003;42(2):244-257.",
+       "No license fee. Free for clinical and research use."]
+    ],
+    basdai: [
+      ["BASDAI", "Garrett S, Jenkinson T, Kennedy LG, Whitelock H, Gaisford P, Calin A. A new approach to defining disease status in ankylosing spondylitis: the Bath Ankylosing Spondylitis Disease Activity Index. J Rheumatol. 1994;21(12):2286-2291.",
+       "Copyright held by A. Calin, represented by Mapi Research Trust. Free for academic and non-commercial clinical use; commercial and industry use is charged. The prompts below are shortened labels, not the validated question wording. Administer the questionnaire from a copy you are licensed to use."]
+    ],
+    asdas: [
+      ["ASDAS-CRP", "Lukas C, Landewé R, Sieper J, et al. Development of an ASAS-endorsed disease activity score (ASDAS) in patients with ankylosing spondylitis. Ann Rheum Dis. 2009;68(1):18-24.",
+       "Public domain. The ASAS group publishes a free calculator at asas-group.org."],
+      ["Activity cut-offs", "Machado PM, Landewé R, van der Heijde D. Ankylosing Spondylitis Disease Activity Score (ASDAS): 2018 update of the nomenclature for disease activity states. Ann Rheum Dis. 2018;77(10):1539-1540.", ""]
+    ],
+    sledai: [
+      ["SLEDAI-2K", "Gladman DD, Ibañez D, Urowitz MB. Systemic lupus erythematosus disease activity index 2000. J Rheumatol. 2002;29(2):288-291.",
+       "Distributed by Mapi Research Trust through ePROVIDE. The descriptors below are abbreviated. Score from the full published definitions, and request a license for anything beyond individual clinical use."]
+    ],
+    dapsa: [
+      ["DAPSA", "Schoels M, Aletaha D, Funovits J, Kavanaugh A, Baker D, Smolen JS. Application of the DAREA/DAPSA score for assessment of disease activity in psoriatic arthritis. Ann Rheum Dis. 2010;69(8):1441-1447.",
+       "No license fee. Free for clinical and research use."],
+      ["Remission cut-offs", "Schoels MM, Aletaha D, Alasti F, Smolen JS. Disease activity in psoriatic arthritis: defining remission and treatment success using the DAPSA score. Ann Rheum Dis. 2016;75(5):811-818.", ""]
+    ]
+  },
+  renderAttr(){
+    const host = document.getElementById("calc-attr");
+    if (!host) return;
+    host.innerHTML = "";
+    const rows = this.ATTR[this.current] || [];
+    const h = document.createElement("h5"); h.textContent = "Source and attribution"; host.appendChild(h);
+    rows.forEach(([name, cite, lic])=>{
+      const p = document.createElement("p");
+      const b = document.createElement("b"); b.textContent = name + ". ";
+      p.appendChild(b); p.appendChild(document.createTextNode(cite));
+      if (lic) { const s = document.createElement("span"); s.className = "lic"; s.textContent = " " + lic; p.appendChild(s); }
+      host.appendChild(p);
+    });
+  },
   init(){
     const pick = document.getElementById("calc-pick");
     this.LIST.forEach(([id, label])=>{
@@ -1995,6 +2047,7 @@ const Calc = {
       this.num(host, "crp", "CRP (mg/dL)", {max:40, step:0.1});
     }
     if (c !== "sledai") host.style.display = "";
+    this.renderAttr();
     this.update();
   },
   update(){
