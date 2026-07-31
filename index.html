@@ -195,8 +195,12 @@
   .langhint{font-size:.78rem; color:var(--accent-ink); margin-left:10px;}
   .esbadge{display:inline-block; font-size:.62rem; font-weight:700; letter-spacing:.04em; color:#fff;
     background:var(--accent); border-radius:5px; padding:2px 6px; margin-left:6px; vertical-align:2px;}
+  .micbtn{background:var(--accent-soft); border-color:var(--accent); color:var(--accent-ink); font-weight:600; white-space:nowrap;}
   .micbtn.rec{background:var(--both); border-color:var(--both); color:#fff; animation:micpulse 1.2s infinite;}
-  .micbtn-off{opacity:.55;}
+  .micbtn-off{opacity:.6;}
+  #dictbar{margin-bottom:12px; padding:9px 14px; border-radius:10px; font-size:.85rem;
+    background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent-ink);}
+  #dictbar.bad{background:#fef3c7; border-color:#f2d48a; color:#92400e;}
   @keyframes micpulse{0%,100%{opacity:1;} 50%{opacity:.55;}}
 
   #backupbar{display:none; max-width:1180px; margin:10px auto 0; padding:9px 16px; border-radius:10px;
@@ -250,7 +254,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI</small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v2.4</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -407,11 +411,12 @@
 
   <section class="tab" id="tab-prechart">
     <p class="tab-intro">Tomorrow's clinic, one card per slot. No names, no identifiers: slot numbers only, matched to your schedule order. Saved in this browser until you clear the day.</p>
-    <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+    <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
       <button class="btn primary" onclick="PC.addSlot()">+ Add patient slot</button>
       <button class="btn" onclick="PC.copyAll()">Copy full day summary</button>
       <button class="btn danger" onclick="PC.clearDay()">Clear day</button>
     </div>
+    <div id="dictbar"></div>
     <div id="pc-list"></div>
   </section>
 
@@ -2118,7 +2123,7 @@ const Dict = {
   supported(){ return !!(window.SpeechRecognition || window.webkitSpeechRecognition); },
   toggle(target, btn){
     if (!this.supported()) {
-      toast("Dictation needs Chrome, Edge, or Safari. Firefox and in-app browsers don't support it yet.");
+      toast("Dictation needs Chrome or Edge. Firefox and in-app browsers do not support speech recognition.");
       return;
     }
     if (this.rec) { const same = this.activeBtn === btn; this.stop(); if (same) return; }
@@ -2146,7 +2151,7 @@ const Dict = {
   },
   stop(){
     const r = this.rec; this.rec = null;
-    if (this.activeBtn) { this.activeBtn.classList.remove("rec"); this.activeBtn.textContent = "Dictate"; }
+    if (this.activeBtn) { this.activeBtn.classList.remove("rec"); this.activeBtn.textContent = "🎤 Dictate"; }
     this.activeBtn = null;
     if (r) { try { r.stop(); } catch(e){} }
   }
@@ -2181,6 +2186,14 @@ const PC = {
     copyText(PRECHART.map((s,i)=>this.slotText(s,i)).join("\n\n"));
   },
   render(){
+    const bar = document.getElementById("dictbar");
+    if (bar) {
+      const ok = Dict.supported();
+      bar.className = ok ? "" : "bad";
+      bar.textContent = ok
+        ? "Dictation is on in this browser. Look for the Dictate button next to Key points, Questions to ask, and Meds to verify."
+        : "Dictation is off: this browser has no speech recognition. The Dictate buttons still show but will not record. Chrome on any device, or Edge, will work.";
+    }
     const wrap = document.getElementById("pc-list"); wrap.innerHTML = "";
     if (!PRECHART.length) { wrap.innerHTML = '<div class="empty">No slots yet. Add one per patient on tomorrow\'s schedule.</div>'; return; }
     PRECHART.forEach((s, i)=>{
@@ -2205,10 +2218,10 @@ const PC = {
         if (dictate) {
           const row = document.createElement("div"); row.style.cssText = "display:flex; justify-content:space-between; align-items:center; gap:8px;";
           row.appendChild(l);
-          const m = document.createElement("button"); m.className = "btn small micbtn"; m.textContent = "Dictate";
+          const m = document.createElement("button"); m.className = "btn small micbtn"; m.textContent = "🎤 Dictate";
           const ok = Dict.supported();
           m.title = ok ? "Speak instead of typing; text lands in this field"
-                       : "Dictation needs Chrome, Edge, or Safari on this device";
+                       : "Dictation needs Chrome or Edge on this device";
           if (!ok) m.classList.add("micbtn-off");
           m.onclick = ()=>Dict.toggle(el, m);
           row.appendChild(m); d.appendChild(row);
