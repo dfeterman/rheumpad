@@ -100,10 +100,10 @@
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
   /* Composer */
-  #composer .comp-section{background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+  .comp-section{background:#fff; border:1px solid var(--line); border-radius:var(--radius);
     padding:14px 18px; margin-bottom:12px; box-shadow:var(--shadow);}
-  #composer .comp-section h4{font-size:.85rem; text-transform:uppercase; letter-spacing:.06em;
-    color:var(--accent-ink); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
+  .comp-section h4{font-size:.85rem; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--accent-ink); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:10px;}
   .comp-body{font-size:.92rem; white-space:pre-wrap; line-height:2;}
   .comp-body input[type=text]{border:none; border-bottom:1.5px solid var(--accent); background:var(--accent-soft);
     border-radius:4px 4px 0 0; padding:2px 7px; min-width:70px; outline:none;}
@@ -189,9 +189,15 @@
   .drugblock b{font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--accent-ink); display:block; margin-bottom:2px;}
   .drugblock.warn b{color:var(--both);}
   .drugblock p{font-size:.9rem;}
-  .langtoggle{display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; margin-bottom:4px;}
-  .langtoggle button{border:none; background:#fff; padding:4px 14px; font-size:.8rem; color:var(--muted);}
+  .langtoggle{display:inline-flex; border:1.5px solid var(--accent); border-radius:999px; overflow:hidden; margin-bottom:6px;}
+  .langtoggle button{border:none; background:#fff; padding:5px 16px; font-size:.85rem; font-weight:600; color:var(--accent-ink);}
   .langtoggle button.on{background:var(--accent); color:#fff;}
+  .langhint{font-size:.78rem; color:var(--accent-ink); margin-left:10px;}
+  .esbadge{display:inline-block; font-size:.62rem; font-weight:700; letter-spacing:.04em; color:#fff;
+    background:var(--accent); border-radius:5px; padding:2px 6px; margin-left:6px; vertical-align:2px;}
+  .micbtn.rec{background:var(--both); border-color:var(--both); color:#fff; animation:micpulse 1.2s infinite;}
+  .micbtn-off{opacity:.55;}
+  @keyframes micpulse{0%,100%{opacity:1;} 50%{opacity:.55;}}
 
   #backupbar{display:none; max-width:1180px; margin:10px auto 0; padding:9px 16px; border-radius:10px;
     background:#fef3c7; border:1px solid #f2d48a; color:#92400e; font-size:.85rem;
@@ -261,6 +267,7 @@
   <button data-tab="templates">Note Templates</button>
   <button data-tab="picklists">Pick Lists</button>
   <button data-tab="jointexam">Joint Exam</button>
+  <button data-tab="calc">Calculators</button>
   <button data-tab="taper">Taper Builder</button>
   <button data-tab="periop">Peri-Op</button>
   <button data-tab="preg">Pregnancy</button>
@@ -329,6 +336,15 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <section class="tab" id="tab-calc">
+    <p class="tab-intro">Disease activity calculators. Pick one, fill the fields, copy the scored sentence into your note.</p>
+    <div class="pc-chips" id="calc-pick" style="margin-bottom:14px;"></div>
+    <div class="comp-section"><div id="calc-body" class="pc-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));"></div></div>
+    <div class="comp-section"><h4><span>Result</span><button class="btn small primary" onclick="Calc.copy()">Copy for the note</button></h4>
+      <div id="calc-out" class="filled" style="margin:0;"></div></div>
+    <p class="modfoot">Decision support only, clinical judgment overrides every output. Verify scores used for treatment decisions.</p>
   </section>
 
   <section class="tab" id="tab-taper">
@@ -1173,7 +1189,10 @@ const App = {
       const bs = document.createElement("button"); bs.textContent = "Español";
       be.onclick = ()=>{ lang = "en"; be.classList.add("on"); bs.classList.remove("on"); renderFillable(curBody(), fill); };
       bs.onclick = ()=>{ lang = "es"; bs.classList.add("on"); be.classList.remove("on"); renderFillable(curBody(), fill); };
-      tg.appendChild(be); tg.appendChild(bs); modal.appendChild(tg);
+      tg.appendChild(be); tg.appendChild(bs);
+      const wrap = document.createElement("div"); wrap.appendChild(tg);
+      const hint = document.createElement("span"); hint.className = "langhint"; hint.textContent = "This handout is also available in Spanish — tap Español.";
+      wrap.appendChild(hint); modal.appendChild(wrap);
     }
     const fill = document.createElement("div"); fill.className = "filled";
     renderFillable(item.body, fill); modal.appendChild(fill);
@@ -1339,6 +1358,7 @@ function renderInstructions(){
     const card = document.createElement("div"); card.className = "card";
     card.innerHTML = '<h3></h3><p class="preview"></p><button class="star" title="Pin to top bar">&#9733;</button>';
     card.querySelector("h3").textContent = p.name;
+    if (p.bodyEs) { const b = document.createElement("span"); b.className = "esbadge"; b.textContent = "EN · ES"; b.title = "Available in Spanish"; card.querySelector("h3").appendChild(b); }
     card.querySelector(".preview").textContent = preview(p.body);
     const star = card.querySelector(".star");
     if (App.isFav("instruction", p.id)) star.classList.add("faved");
@@ -1890,6 +1910,155 @@ const Launcher = {
   }
 };
 
+// ====================== DISEASE ACTIVITY CALCULATORS ======================
+const Calc = {
+  current: "das28", f: {},
+  LIST: [["das28","RA — DAS28 / SDAI"],["basdai","axSpA — BASDAI"],["asdas","axSpA — ASDAS-CRP"],["sledai","SLE — SLEDAI-2K"],["dapsa","PsA — DAPSA"]],
+  SLEDAI_ITEMS: [
+    [8,"Seizure (recent onset)"],[8,"Psychosis"],[8,"Organic brain syndrome"],[8,"Visual disturbance (retinal changes)"],
+    [8,"Cranial nerve disorder"],[8,"Lupus headache"],[8,"CVA (new)"],[8,"Vasculitis"],
+    [4,"Arthritis (2+ joints)"],[4,"Myositis"],[4,"Urinary casts"],[4,"Hematuria (>5 RBC/hpf)"],
+    [4,"Proteinuria (>0.5 g/24h)"],[4,"Pyuria (>5 WBC/hpf)"],
+    [2,"Inflammatory rash"],[2,"Alopecia"],[2,"Mucosal ulcers"],[2,"Pleurisy"],[2,"Pericarditis"],
+    [2,"Low complement"],[2,"Elevated dsDNA"],
+    [1,"Fever >38°C"],[1,"Thrombocytopenia (<100k)"],[1,"Leukopenia (<3k)"]
+  ],
+  init(){
+    const pick = document.getElementById("calc-pick");
+    this.LIST.forEach(([id, label])=>{
+      const c = document.createElement("button"); c.className = "chip" + (id === this.current ? " on" : "");
+      c.textContent = label; c.dataset.id = id;
+      c.onclick = ()=>{ this.current = id; pick.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on", x.dataset.id === id)); this.render(); };
+      pick.appendChild(c);
+    });
+    this.render();
+  },
+  num(host, id, label, opts = {}){
+    const d = document.createElement("div"); d.className = "pc-field";
+    const l = document.createElement("label"); l.textContent = label; d.appendChild(l);
+    const i = document.createElement("input"); i.type = "number";
+    i.min = opts.min ?? 0; if (opts.max !== undefined) i.max = opts.max; i.step = opts.step ?? 1;
+    i.placeholder = opts.ph || "";
+    i.addEventListener("input", ()=>this.update());
+    d.appendChild(i); host.appendChild(d); this.f[id] = i;
+  },
+  v(id){ const x = parseFloat(this.f[id]?.value); return isNaN(x) ? null : x; },
+  render(){
+    const host = document.getElementById("calc-body"); host.innerHTML = ""; this.f = {};
+    const c = this.current;
+    if (c === "das28") {
+      this.num(host, "tjc", "TJC (28)", {max:28});
+      this.num(host, "sjc", "SJC (28)", {max:28});
+      const btnWrap = document.createElement("div"); btnWrap.className = "pc-field";
+      const bl = document.createElement("label"); bl.textContent = "From diagram"; btnWrap.appendChild(bl);
+      const jb = document.createElement("button"); jb.className = "btn small"; jb.textContent = "Use joint exam counts";
+      jb.onclick = ()=>{ this.f.tjc.value = document.getElementById("tjc").textContent; this.f.sjc.value = document.getElementById("sjc").textContent; this.update(); };
+      btnWrap.appendChild(jb); host.appendChild(btnWrap);
+      this.num(host, "gh", "Patient global (0-100 mm)", {max:100});
+      this.num(host, "pga", "Patient global (0-10, for SDAI)", {max:10, step:0.5});
+      this.num(host, "ega", "Provider global (0-10, for SDAI)", {max:10, step:0.5});
+      this.num(host, "esr", "ESR (mm/h)", {max:200});
+      this.num(host, "crp", "CRP (mg/L)", {max:400, step:0.1});
+    } else if (c === "basdai") {
+      const Q = [["q1","Q1 Fatigue (0-10)"],["q2","Q2 Spinal pain (0-10)"],["q3","Q3 Peripheral joint pain/swelling (0-10)"],
+        ["q4","Q4 Tenderness to touch (0-10)"],["q5","Q5 Morning stiffness severity (0-10)"],["q6","Q6 Morning stiffness duration (0-10, 10 = 2+ h)"]];
+      Q.forEach(([id, label])=>this.num(host, id, label, {max:10, step:0.5}));
+    } else if (c === "asdas") {
+      this.num(host, "bp", "Back pain (0-10)", {max:10, step:0.5});
+      this.num(host, "dur", "Morning stiffness duration (0-10)", {max:10, step:0.5});
+      this.num(host, "ptg", "Patient global (0-10)", {max:10, step:0.5});
+      this.num(host, "per", "Peripheral pain/swelling (0-10)", {max:10, step:0.5});
+      this.num(host, "crp", "CRP (mg/L)", {max:400, step:0.1});
+    } else if (c === "sledai") {
+      host.style.display = "block";
+      const wrap = document.createElement("div"); wrap.className = "pc-chips";
+      this.f.items = [];
+      this.SLEDAI_ITEMS.forEach(([w, label], i)=>{
+        const chip = document.createElement("button"); chip.className = "chip";
+        chip.innerHTML = "<b></b>&nbsp;"; chip.querySelector("b").textContent = "+" + w;
+        chip.appendChild(document.createTextNode(label));
+        chip.onclick = ()=>{ chip.classList.toggle("on"); this.update(); };
+        chip.dataset.w = w; chip.dataset.label = label;
+        wrap.appendChild(chip); this.f.items.push(chip);
+      });
+      host.appendChild(wrap);
+    } else if (c === "dapsa") {
+      this.num(host, "tjc68", "TJC (68)", {max:68});
+      this.num(host, "sjc66", "SJC (66)", {max:66});
+      this.num(host, "pain", "Pain (0-10)", {max:10, step:0.5});
+      this.num(host, "ptg", "Patient global (0-10)", {max:10, step:0.5});
+      this.num(host, "crp", "CRP (mg/dL)", {max:40, step:0.1});
+    }
+    if (c !== "sledai") host.style.display = "";
+    this.update();
+  },
+  update(){
+    document.getElementById("calc-out").textContent = this.result() || "Fill the fields above.";
+  },
+  result(){
+    const c = this.current, r1 = (x)=>Math.round(x * 10) / 10, r2 = (x)=>Math.round(x * 100) / 100;
+    if (c === "das28") {
+      const tjc = this.v("tjc"), sjc = this.v("sjc"), gh = this.v("gh"), esr = this.v("esr"), crp = this.v("crp"),
+        pga = this.v("pga"), ega = this.v("ega");
+      const lines = [];
+      const cat = (s)=> s < 2.6 ? "remission" : s <= 3.2 ? "low disease activity" : s <= 5.1 ? "moderate disease activity" : "high disease activity";
+      if (tjc !== null && sjc !== null && gh !== null && esr !== null && esr > 0) {
+        const d = 0.56 * Math.sqrt(tjc) + 0.28 * Math.sqrt(sjc) + 0.70 * Math.log(esr) + 0.014 * gh;
+        lines.push("DAS28-ESR " + r2(d) + " (" + cat(d) + ")");
+      }
+      if (tjc !== null && sjc !== null && gh !== null && crp !== null) {
+        const d = 0.56 * Math.sqrt(tjc) + 0.28 * Math.sqrt(sjc) + 0.36 * Math.log(crp + 1) + 0.014 * gh + 0.96;
+        lines.push("DAS28-CRP " + r2(d) + " (" + cat(d) + ")");
+      }
+      if (tjc !== null && sjc !== null && pga !== null && ega !== null) {
+        const cd = tjc + sjc + pga + ega;
+        const cc = cd <= 2.8 ? "remission" : cd <= 10 ? "low disease activity" : cd <= 22 ? "moderate disease activity" : "high disease activity";
+        lines.push("CDAI " + r1(cd) + " (" + cc + ")");
+      }
+      if (tjc !== null && sjc !== null && pga !== null && ega !== null && crp !== null) {
+        const s = tjc + sjc + pga + ega + crp / 10;
+        const sc = s <= 3.3 ? "remission" : s <= 11 ? "low disease activity" : s <= 26 ? "moderate disease activity" : "high disease activity";
+        lines.push("SDAI " + r1(s) + " (" + sc + ")");
+      }
+      return lines.length ? lines.join(". ") + "." : null;
+    }
+    if (c === "basdai") {
+      const q = ["q1","q2","q3","q4","q5","q6"].map(id=>this.v(id));
+      if (q.some(x=>x === null)) return null;
+      const s = (q[0] + q[1] + q[2] + q[3] + (q[4] + q[5]) / 2) / 5;
+      return "BASDAI " + r1(s) + (s >= 4 ? " (active axial disease, at or above the 4.0 threshold)" : " (below the 4.0 activity threshold)") + ".";
+    }
+    if (c === "asdas") {
+      const bp = this.v("bp"), dur = this.v("dur"), ptg = this.v("ptg"), per = this.v("per");
+      let crp = this.v("crp");
+      if ([bp, dur, ptg, per, crp].some(x=>x === null)) return null;
+      if (crp < 2) crp = 2;
+      const s = 0.121 * bp + 0.058 * dur + 0.110 * ptg + 0.073 * per + 0.579 * Math.log(crp + 1);
+      const sc = s < 1.3 ? "inactive disease" : s < 2.1 ? "low disease activity" : s <= 3.5 ? "high disease activity" : "very high disease activity";
+      return "ASDAS-CRP " + r2(s) + " (" + sc + ").";
+    }
+    if (c === "sledai") {
+      const on = (this.f.items || []).filter(ch=>ch.classList.contains("on"));
+      const s = on.reduce((a, ch)=>a + parseInt(ch.dataset.w), 0);
+      const sc = s === 0 ? "no activity" : s <= 5 ? "mild activity" : s <= 10 ? "moderate activity" : s <= 19 ? "high activity" : "very high activity";
+      return "SLEDAI-2K " + s + " (" + sc + ")" + (on.length ? ". Contributors: " + on.map(ch=>ch.dataset.label.toLowerCase()).join(", ") : "") + ".";
+    }
+    if (c === "dapsa") {
+      const t = this.v("tjc68"), s6 = this.v("sjc66"), pain = this.v("pain"), ptg = this.v("ptg"), crp = this.v("crp");
+      if ([t, s6, pain, ptg, crp].some(x=>x === null)) return null;
+      const s = t + s6 + pain + ptg + crp;
+      const sc = s <= 4 ? "remission" : s <= 14 ? "low disease activity" : s <= 28 ? "moderate disease activity" : "high disease activity";
+      return "DAPSA " + r1(s) + " (" + sc + ").";
+    }
+    return null;
+  },
+  copy(){
+    const r = this.result();
+    if (!r) { toast("Fill the fields first"); return; }
+    copyText(r);
+  }
+};
+
 // ====================== TAPER BUILDER ======================
 const Taper = {
   fmt(d){ return d.toLocaleDateString("en-US", {month:"short", day:"numeric"}); },
@@ -1943,6 +2112,46 @@ const Taper = {
   }
 };
 
+// ====================== DICTATION (browser speech-to-text) ======================
+const Dict = {
+  rec: null, activeBtn: null,
+  supported(){ return !!(window.SpeechRecognition || window.webkitSpeechRecognition); },
+  toggle(target, btn){
+    if (!this.supported()) {
+      toast("Dictation needs Chrome, Edge, or Safari. Firefox and in-app browsers don't support it yet.");
+      return;
+    }
+    if (this.rec) { const same = this.activeBtn === btn; this.stop(); if (same) return; }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let r;
+    try { r = new SR(); } catch(e){ toast("Dictation not available in this browser"); return; }
+    r.continuous = true; r.interimResults = false; r.lang = "en-US";
+    r.onresult = (e)=>{
+      let txt = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) txt += e.results[i][0].transcript;
+      txt = txt.trim();
+      if (txt) {
+        target.value = (target.value ? target.value.replace(/\s+$/, "") + " " : "") + txt;
+        target.dispatchEvent(new Event("input"));
+      }
+    };
+    r.onend = ()=>{ if (this.rec === r) this.stop(); };
+    r.onerror = (e)=>{
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") toast("Microphone blocked - allow mic access for this site");
+      else if (e.error !== "aborted" && e.error !== "no-speech") toast("Dictation stopped: " + e.error);
+      this.stop();
+    };
+    this.rec = r; this.activeBtn = btn; btn.classList.add("rec"); btn.textContent = "Stop";
+    try { r.start(); toast("Listening — tap Stop when done"); } catch(e){ this.stop(); }
+  },
+  stop(){
+    const r = this.rec; this.rec = null;
+    if (this.activeBtn) { this.activeBtn.classList.remove("rec"); this.activeBtn.textContent = "Dictate"; }
+    this.activeBtn = null;
+    if (r) { try { r.stop(); } catch(e){} }
+  }
+};
+
 // ====================== PRE-CHART ======================
 const PC = {
   LABS: ["CBC","CMP","ESR","CRP","uric acid","dsDNA / C3 C4","UA protein","drug level","imaging result","DEXA"],
@@ -1990,13 +2199,28 @@ const PC = {
       head.appendChild(num); head.appendChild(vsel); head.appendChild(dx); head.appendChild(del);
       card.appendChild(head);
       const grid = document.createElement("div"); grid.className = "pc-grid";
-      const mkField = (label, el)=>{ const d=document.createElement("div"); d.className="pc-field"; const l=document.createElement("label"); l.textContent=label; d.appendChild(l); d.appendChild(el); return d; };
+      const mkField = (label, el, dictate)=>{
+        const d = document.createElement("div"); d.className = "pc-field";
+        const l = document.createElement("label"); l.textContent = label;
+        if (dictate) {
+          const row = document.createElement("div"); row.style.cssText = "display:flex; justify-content:space-between; align-items:center; gap:8px;";
+          row.appendChild(l);
+          const m = document.createElement("button"); m.className = "btn small micbtn"; m.textContent = "Dictate";
+          const ok = Dict.supported();
+          m.title = ok ? "Speak instead of typing; text lands in this field"
+                       : "Dictation needs Chrome, Edge, or Safari on this device";
+          if (!ok) m.classList.add("micbtn-off");
+          m.onclick = ()=>Dict.toggle(el, m);
+          row.appendChild(m); d.appendChild(row);
+        } else d.appendChild(l);
+        d.appendChild(el); return d;
+      };
       const pts = document.createElement("textarea"); pts.value = s.points; pts.placeholder = "e.g. flare at last visit, started new DMARD, taper in progress";
       pts.oninput = ()=>{ s.points = pts.value; saveState(); };
-      grid.appendChild(mkField("Key points from last visit", pts));
+      grid.appendChild(mkField("Key points from last visit", pts, true));
       const q = document.createElement("textarea"); q.value = s.questions; q.placeholder = "e.g. side effects? adherence? injection today?";
       q.oninput = ()=>{ s.questions = q.value; saveState(); };
-      grid.appendChild(mkField("Questions to ask", q));
+      grid.appendChild(mkField("Questions to ask", q, true));
       const labs = document.createElement("div"); labs.className = "pc-chips";
       this.LABS.forEach(lb=>{
         const c = document.createElement("button"); c.className = "chip" + (s.labs.includes(lb) ? " on" : ""); c.textContent = lb;
@@ -2013,7 +2237,7 @@ const PC = {
       grid.appendChild(mkField("Tasks this visit", tasks));
       const meds = document.createElement("input"); meds.type = "text"; meds.value = s.meds; meds.placeholder = "e.g. MTX 20 weekly, folic acid, HCQ 200 BID";
       meds.oninput = ()=>{ s.meds = meds.value; saveState(); };
-      grid.appendChild(mkField("Meds to verify", meds));
+      grid.appendChild(mkField("Meds to verify", meds, true));
       card.appendChild(grid);
       const acts = document.createElement("div"); acts.className = "pc-actions";
       const cp = document.createElement("button"); cp.className = "btn small primary"; cp.textContent = "Copy prep summary";
@@ -2342,6 +2566,72 @@ const PG = {
       lact:"NOT compatible with breastfeeding.",
       en:{plan:"Stop this medicine 3 months before trying to get pregnant.", preg:"This medicine is not safe in pregnancy except in rare emergencies your doctors would discuss with you.", lact:"Do not take this medicine while breastfeeding."},
       es:{plan:"Deje este medicamento 3 meses antes de intentar quedar embarazada.", preg:"Este medicamento no es seguro en el embarazo salvo en emergencias raras que sus médicos hablarían con usted.", lact:"No tome este medicamento mientras amamanta."}},
+    {id:"pg-csa", name:"Cyclosporine",
+      plan:"Compatible. Continue at the lowest effective dose.",
+      preg:"Compatible; use the lowest effective dose and monitor blood pressure and renal function.",
+      lact:"Compatible with breastfeeding (conditional).",
+      en:{plan:"This medicine is considered safe while trying to get pregnant, at the lowest dose that works.", preg:"This medicine is considered safe in pregnancy. We use the lowest dose that works and watch your blood pressure and kidneys.", lact:"This medicine is considered safe while breastfeeding. Tell your baby's doctor you take it."},
+      es:{plan:"Este medicamento se considera seguro mientras intenta quedar embarazada, en la dosis más baja que funcione.", preg:"Este medicamento se considera seguro en el embarazo. Usamos la dosis más baja que funcione y vigilamos su presión y sus riñones.", lact:"Este medicamento se considera seguro mientras amamanta. Avise al médico de su bebé que usted lo toma."}},
+    {id:"pg-tac", name:"Tacrolimus",
+      plan:"Compatible. Continue at the lowest effective dose.",
+      preg:"Compatible; monitor levels, blood pressure, glucose, and renal function.",
+      lact:"Compatible with breastfeeding (conditional).",
+      en:{plan:"This medicine is considered safe while trying to get pregnant, at the lowest dose that works.", preg:"This medicine is considered safe in pregnancy. We check drug levels, blood pressure, sugar, and kidneys along the way.", lact:"This medicine is considered safe while breastfeeding. Tell your baby's doctor you take it."},
+      es:{plan:"Este medicamento se considera seguro mientras intenta quedar embarazada, en la dosis más baja que funcione.", preg:"Este medicamento se considera seguro en el embarazo. Revisamos los niveles del medicamento, la presión, el azúcar y los riñones durante el proceso.", lact:"Este medicamento se considera seguro mientras amamanta. Avise al médico de su bebé que usted lo toma."}},
+    {id:"pg-ivig", name:"IVIG",
+      plan:"Compatible.",
+      preg:"Compatible throughout pregnancy.",
+      lact:"Compatible with breastfeeding.",
+      en:{plan:"This infusion is considered safe while trying to get pregnant.", preg:"This infusion is considered safe during pregnancy.", lact:"This infusion is considered safe while breastfeeding."},
+      es:{plan:"Esta infusión se considera segura mientras intenta quedar embarazada.", preg:"Esta infusión se considera segura durante el embarazo.", lact:"Esta infusión se considera segura mientras amamanta."}},
+    {id:"pg-rtx", name:"Rituximab",
+      plan:"Discontinue at conception (conditional). May be dosed before conception attempts.",
+      preg:"Stop at conception; consider during pregnancy only for life- or organ-threatening disease. Late-pregnancy exposure can deplete the newborn's B cells.",
+      lact:"Compatible with breastfeeding (minimal transfer).",
+      en:{plan:"Plan to stop this infusion when you start trying to get pregnant. Your doctor will time your last dose before then.", preg:"This medicine is usually stopped in pregnancy and used only when the disease itself is dangerous. Call your doctor to make a plan.", lact:"This medicine is considered safe while breastfeeding. Very little reaches your milk."},
+      es:{plan:"Planee suspender esta infusión cuando empiece a intentar quedar embarazada. Su médico programará la última dosis antes de eso.", preg:"Este medicamento normalmente se suspende en el embarazo y se usa solo cuando la enfermedad misma es peligrosa. Llame a su médico para hacer un plan.", lact:"Este medicamento se considera seguro mientras amamanta. Muy poco llega a su leche."}},
+    {id:"pg-tcz", name:"Tocilizumab",
+      plan:"Discontinue at conception (conditional; limited data).",
+      preg:"Stop once pregnancy is confirmed; data are limited.",
+      lact:"Considered compatible with breastfeeding (conditional; large molecule, minimal transfer).",
+      en:{plan:"Plan to stop this medicine when you start trying to get pregnant. There is not enough safety information yet.", preg:"This medicine is usually stopped once pregnancy is confirmed because safety information is limited. Call your doctor.", lact:"This medicine is likely safe while breastfeeding; very little reaches your milk."},
+      es:{plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Todavía no hay suficiente información de seguridad.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo porque la información de seguridad es limitada. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta; muy poco llega a su leche."}},
+    {id:"pg-aba", name:"Abatacept",
+      plan:"Discontinue at conception (conditional; limited data).",
+      preg:"Stop once pregnancy is confirmed; data are limited.",
+      lact:"Considered compatible with breastfeeding (conditional).",
+      en:{plan:"Plan to stop this medicine when you start trying to get pregnant. There is not enough safety information yet.", preg:"This medicine is usually stopped once pregnancy is confirmed because safety information is limited. Call your doctor.", lact:"This medicine is likely safe while breastfeeding; very little reaches your milk."},
+      es:{plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Todavía no hay suficiente información de seguridad.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo porque la información de seguridad es limitada. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta; muy poco llega a su leche."}},
+    {id:"pg-ana", name:"Anakinra",
+      plan:"Conditionally stop at conception; may continue when active disease demands it (limited data).",
+      preg:"Individualize: usually stopped, but may continue for disease control when needed.",
+      lact:"Considered compatible with breastfeeding (conditional).",
+      en:{plan:"We usually pause this medicine before pregnancy, but it may be continued if your disease needs it. Decide together with your doctor.", preg:"This medicine is sometimes continued in pregnancy when the disease requires it. Talk with your doctor about your plan.", lact:"This medicine is likely safe while breastfeeding."},
+      es:{plan:"Normalmente pausamos este medicamento antes del embarazo, pero puede continuarse si su enfermedad lo necesita. Decídalo junto con su médico.", preg:"Este medicamento a veces se continúa en el embarazo cuando la enfermedad lo requiere. Hable con su médico sobre su plan.", lact:"Este medicamento probablemente es seguro mientras amamanta."}},
+    {id:"pg-beli", name:"Belimumab",
+      plan:"Discontinue at conception (conditional; limited data).",
+      preg:"Stop once pregnancy is confirmed; hydroxychloroquine and other compatible SLE therapy continue.",
+      lact:"Considered compatible with breastfeeding (conditional; limited data).",
+      en:{plan:"Plan to stop this medicine when you start trying to get pregnant. Your other lupus medicines that are safe will continue.", preg:"This medicine is usually stopped once pregnancy is confirmed. Your safe lupus medicines continue. Call your doctor.", lact:"This medicine is likely safe while breastfeeding, though information is limited."},
+      es:{plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Sus otros medicamentos para el lupus que son seguros continuarán.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo. Sus medicamentos seguros para el lupus continúan. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta, aunque la información es limitada."}},
+    {id:"pg-il17", name:"IL-17 / IL-12-23 biologics (secukinumab, ixekizumab, ustekinumab, guselkumab)",
+      plan:"Discontinue at conception (conditional; limited data).",
+      preg:"Stop once pregnancy is confirmed; data are limited.",
+      lact:"Considered compatible with breastfeeding (conditional).",
+      en:{plan:"Plan to stop this medicine when you start trying to get pregnant. There is not enough safety information yet.", preg:"This medicine is usually stopped once pregnancy is confirmed because safety information is limited. Call your doctor.", lact:"This medicine is likely safe while breastfeeding; very little reaches your milk."},
+      es:{plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Todavía no hay suficiente información de seguridad.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo porque la información de seguridad es limitada. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta; muy poco llega a su leche."}},
+    {id:"pg-jak", name:"JAK inhibitors (tofacitinib, upadacitinib, baricitinib)",
+      plan:"STOP before conception - small molecules with no adequate safety data.",
+      preg:"NOT recommended in pregnancy.",
+      lact:"NOT compatible with breastfeeding - small molecules transfer into milk.",
+      en:{plan:"Stop this pill before trying to get pregnant. It is a small molecule that reaches the baby and there is no good safety information.", preg:"This pill is not recommended in pregnancy. If you are pregnant and taking it, call our office today.", lact:"Do not take this pill while breastfeeding. It passes into breast milk."},
+      es:{plan:"Deje esta pastilla antes de intentar quedar embarazada. Es una molécula pequeña que llega al bebé y no hay buena información de seguridad.", preg:"Esta pastilla no se recomienda en el embarazo. Si está embarazada y la toma, llame a nuestro consultorio hoy.", lact:"No tome esta pastilla mientras amamanta. Pasa a la leche materna."}},
+    {id:"pg-apre", name:"Apremilast",
+      plan:"Discontinue before conception (insufficient data).",
+      preg:"Not recommended - insufficient data.",
+      lact:"Not recommended - no data.",
+      en:{plan:"Stop this pill before trying to get pregnant. There is not enough safety information.", preg:"This pill is not recommended in pregnancy because there is not enough safety information. Call your doctor.", lact:"Do not take this pill while breastfeeding; there is no safety information."},
+      es:{plan:"Deje esta pastilla antes de intentar quedar embarazada. No hay suficiente información de seguridad.", preg:"Esta pastilla no se recomienda en el embarazo porque no hay suficiente información de seguridad. Llame a su médico.", lact:"No tome esta pastilla mientras amamanta; no hay información de seguridad."}},
     {id:"pg-lef", name:"Leflunomide",
       plan:"STOP before conception with cholestyramine washout and CONFIRMED undetectable drug levels.",
       preg:"NOT compatible — if pregnancy occurs, start cholestyramine washout immediately and call the office.",
@@ -2349,6 +2639,29 @@ const PG = {
       en:{plan:"This medicine stays in your body a very long time. Before trying to get pregnant you need a special washout medicine (cholestyramine) and a blood test proving the drug is gone.", preg:"This medicine is not safe in pregnancy. If you are pregnant, call our office today — we will start a washout medicine right away.", lact:"Do not take this medicine while breastfeeding."},
       es:{plan:"Este medicamento permanece en su cuerpo por mucho tiempo. Antes de intentar quedar embarazada necesita un medicamento de lavado (colestiramina) y un análisis de sangre que confirme que el medicamento ya no está.", preg:"Este medicamento no es seguro en el embarazo. Si está embarazada, llame a nuestro consultorio hoy; comenzaremos el medicamento de lavado de inmediato.", lact:"No tome este medicamento mientras amamanta."}}
   ],
+  // Explicit caution flags per drug and status. true = show the Caution/stop badge.
+  // Trimester keys (t1/t2/t3) override the preg default when present. Unlisted = compatible badge.
+  WARN: {
+    "pg-nsaid": {plan:false, preg:true, t1:false, t2:true, t3:true, lact:false},
+    "pg-mtx":   {plan:true, preg:true, lact:true},
+    "pg-mmf":   {plan:true, preg:true, lact:true},
+    "pg-cyc":   {plan:true, preg:true, lact:true},
+    "pg-lef":   {plan:true, preg:true, lact:true},
+    "pg-rtx":   {plan:true, preg:true, lact:false},
+    "pg-tcz":   {plan:true, preg:true, lact:false},
+    "pg-aba":   {plan:true, preg:true, lact:false},
+    "pg-ana":   {plan:true, preg:true, lact:false},
+    "pg-beli":  {plan:true, preg:true, lact:false},
+    "pg-il17":  {plan:true, preg:true, lact:false},
+    "pg-jak":   {plan:true, preg:true, lact:true},
+    "pg-apre":  {plan:true, preg:true, lact:true}
+  },
+  flagged(d){
+    const w = this.WARN[d.id]; if (!w) return false;
+    if (this.status === "plan") return !!w.plan;
+    if (this.status === "lact") return !!w.lact;
+    return w[this.status] !== undefined ? !!w[this.status] : !!w.preg;
+  },
   status: "plan", drug: null,
   init(){
     const sh = document.getElementById("pg-status");
@@ -2378,7 +2691,7 @@ const PG = {
     const d = this.current();
     if (!d) { host.innerHTML = '<div class="empty">Pick a medication above.</div>'; return; }
     const g = this.guidance(d);
-    const bad = /NOT compatible|STOP|Avoid —|Stop by 20/i.test(g);
+    const bad = this.flagged(d);
     const card = document.createElement("div"); card.className = "comp-section";
     const h4 = document.createElement("h4");
     const nm = document.createElement("span"); nm.textContent = d.name + " — " + this.statusLabel();
@@ -2447,6 +2760,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   });
   document.getElementById("set-clinic").addEventListener("input", (e)=>{ DATA.clinic = e.target.value; saveState(); });
   JE.render();
+  Calc.init();
   Taper.init();
   EM.init();
   PO.init();
@@ -2454,6 +2768,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   renderAll();
   App.checkBackup();
 });
+
 </script>
 </body>
 </html>
