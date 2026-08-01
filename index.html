@@ -110,6 +110,19 @@
   .comp-body select{border:1.5px solid var(--accent); background:var(--accent-soft); border-radius:6px; padding:2px 6px; outline:none;}
   .comp-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
   .comp-top h2{font-size:1.1rem;}
+  /* Modular notes: disease picker + section chips */
+  .modpick{display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:var(--accent-soft);
+    border:1.5px solid var(--accent); border-radius:var(--radius); padding:10px 14px; margin-bottom:10px;}
+  .modpick label{font-weight:700; font-size:.9rem;}
+  .modpick select{border:1.5px solid var(--accent); background:#fff; border-radius:6px;
+    padding:6px 10px; font-size:.95rem; font-weight:600; outline:none; min-width:230px;}
+  .modhint{font-size:.78rem; color:var(--muted); flex:1 1 240px;}
+  .secbar{display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:14px;}
+  .seclab{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:700; margin-right:2px;}
+  .secchip{border:1px solid var(--line); background:#fff; color:var(--muted); border-radius:999px;
+    padding:3px 10px; font-size:.75rem; cursor:pointer; font-family:inherit;}
+  .secchip.on{border-color:var(--accent); background:var(--accent-soft); color:var(--ink); font-weight:600;}
+  .card.modcard{border-color:var(--accent); border-width:1.5px;}
 
   /* Joint exam */
   #je-wrap{display:grid; grid-template-columns:minmax(300px,430px) 1fr; gap:18px; align-items:start;}
@@ -261,7 +274,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v2.5</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v2.9</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -287,6 +300,7 @@
   <button data-tab="drugs">Drug Cards</button>
   <button data-tab="codes">Codes & Billing</button>
   <button data-tab="settings">Settings</button>
+  <button data-tab="start">Start Here</button>
 </nav>
 
 <div id="favbar"><span class="favlabel">Pinned</span></div>
@@ -484,6 +498,35 @@
       </div>
     </div>
     <div class="set-block">
+      <h3>Your signature</h3>
+      <p class="hint">Type your signature once. Every note, letter, and attestation that ends in a signature uses it, including the modular follow-up and consult notes and all prior authorization letters. Leave it blank and notes print <code class="syn">[your name and credentials]</code> instead.</p>
+      <div class="ed-form" style="max-width:420px; margin-top:6px;">
+        <div><label>Signature block (one line per line of the signature)</label>
+        <textarea id="set-sig" rows="3" placeholder="Jane Smith, MD&#10;Rheumatology"></textarea></div>
+      </div>
+      <div class="ed-form" style="max-width:560px; margin-top:8px;">
+        <label style="font-weight:600">Preview</label>
+        <div id="sig-preview" class="filled" style="margin:4px 0 0; white-space:pre-wrap;"></div>
+      </div>
+      <p class="hint" style="margin-top:8px;">Put <code class="syn">[[ME]]</code> anywhere in your own phrases or templates to drop the whole block in, or <code class="syn">[[MENAME]]</code> for the first line alone inside a sentence. Your signature saves with your library, so an Export you hand to a colleague carries your name. Tell them to change it in this box.</p>
+    </div>
+    <div class="set-block">
+      <h3>EMR mode</h3>
+      <p class="hint">Tailored templates carry portable markers like <code class="syn">[[NAME]]</code>, <code class="syn">[[MEDS]]</code>, and <code class="syn">[[LAB:ESR]]</code> for the parts your chart fills in by itself. This switch decides what those markers become when you copy a note. Flip it any time; the same template works in both.</p>
+      <div class="ed-form" style="max-width:560px; margin-top:6px;">
+        <div><label>Where are you charting today?</label>
+        <select id="set-emr">
+          <option value="generic">Any EMR (Meditech, Cerner, Athena, paper) - markers become bracketed cues</option>
+          <option value="epic">Epic - markers become SmartLinks like @NAME@ and @LABRSLTLINE(ESR)@</option>
+        </select></div>
+      </div>
+      <p class="hint" style="margin-top:8px;">Generic mode writes cues as plain text, never as boxes you type into. No name, date of birth, or MRN is ever entered into RheumPad in either mode.</p>
+      <div class="ed-form" style="max-width:560px; margin-top:8px;">
+        <label style="font-weight:600">Preview</label>
+        <div id="emr-preview" class="filled" style="margin:4px 0 0; white-space:pre-wrap;"></div>
+      </div>
+    </div>
+    <div class="set-block">
       <h3>Phrases</h3>
       <div id="ed-phrases"></div>
       <button class="btn small" style="margin-top:8px" onclick="ED.newItem('phrases')">+ Add phrase</button>
@@ -509,9 +552,58 @@
       <button class="btn small" style="margin-top:8px" onclick="ED.newItem('drugs')">+ Add drug card</button>
     </div>
     <div class="set-block">
+      <h3>About &amp; license</h3>
+      <p class="hint" style="margin-bottom:6px;"><b>RheumPad</b> &middot; a charting companion for rheumatology.<br>
+      &copy; 2026 Dominique Feterman, MD. Free to use and adapt.</p>
+      <p class="hint"><b>License:</b> Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0). Use RheumPad free of charge, at work or at home, and adapt the library to your own practice. Credit the author, do not sell the app or fold the app into a paid product, and share any modified version under these same terms. Full terms at <code class="syn">creativecommons.org/licenses/by-nc-sa/4.0</code></p>
+      <p class="hint"><b>Medical disclaimer:</b> RheumPad is a documentation aid for licensed clinicians. Not medical advice, not a diagnostic device, and not a substitute for clinical judgment or current prescribing information. Drug dosing, monitoring intervals, and calculator output are a starting reference only. Verify against a primary source before prescribing. Provided as is, without warranty of any kind. The author accepts no liability for clinical decisions made using this tool.</p>
+      <p class="hint"><b>Privacy:</b> RheumPad stores no patient data. Nothing you type leaves your browser, no account exists, and no analytics or network calls run. Pre-chart slots are numbered, never named. Keep protected health information out of every field, including your own custom phrases.</p>
+      <p class="hint"><b>Calculator attribution:</b> Scores are implemented from published formulas and are provided as calculation aids. Original instruments remain the property of their respective developers.</p>
+    </div>
+    <div class="set-block">
       <h3>Reset</h3>
       <p class="hint">Restore the built-in starter library. Your own added items are removed. Export first if unsure.</p>
       <button class="btn danger" onclick="ED.resetAll()">Reset to starter library</button>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-start">
+    <div class="set-block">
+      <h3>What RheumPad is</h3>
+      <p class="hint">A charting companion for rheumatology. It holds your dot phrases, note templates, pick lists, patient handouts, drug cards, calculators, a steroid taper builder, peri-op and pregnancy references, and an E/M helper. You fill in blanks here, copy, and paste into whatever chart you use. It works in Epic, Meditech, Cerner, Athena, or on paper.</p>
+      <p class="hint">It runs entirely inside your browser. No login, no server, no internet connection needed after the file loads. Nothing you type leaves your computer.</p>
+      <p class="hint"><b>Never type patient identifiers into RheumPad.</b> No names, no dates of birth, no MRNs, not in the pre-chart list and not in phrases you write yourself. The app is built so identifiers are never needed: chart-specific details show as bracketed cues that your EMR fills in after you paste.</p>
+    </div>
+
+    <div class="set-block">
+      <h3>Set it up in three minutes</h3>
+      <ol class="hint" style="padding-left:20px; line-height:1.9;">
+        <li><b>Type your signature.</b> Settings, Your signature. Every note, letter, and attestation picks it up.</li>
+        <li><b>Type your clinic name.</b> Settings, Your library. It prints on patient handouts.</li>
+        <li><b>Pick your EMR.</b> Settings, EMR mode. Epic turns markers into SmartLinks. Any other chart leaves them as bracketed cues you overwrite or delete.</li>
+        <li><b>Export a backup.</b> Top right. Do this again after any big editing session, because clinic computers wipe browser data without warning.</li>
+      </ol>
+      <button class="btn primary" onclick="App.showTab('settings')">Open Settings</button>
+    </div>
+
+    <div class="set-block">
+      <h3>The three things worth learning first</h3>
+      <p class="hint"><b>1. The quick launcher.</b> Press the period key or Ctrl+K from anywhere. Type a dot phrase like .mtxstart, or any name. Arrow keys move, Enter copies or opens it. Phrases with no blanks copy straight to your clipboard.</p>
+      <p class="hint"><b>2. The modular notes.</b> Note Templates, Modular Notes. Open Follow-Up Note or New Consult Note, pick a disease from the dropdown at the top, and the assessment, interval history, serologies, focused exam, and labs rewrite themselves for that disease. Pick nothing for a plain generic note. The SECTIONS chips underneath hide the parts you do not use, and hidden sections stay out of Copy full note.</p>
+      <p class="hint"><b>3. Blanks.</b> Anywhere you write your own text: <code class="syn">{dose}</code> makes a fill-in box, <code class="syn">{severity:mild|moderate|severe}</code> makes a dropdown, <code class="syn">***</code> makes a plain blank. Boxes you leave empty copy as <code class="syn">***</code> so you spot them in the note.</p>
+    </div>
+
+    <div class="set-block">
+      <h3>Make it yours</h3>
+      <p class="hint">Settings edits every phrase, template, pick list, handout, and drug card, and adds new ones. Nothing is locked. The starter library is a starting point, so rewrite anything that does not match how you practice.</p>
+      <p class="hint">Star anything to pin it to the bar under the search box. Starred items are the ones you reach for ten times a day.</p>
+      <p class="hint">Moving to another computer: Export here, Import there. The file carries your whole library, including your signature, so change the signature after importing someone else's.</p>
+    </div>
+
+    <div class="set-block">
+      <h3>Before you rely on it</h3>
+      <p class="hint">Drug dosing, monitoring intervals, taper schedules, peri-op holds, pregnancy compatibility, and calculator output are a reference starting point written by one rheumatologist. Verify against current prescribing information and your own guidelines before you act on any of it. RheumPad is a documentation aid. The clinical decision stays yours.</p>
+      <p class="hint">Full license and disclaimer sit at the bottom of Settings.</p>
     </div>
   </section>
 </main>
@@ -533,6 +625,7 @@
 const DEFAULT_DATA = {
   version: 5,
   clinic: "",
+  emr: "generic",
   phrases: [
     {id:"p-mtxstart", name:"Methotrexate start counseling", dot:".mtxstart", cat:"Counseling", body:
 `Discussed methotrexate initiation at {dose:7.5 mg|10 mg|12.5 mg|15 mg|20 mg|25 mg} weekly with folic acid 1 mg daily. Reviewed common side effects (nausea, fatigue, oral ulcers, hair thinning) and rare serious risks (hepatotoxicity, cytopenias, pneumonitis). Counseled to avoid alcohol, report fever, dyspnea, or unusual bruising, and to hold the dose during active infection. Reviewed strict pregnancy avoidance and contraception requirements. Baseline CBC, CMP, hepatitis B and C serologies, and chest imaging reviewed or ordered. Labs every 2-4 weeks for the first 3 months, then every 8-12 weeks. Patient verbalized understanding and agreed to proceed.`},
@@ -593,70 +686,6 @@ const DEFAULT_DATA = {
 3. Monitoring labs before next visit.
 4. Return in {fu:6 weeks|3 months|4 months|6 months}.`}
     ]},
-    {id:"t-fura", name:"RA Follow-Up", cat:"Follow-Up", sections:[
-      {title:"Interval History", body:`Established patient with {sero:seropositive|seronegative} rheumatoid arthritis, here for follow-up. Overall {status:improved|stable|worse} since last visit. Morning stiffness {stiffness:none|<15 minutes|15-30 minutes|30-60 minutes|>1 hour}. Flares since last visit: {flares:none|one, self-limited|***}. Patient global assessment {pga}/10. Current therapy: {tx}, adherence {adh:good|partial|poor}, side effects {se:none|***}.`},
-      {title:"Exam", body:`{msk}`},
-      {title:"Disease Activity", body:`TJC28 {tjc}, SJC28 {sjc}, patient global {pga2}/10, provider global {ega}/10. CDAI {cdai} ({level:remission|low|moderate|high} disease activity).`},
-      {title:"Data", body:`CBC, CMP reviewed without significant abnormality{labnote: |; see below}. ESR {esr}, CRP {crp}.`},
-      {title:"Assessment & Plan", body:`Rheumatoid arthritis, {activity:in remission|low disease activity|moderate disease activity|high disease activity} on current therapy.
-1. {plan1:Continue current regimen, treat-to-target reviewed|Escalate therapy as discussed|Taper as discussed}.
-2. {plan2}
-3. DMARD safety labs before next visit.
-4. Lifestyle measures reviewed: activity, anti-inflammatory eating pattern, sleep, tobacco avoidance.
-5. Return in {fu:6 weeks|3 months|4 months|6 months}.`}
-    ]},
-    {id:"t-fulupus", name:"Lupus / CTD Follow-Up", cat:"Follow-Up", sections:[
-      {title:"Interval History", body:`Established patient with {dx:SLE|SLE with lupus nephritis|Sjogren syndrome|systemic sclerosis|MCTD|dermatomyositis|undifferentiated CTD}, here for follow-up, overall {status:improved|stable|worse}. Organ-based review: skin {skin:clear|rash - see exam}, mucosal ulcers {ulcers:none|present}, alopecia {alo:none|present}, arthralgias/arthritis {joints:none|present - see exam}, serositis symptoms {serositis:none|present}, Raynaud {raynaud:stable|worse|none}, sicca {sicca:stable|none|present}. Constitutional: {const:no fevers or weight loss|***}. Current therapy: {tx}, adherence {adh:good|partial|poor}.`},
-      {title:"Exam", body:`General: well-appearing. Skin: {skinex:no active rash|***}. Oral mucosa without ulcers. MSK: {msk}. CV/pulm: no rubs, clear breath sounds. Edema: {edema:none|***}.`},
-      {title:"Data", body:`CBC, CMP, urinalysis with protein assessment reviewed: {ua:no proteinuria or active sediment|***}. Complements {c34:normal|low}, dsDNA {dsdna:stable|rising|negative}.`},
-      {title:"Assessment & Plan", body:`{dx2}, currently {activity:quiescent|mildly active|active - see plan}.
-1. {plan1:Continue hydroxychloroquine; annual eye exam up to date|Adjust therapy as below}.
-2. {plan2}
-3. Sun protection, vaccination status, and cardiovascular risk reviewed.
-4. Labs including urine protein before next visit.
-5. Return in {fu:6 weeks|3 months|4 months|6 months}.`}
-    ]},
-    {id:"t-fupsa", name:"PsA / Axial SpA Follow-Up", cat:"Follow-Up", sections:[
-      {title:"Interval History", body:`Established patient with {dx:psoriatic arthritis|axial spondyloarthritis|peripheral spondyloarthritis}, here for follow-up, overall {status:improved|stable|worse}. Peripheral joint symptoms: {joints:none|***}. Inflammatory back symptoms: {back:none|morning stiffness >30 min, improves with activity|stable|worse}. Skin/psoriasis: {skin:clear|stable plaques|worse}. Enthesitis: {enth:none|present - see exam}. Dactylitis: {dact:none|present}. Current therapy: {tx}, adherence {adh:good|partial|poor}, side effects {se:none|***}.`},
-      {title:"Exam", body:`Skin: {skinex:no psoriatic plaques|plaques at ***}. Nails: {nails:normal|pitting/onycholysis}. MSK: {msk}. Entheses: {enthex:nontender|tender at ***}. Spine: {spine:full range of motion|restricted ***}.`},
-      {title:"Data", body:`Labs reviewed: CBC, CMP without significant abnormality. CRP {crp}.`},
-      {title:"Assessment & Plan", body:`{dx2}, {activity:minimal disease activity|low disease activity|active disease}.
-1. {plan1:Continue current biologic/DMARD|Escalate therapy as discussed}.
-2. {plan2}
-3. Home exercise and posture program reinforced.
-4. Return in {fu:3 months|4 months|6 months}.`}
-    ]},
-    {id:"t-fugout", name:"Gout Follow-Up", cat:"Follow-Up", sections:[
-      {title:"Interval History", body:`Established patient with gout on {ult:allopurinol|febuxostat|no urate-lowering therapy} {dose}, here for follow-up. Flares since last visit: {flares:none|one|two or more}. Adherence {adh:good|partial|poor}. Tophi: {tophi:none|stable|regressing}. Dietary and alcohol review: {diet}.`},
-      {title:"Exam", body:`MSK: {msk:no active synovitis, no tophi appreciated|***}.`},
-      {title:"Data", body:`Serum urate today: {urate} mg/dL (goal {goal:<6.0|<5.0}). CBC, CMP reviewed.`},
-      {title:"Assessment & Plan", body:`Gout, {control:at urate goal and flare-free - well controlled|above urate goal - titrating|clinically active}.
-1. {plan1:Continue current urate-lowering dose|Increase allopurinol by 100 mg and recheck urate|Start urate-lowering therapy as discussed}.
-2. Flare plan reviewed and in place.
-3. {ppx:Continue flare prophylaxis|Discontinue prophylaxis - flare-free interval achieved|N/A}.
-4. Repeat urate in {int:2 weeks|4 weeks|6 weeks|3 months}. Return in {fu:6 weeks|3 months|6 months|1 year}.`}
-    ]},
-    {id:"t-fupmr", name:"PMR / GCA Follow-Up", cat:"Follow-Up", sections:[
-      {title:"Interval History", body:`Established patient with {dx:polymyalgia rheumatica|giant cell arteritis|PMR with GCA}, on prednisone {dose} daily, here for follow-up. Shoulder/hip girdle symptoms: {girdle:resolved|improved|recurrent}. GCA symptom screen: headache {ha:none|present}, jaw claudication {jaw:none|present}, visual symptoms {vis:none|present - urgent evaluation}. Steroid side effects: {se:none|***}.`},
-      {title:"Exam", body:`General: well-appearing. Temporal arteries: {ta:nontender, pulses intact|***}. Shoulder and hip range of motion: {rom:full and painless|***}. MSK otherwise: {msk:no synovitis|***}.`},
-      {title:"Data", body:`ESR {esr}, CRP {crp} ({trend:normalized|improving|rising}). Glucose and bone health parameters reviewed.`},
-      {title:"Assessment & Plan", body:`{dx2}, {control:in clinical and laboratory remission on taper|controlled, continuing taper|flare during taper - see plan}.
-1. Prednisone: {taper}.
-2. {sparing:No steroid-sparing agent indicated at this time|Continue methotrexate|Continue tocilizumab|Initiate steroid-sparing therapy as discussed}.
-3. Bone protection: calcium/vitamin D; DEXA {dexa:up to date|ordered}.
-4. Strict return precautions for visual symptoms reviewed.
-5. Labs and return in {fu:2 weeks|4 weeks|6 weeks|3 months}.`}
-    ]},
-    {id:"t-fuop", name:"Osteoporosis Follow-Up", cat:"Follow-Up", sections:[
-      {title:"Interval History", body:`Established patient with {dx:osteoporosis|osteopenia|glucocorticoid-induced osteoporosis} on {tx:alendronate weekly|denosumab q6 months|zoledronic acid annually|teriparatide daily|no pharmacologic therapy}. Interval fractures: {fx:none|***}. Falls since last visit: {falls:none|***}. Adherence and tolerance: {adh:good|GI upset|injection site reaction|***}. Calcium/vitamin D intake: {cavd:adequate|reviewed and adjusted}.`},
-      {title:"Exam", body:`Height today: {height} ({htchange:stable|loss from prior}). Gait and balance: {gait:steady|***}. Spine: {spine:nontender|***}.`},
-      {title:"Data", body:`Most recent DEXA {dexadate}: T-scores spine {tspine}, hip {thip} ({trend:stable|improved|declined} from prior). Vitamin D level {vitd}.`},
-      {title:"Assessment & Plan", body:`{dx2}, on treatment year {year}.
-1. {plan1:Continue current therapy|Drug holiday discussed and initiated|Transition therapy as discussed}.
-2. Weight-bearing and resistance exercise, fall prevention, protein intake reviewed.
-3. Repeat DEXA {nextdexa:in 2 years|in 1 year|per drug holiday protocol}.
-4. Return in {fu:6 months|1 year}.`}
-    ]},
     {id:"t-medcheck", name:"Medication Check", cat:"Short Visits", sections:[
       {title:"Note", body:`Brief visit for medication monitoring. Patient on {drug} for {dx}. Doing {status:well without side effects|well with minor side effects: ***|poorly - see plan}. Safety labs reviewed: {labs:CBC and CMP without significant abnormality|***}. No active disease symptoms reported today{caveat: |; see below}.
 Plan: {plan:continue current dose|dose adjusted as below|hold and reassess}. Next labs in {int:4 weeks|8 weeks|12 weeks}. Return to regular follow-up as scheduled.`}
@@ -675,8 +704,7 @@ I am requesting prior authorization for {drug:adalimumab|etanercept|infliximab|c
       {title:"Closing", body:`This request represents medically necessary care for this patient. Please contact my office at *** with any questions or to arrange a peer-to-peer discussion. I appreciate your prompt review.
 
 Sincerely,
-***, MD
-Board-Certified Rheumatologist`}
+[[ME]]`}
     ]},
     {id:"t-paosteo", name:"Osteoporosis Medication Medical Necessity", cat:"Prior Authorization", sections:[
       {title:"Request", body:`To Whom It May Concern:
@@ -687,7 +715,7 @@ I am requesting prior authorization for {drug:denosumab|teriparatide|abaloparati
       {title:"Medical Necessity", body:`The requested agent is consistent with current AACE and Endocrine Society guidance for patients at {risk2:high|very high} fracture risk in this clinical setting. Delay in effective treatment leaves the patient exposed to preventable fracture, hospitalization, and loss of independence. Please contact my office at *** for questions or peer-to-peer review.
 
 Sincerely,
-***, MD`}
+[[ME]]`}
     ]},
     {id:"t-paappeal", name:"Appeal of Denial", cat:"Prior Authorization", sections:[
       {title:"Appeal", body:`RE: Appeal of denial, reference number {ref}. Patient: ***. Member ID: ***.
@@ -698,8 +726,7 @@ I am writing to formally appeal the denial of {drug} for {dx}, communicated on {
       {title:"Closing", body:`I request that this denial be overturned and the therapy approved. I am available for a peer-to-peer discussion at ***. Please treat this appeal with urgency given active disease.
 
 Sincerely,
-***, MD
-Board-Certified Rheumatologist`}
+[[ME]]`}
     ]},
     {id:"t-papeer", name:"Peer-to-Peer Prep Sheet", cat:"Prior Authorization", sections:[
       {title:"Case Facts", body:`Drug requested: {drug}. Diagnosis: {dx}, ICD-10 {icd}. Denial reason on file: {denial}. Reviewer specialty (if known): {reviewer}.`},
@@ -1014,7 +1041,13 @@ Los mensajes por el portal se responden en {response} días hábiles. En una eme
       monitor:"Calcium, urate, creatinine periodically.",
       se:"Dizziness, leg cramps, nausea, orthostasis, mild hypercalcemia.",
       serious:"Avoid in Paget disease, prior skeletal radiation, unexplained high alkaline phosphatase, or bone malignancy.",
-      pearls:"Anabolic-first for very high fracture risk. Must follow with an antiresorptive or the gains are lost."}
+      pearls:"Anabolic-first for very high fracture risk. Must follow with an antiresorptive or the gains are lost."},
+    {id:"d-ldn", name:"Low-dose naltrexone (LDN)", cls:"Adjunctive & off-label",
+      dosing:"1.5 mg at bedtime for 1-2 weeks, then 3 mg, then 4.5 mg nightly. Usual range 1.5-4.5 mg. Requires a compounding pharmacy; the commercial 50 mg tablet is not a practical starting point. Off-label for all rheumatologic indications.",
+      monitor:"No routine labs required. Baseline LFTs are reasonable if there is known liver disease. Reassess symptom benefit at 8-12 weeks and stop if there is none.",
+      se:"Vivid dreams, insomnia or sleep disruption in the first 1-2 weeks, headache, nausea, transient anxiety. Usually settles or resolves with a slower titration.",
+      serious:"Precipitates acute withdrawal in anyone on opioids. Confirm the patient is opioid-free for 7-10 days before starting, and warn that opioid analgesia will be blunted in an emergency. Avoid in acute hepatitis or hepatic failure.",
+      pearls:"Proposed mechanism is glial TLR4 antagonism, not opioid receptor blockade, at these doses. Evidence is thin: small crossover trials in fibromyalgia showed benefit, but the largest randomized trial to date (naltrexone 6 mg vs placebo, 99 women, 12 weeks, Lancet Rheumatology 2024) did not meet its primary endpoint for pain reduction. Reasonable to trial in fibromyalgia after standard options, and set expectations accordingly. Not a DMARD and no disease-modifying evidence in inflammatory arthritis. Usually cash pay, roughly 30 to 60 dollars a month compounded. Have the patient carry a card noting naltrexone use for emergencies."}
   ],
 
   codes: [
@@ -1071,10 +1104,995 @@ Los mensajes por el portal se responden en {response} días hábiles. En una eme
       {code:"20611", desc:"Major joint, with ultrasound"}]}
   ]
 };
+// ============ TAILORED PROGRESS NOTES (built from Dr. Feterman's own Epic templates) ============
+// Portable EMR markers: [[NAME]], [[MEDS]], [[LAB:ESR]] etc.
+// Epic mode  -> @NAME@, @MEDSCONDENSEDREFRESH@, @LABRSLTLINE(ESR)@
+// Generic    -> [patient name], [current medication list], "ESR: [        ]"  (plain text, never a field)
+(function(){
+  if (typeof DEFAULT_DATA === "undefined" || !DEFAULT_DATA) return;
+
+  // ---------- shared blocks ----------
+  const LEAD = "For your convenience, I will begin by listing my impression and recommendations followed by details of history, physical exam, diagnostic testing, and data review.";
+
+  const IMMUNO = [
+    "Immunosuppressed status",
+    "High risk medication use",
+    "Medication monitoring encounter"
+  ].join("\n");
+
+  const VAX = [
+    "Up to date on: {vaccines up to date:PCV20|Tdap|COVID-19|influenza|Shingrix|all of the above|reviewed, see chart}",
+    "Recommended today: {vaccines recommended:none due|PCV20|Tdap|COVID-19|influenza|Shingrix|see chart}"
+  ].join("\n");
+
+  const MONITOR = "- CBC, CMP every {monitoring interval:6 weeks|8 weeks|3 months|4 months|6 months} for toxicity monitoring for ***.";
+
+  const RTC = "Return to clinic for follow-up in {return interval:4 weeks|6 weeks|2 months|3 months|4 months|6 months|12 months}.";
+
+  const INTERVAL_TAIL = [
+    "Interval Events:",
+    "- Medication changes: ***",
+    "- Infections/illnesses: ***",
+    "- ER visits/hospitalizations: ***",
+    "- Medication side effects: ***",
+    "Currently on ***, tolerating ***. No side effects (GI, headaches, oral ulcers, abnormal bleeding)."
+  ].join("\n");
+
+  const ROSPMH = [
+    "REVIEW OF SYSTEMS:",
+    "Except for those mentioned in the HPI, full review of systems is negative.",
+    "",
+    "PAST MEDICAL HISTORY:",
+    "Past medical and surgical history were reviewed, pertinent details included in the HPI and my impression.",
+    "[[PROBLIST]]",
+    "",
+    "FAMILY HISTORY:",
+    "***",
+    "",
+    "SOCIAL HISTORY:",
+    "***"
+  ].join("\n");
+
+  const MEDSEC = "PERTINENT MEDICATIONS:\n[[MEDS]]";
+
+  const OBJHEAD = [
+    "[[OBJ]]",
+    "[[WT]]",
+    "[[BP]]",
+    "[[VITALS]]",
+    "[[EXAM]]"
+  ].join("\n");
+
+  const CORELABS = [
+    "[[LAB:WBC]]",
+    "[[LAB:HEMOGLOBIN]]",
+    "[[LAB:HEMATOCRIT]]",
+    "[[LAB:PLATELET]]",
+    "[[LAB:CREATININE]]",
+    "[[LAB:AST]]",
+    "[[LAB:ALT]]",
+    "[[LAB:ESR]]",
+    "[[LAB:CRP]]"
+  ].join("\n");
+
+  const INFXN = "Infection monitoring: ***\n[[INFXN]]";
+
+  const SIG = "[[ME]]";
+
+  const ATTEST = SIG + "\n\nThis visit represents ongoing and longitudinal specialty care provided to this patient.";
+
+  const NORMAL_EXAM = [
+    "Constitutional: well appearing, no acute distress",
+    "HEENT: no scleral icterus, no conjunctival injection, no nasal or oral ulcers, moist oral mucosa, able to open mouth normally; no saddle nose deformity, no deformity or tenderness of the ears, no cervical lymphadenopathy, no malar rash",
+    "Pulmonary: respirations unlabored, lungs clear to auscultation",
+    "Cardiovascular: RRR, no m/g/r",
+    "Musculoskeletal:",
+    "Shoulder - normal ROM, no tenderness, no swelling",
+    "Elbows - normal ROM, no tenderness, no swelling, no epicondylitis, no bursitis, no erythema, cool to touch",
+    "Wrists - normal ROM, no tenderness, no swelling, no erythema, cool to touch",
+    "MCPs/PIPs - normal ROM, no tenderness, no swelling, no erythema, no Bouchard's nodes, cool to touch",
+    "DIP - no abnormalities, no Heberden's nodes, no erythema, cool to touch",
+    "Knees - normal ROM, no tenderness, no swelling, no effusion, no erythema, cool to touch",
+    "Ankles - normal ROM, no tenderness, no swelling, no effusion, no erythema, cool to touch",
+    "Feet - normal ROM, no tenderness, no swelling, negative MTP squeeze, no effusion, no erythema, cool to touch",
+    "Skin: no discoid rashes, no reticular rashes, no sclerodactyly, no dactylitis, no skin tightening, no telangiectasias, no livedo, no nodules, no calcinosis, no tophi",
+    "Neurologic: alert, oriented, answering questions appropriately",
+    "Psychiatric: calm, cooperative"
+  ].join("\n");
+
+  const NP_PASTHX = [
+    "Past History:",
+    "Meds: ***",
+    "PMHx: ***",
+    "Family Hx: ***",
+    "Social Hx: ***"
+  ].join("\n");
+
+  const NP_RECORDS = [
+    "RECORDS REVIEWED:",
+    "I personally reviewed and interpreted the history, physical exams, lab testing, and imaging results in the patient's EMR as discussed in the HPI above.",
+    "Outside records reviewed: {records:none available|prior rheumatology notes|primary care notes|outside labs|outside imaging|hospital records|multiple, see above}"
+  ].join("\n");
+
+  // ---------- disease definitions ----------
+  // k=key  n=name  dx=diagnosis line  imm=on immunosuppression
+  // iv=interval history additions  ser=serologies  ap=assessment & plan lines
+  // lab=extra data lines  ex=exam additions  hpi=new-patient HPI prompts  npobj=new-patient objective
+  const D = [
+
+  {k:"ra", n:"Rheumatoid Arthritis", cat:"RA",
+   dx:"{serostatus:seropositive|seronegative} rheumatoid arthritis",
+   imm:true,
+   iv:[
+     "Pain level: ***/10",
+     "PGA: ***/10",
+     "Morning stiffness: *** minutes",
+     "Active joints: ***",
+     "Tender joint count (28): ***    Swollen joint count (28): ***",
+     "Flares since last visit: {flares:none|one, self-limited|two or more|ongoing}",
+     "Function: {function:no limitation|mild limitation|difficulty with grip and fine motor tasks|difficulty with ambulation}"
+   ].join("\n"),
+   ser:"RF: ***\nCCP: ***\nANA: ***",
+   ap:[
+     "{serostatus2:Seropositive|Seronegative} rheumatoid arthritis, {activity:in remission|low disease activity|moderate disease activity|high disease activity} by CDAI of ***.",
+     "- {action:Continue current regimen|Escalate therapy|Taper therapy|Switch mechanism of action}: ***",
+     "- Treat-to-target discussed; goal is remission or low disease activity by CDAI at each visit.",
+     "- Erosive disease: {erosive:no radiographic erosions|erosions present|not yet imaged}. Hand and foot radiographs {films:not indicated today|ordered today|due in 12 months}."
+   ].join("\n"),
+   lab:"",
+   ex:"Detailed joint exam performed. Tender joints: ***. Swollen joints: ***. No rheumatoid nodules. No synovitis appreciated elsewhere.",
+   hpi:"presenting with {onset:additive|migratory|symmetric|asymmetric} {distribution:small joint|large joint|small and large joint} pain and swelling for {duration}. Morning stiffness {stiffness:none|under 15 minutes|15 to 30 minutes|30 to 60 minutes|over 1 hour}. Involved joints: ***. Prior treatment: {prior:none|NSAIDs|prednisone|methotrexate|other DMARD}. Function and grip strength: ***.",
+   npobj:"Serologies: RF ***, CCP ***, ANA ***.\nInflammatory markers: ESR ***, CRP ***.\nHepatitis B, hepatitis C, HIV, and QuantiFERON as below prior to DMARD initiation."},
+
+  {k:"sle", n:"Systemic Lupus Erythematosus", cat:"SLE",
+   dx:"systemic lupus erythematosus",
+   imm:true,
+   iv:[
+     "Pain level: ***/10",
+     "PGA: ***/10",
+     "Morning stiffness: *** minutes",
+     "Active joints: ***",
+     "Mucocutaneous: {skin:no rash|malar rash|discoid lesions|photosensitive rash}, oral ulcers {ulcers:absent|present}, alopecia {alopecia:absent|present}",
+     "Serositis: {serositis:no pleuritic pain or dyspnea|pleuritic chest pain|dyspnea}",
+     "Raynaud phenomenon: {raynaud:absent|present, mild|present with digital ulceration}",
+     "Hydroxychloroquine {hcq:200 mg daily|200 mg BID|300 mg daily|400 mg daily}; last ophthalmologic exam ***"
+   ].join("\n"),
+   ser:"ANA: ***\ndsDNA: ***\nSm: ***\nRNP: ***\nSSA/Ro: ***    SSB/La: ***\nC3: ***    C4: ***\nAntiphospholipid antibodies (lupus anticoagulant, anticardiolipin, beta-2 glycoprotein I): ***",
+   ap:[
+     "Systemic lupus erythematosus, {activity:quiescent|mildly active|moderately active|severely active}. Organ systems involved: ***.",
+     "- Hydroxychloroquine continued at or below 5 mg/kg actual body weight. Annual retinal screening after 5 years of use, sooner with risk factors.",
+     "- Renal monitoring: urinalysis with microscopy and urine protein-to-creatinine ratio {renal:today|at next visit|every 3 months}.",
+     "- Complement and dsDNA followed as activity markers.",
+     "- Sun protection, SPF 30 or higher, reviewed.",
+     "- Pregnancy planning and medication compatibility discussed: ***"
+   ].join("\n"),
+   lab:"[[LAB:C3]]\n[[LAB:C4]]\nAnti-dsDNA: ***\nUrinalysis with microscopy: ***\nUrine protein-to-creatinine ratio: ***",
+   ex:"Skin: {rash:no active rash|malar erythema sparing nasolabial folds|discoid lesions|photodistributed rash}. Oral mucosa: {oral:no ulcers|palatal ulcers}. No alopecia. No digital ulcers. Joint exam: ***.",
+   hpi:"presenting with {presentation:polyarthralgia|rash|fatigue|cytopenias|renal abnormality|positive ANA} for {duration}. Reviewed for photosensitivity, malar or discoid rash, oral ulcers, alopecia, serositis, Raynaud phenomenon, sicca, thrombosis, and pregnancy loss. Pertinent positives: ***.",
+   npobj:"Serologies: ANA *** (pattern ***, titer ***), dsDNA ***, Sm ***, RNP ***, SSA ***, SSB ***, C3 ***, C4 ***.\nAntiphospholipid panel: lupus anticoagulant ***, anticardiolipin ***, beta-2 glycoprotein I ***.\nUrinalysis with microscopy and urine protein-to-creatinine ratio: ***."},
+
+  {k:"psa", n:"Psoriatic Arthritis", cat:"PsA",
+   dx:"psoriatic arthritis",
+   imm:true,
+   iv:[
+     "Pain level: ***/10",
+     "PGA: ***/10",
+     "Morning stiffness: *** minutes",
+     "Active joints: ***",
+     "Skin involvement: {skin:clear|under 3 percent BSA|3 to 10 percent BSA|over 10 percent BSA}; sites ***",
+     "Nail involvement: {nails:none|pitting|onycholysis|both}",
+     "Dactylitis: {dactylitis:absent|present} ***",
+     "Enthesitis: {enthesitis:absent|Achilles|plantar fascia|lateral epicondyle|multiple sites}",
+     "Axial symptoms: {axial:absent|inflammatory back pain|buttock pain}",
+     "Extra-articular: uveitis {uveitis:no history|prior episode}, inflammatory bowel disease {ibd:no|yes}"
+   ].join("\n"),
+   ser:"RF: ***\nCCP: ***\nANA: ***\nHLA-B27 (if obtained): ***",
+   ap:[
+     "Psoriatic arthritis, {domain:peripheral|axial|peripheral and axial} predominant, {activity:in remission|low disease activity|moderate disease activity|high disease activity}.",
+     "- Domains active today: {domains:peripheral arthritis|enthesitis|dactylitis|axial disease|skin|nail disease}.",
+     "- {action:Continue current regimen|Escalate therapy|Switch mechanism of action}: ***",
+     "- Target is minimal disease activity. Skin and joint control coordinated with dermatology as needed.",
+     "- Cardiometabolic risk reviewed: weight, lipids, blood pressure, and glucose with primary care."
+   ].join("\n"),
+   lab:"",
+   ex:"Skin: psoriatic plaques {plaques:absent today|scalp|extensor surfaces|intergluteal|multiple sites}. Nails: {nailex:normal|pitting|onycholysis}. Dactylitis: ***. Enthesitis: ***. Joint exam: ***.",
+   hpi:"presenting with {presentation:joint pain and swelling|heel pain|swollen digit|back pain} for {duration} in the setting of {psoriasis:known plaque psoriasis|scalp psoriasis|nail changes only|family history of psoriasis}. Reviewed for dactylitis, enthesitis, inflammatory back pain, uveitis, and inflammatory bowel disease. Pertinent positives: ***.",
+   npobj:"Serologies: RF ***, CCP ***, ANA ***.\nInflammatory markers: ESR ***, CRP ***.\nRadiographs of hands, feet, and pelvis: ***."},
+
+  {k:"axspa", n:"Axial Spondyloarthritis", cat:"axSpA",
+   dx:"{axtype:radiographic|non-radiographic} axial spondyloarthritis",
+   imm:true,
+   iv:[
+     "Pain level: ***/10",
+     "PGA: ***/10",
+     "Morning stiffness: *** minutes",
+     "Inflammatory back pain: {ibp:controlled|nocturnal pain|second half of the night pain|improved with activity}",
+     "Peripheral joints: ***",
+     "Enthesitis: {enthesitis:absent|Achilles|plantar fascia|multiple sites}",
+     "Extra-articular: uveitis {uveitis:no history|prior episode|active}, psoriasis {psoriasis:no|yes}, inflammatory bowel disease {ibd:no|yes}",
+     "Exercise program adherence: {exercise:daily|several times weekly|inconsistent|not started}"
+   ].join("\n"),
+   ser:"HLA-B27: ***\nRF: ***\nCCP: ***",
+   ap:[
+     "{axtype2:Radiographic|Non-radiographic} axial spondyloarthritis, {activity:inactive disease|low disease activity|high disease activity} by ASDAS of ***.",
+     "- {action:Continue current regimen|Escalate to a biologic|Optimize NSAID therapy|Switch mechanism of action}: ***",
+     "- Daily spinal extension and postural exercise reinforced; physical therapy {pt:ongoing|referred today|declined}.",
+     "- Counseled to report acute eye pain, redness, or photophobia for urgent ophthalmologic evaluation.",
+     "- Smoking cessation reviewed where applicable."
+   ].join("\n"),
+   lab:"",
+   ex:"Spine: {spine:full range of motion|reduced lumbar flexion|reduced cervical rotation}. Modified Schober ***  cm. Chest expansion *** cm. Sacroiliac tenderness: {si:absent|present}. Enthesitis: ***. Peripheral joint exam: ***.",
+   hpi:"presenting with {presentation:chronic low back pain|buttock pain|neck pain|peripheral arthritis} for {duration}, with onset before age 45. Inflammatory features: morning stiffness over 30 minutes, improvement with exercise, no improvement with rest, nocturnal pain with improvement on arising. Reviewed for uveitis, psoriasis, inflammatory bowel disease, dactylitis, enthesitis, and family history of spondyloarthritis. Pertinent positives: ***.",
+   npobj:"HLA-B27: ***. ESR ***, CRP ***.\nRadiographs of the sacroiliac joints: ***.\nMRI of the sacroiliac joints without contrast: ***."},
+
+  {k:"gout", n:"Gout and Hyperuricemia", cat:"Gout",
+   dx:"gout",
+   imm:false,
+   iv:[
+     "Pain level: ***/10",
+     "Flares since last visit: {flares:none|one|two|three or more}; joints involved ***",
+     "Last flare: ***",
+     "Tophi: {tophi:none|stable|decreasing|new or enlarging}",
+     "Current urate-lowering therapy: {ult:none|allopurinol 100 mg daily|allopurinol 200 mg daily|allopurinol 300 mg daily|allopurinol above 300 mg daily|febuxostat}",
+     "Anti-inflammatory prophylaxis: {ppx:colchicine daily|colchicine twice daily|low-dose NSAID|none}",
+     "Diet and alcohol reviewed: {diet:adherent|partially adherent|not yet changed}",
+     "Kidney stones or renal disease: ***"
+   ].join("\n"),
+   ser:"Serum uric acid: ***\nSynovial fluid crystal analysis (if performed): ***",
+   ap:[
+     "Gout, {state:intercritical, no recent flares|recurrent flares|tophaceous|acute flare today}.",
+     "- Serum urate target below {target:6.0 mg/dL|5.0 mg/dL with tophi}. Current urate ***.",
+     "- Allopurinol titration: 100 mg daily for 3 to 4 weeks, then 200 mg daily for 3 to 4 weeks, then 300 mg daily. Titrate further to target as renal function allows.",
+     "- Safety labs: liver function tests at about 6 weeks; CBC, chemistry panel with liver function tests, and uric acid at 12 to 16 weeks.",
+     "- Anti-inflammatory prophylaxis with colchicine continued for {ppxdur:3 months|6 months} after reaching target urate.",
+     "- Counseled to stop allopurinol and contact the office for fever, rash, or a scalded sensation of the mouth or mucous membranes.",
+     "- Counseled not to stop allopurinol abruptly, since interruption can precipitate a flare.",
+     "- Minimize alcohol and shellfish, avoid liver and organ meats, and maintain hydration."
+   ].join("\n"),
+   lab:"Serum uric acid: ***\n[[LAB:CREATININE]]",
+   ex:"Joint exam: {joint:no active synovitis|warm swollen joint at ***}. Tophi: {tophiex:none identified|present at ***}. Skin overlying involved joints: ***.",
+   hpi:"presenting with {presentation:recurrent acute monoarthritis|podagra|polyarticular flares|asymptomatic hyperuricemia|tophaceous deposits} for {duration}. Flare frequency ***. Prior crystal confirmation: {crystals:yes, monosodium urate identified|no aspiration performed}. Diuretic use, alcohol intake, renal function, and dietary triggers reviewed. Pertinent positives: ***.",
+   npobj:"Serum uric acid ***, creatinine ***, eGFR ***.\nSynovial fluid analysis: ***.\nRadiographs or dual-energy CT if obtained: ***."},
+
+  {k:"pmrgca", n:"Polymyalgia Rheumatica and Giant Cell Arteritis", cat:"PMR/GCA",
+   dx:"{pmrgca:polymyalgia rheumatica|giant cell arteritis|giant cell arteritis with polymyalgia rheumatica}",
+   imm:true,
+   iv:[
+     "Pain level: ***/10",
+     "PGA: ***/10",
+     "Shoulder girdle stiffness: *** minutes    Hip girdle stiffness: *** minutes",
+     "Ability to rise from a chair and raise arms overhead: {function:normal|mildly limited|markedly limited}",
+     "Cranial symptoms: new headache {headache:absent|present}, jaw claudication {jaw:absent|present}, scalp tenderness {scalp:absent|present}, visual change {vision:absent|transient|persistent}",
+     "Current prednisone dose: *** mg daily; taper step since last visit: ***",
+     "Steroid side effects: {steroidse:none|hyperglycemia|weight gain|insomnia|mood change|skin fragility}"
+   ].join("\n"),
+   ser:"ESR: ***\nCRP: ***\nTemporal artery ultrasound or biopsy result: ***",
+   ap:[
+     "{pmrgca2:Polymyalgia rheumatica|Giant cell arteritis|Giant cell arteritis with polymyalgia rheumatica}, {activity:in remission on therapy|partially controlled|relapsed}.",
+     "- Prednisone {predaction:continue current dose|taper as below|increase for relapse}: *** mg daily.",
+     "- Counseled that any new headache, jaw claudication, or visual symptom requires same-day contact.",
+     "- Glucocorticoid-induced osteoporosis prevention: calcium and vitamin D, DXA {dxa:current|ordered today|due}, FRAX with glucocorticoid adjustment reviewed.",
+     "- Steroid-sparing therapy: {sparing:not indicated|tocilizumab|methotrexate|under consideration}.",
+     "- Monitored for hyperglycemia, blood pressure, and weight while on glucocorticoids."
+   ].join("\n"),
+   lab:"[[LAB:GLUCOSE]]\nHemoglobin A1c (if on glucocorticoids): ***",
+   ex:"Temporal arteries: {ta:nontender, normal pulsation bilaterally|tender|nodular|pulseless}. Scalp: {scalpex:nontender|tender}. Shoulder and hip girdle: {girdle:full range of motion|painful restricted abduction|painful restricted hip flexion}. No proximal weakness on confrontation testing. Blood pressure and pulses symmetric in both arms.",
+   hpi:"presenting with {presentation:new bilateral shoulder and hip girdle pain and stiffness|new headache|jaw claudication|visual loss|constitutional symptoms} for {duration}. Reviewed for cranial ischemic symptoms, limb claudication, fever, weight loss, and night sweats. Pertinent positives: ***.",
+   npobj:"ESR ***, CRP ***, CBC ***, comprehensive metabolic panel ***.\nTemporal artery color Doppler ultrasound: *** (obtained before or as early as possible after starting glucocorticoids, ideally within one week).\nTemporal artery biopsy: *** (performed within two to four weeks of starting treatment when indicated).\nLarge-vessel imaging (CTA, MRA, or PET-CT) if obtained: ***."}
+
+  ];
+
+  D.push(
+
+  {k:"sjogren", n:"Sjogren Disease", cat:"Sjogren",
+   dx:"Sjogren disease",
+   imm:true,
+   iv:[
+     "Pain level: ***/10",
+     "PGA: ***/10",
+     "Dry eyes: {eyes:controlled|gritty sensation|foreign body sensation|requiring frequent drops}",
+     "Dry mouth: {mouth:controlled|difficulty swallowing dry food|nighttime dryness|requiring frequent sips of water}",
+     "Salivary gland swelling: {glands:absent|intermittent|persistent}",
+     "Fatigue: ***/10",
+     "Arthralgia or arthritis: ***",
+     "Neuropathic symptoms: {neuro:absent|distal numbness|burning pain}",
+     "Dental status: last dental visit ***, new caries {caries:none|yes}"
+   ].join("\n"),
+   ser:"ANA: ***\nSSA/Ro: ***    SSB/La: ***\nRF: ***\nIgG: ***    SPEP: ***\nC3: ***    C4: ***\nCryoglobulins (if obtained): ***",
+   ap:[
+     "Sjogren disease, {activity:stable|with active glandular symptoms|with extraglandular involvement}. Extraglandular features: ***.",
+     "- Ocular surface care: preservative-free artificial tears, {ocular:ongoing ophthalmology follow-up|referral placed today}.",
+     "- Dry mouth management reviewed in detail: hydration, sugar-free candies, mints, and gum, saline rinses, over-the-counter dry mouth products, and secretagogue therapy where appropriate.",
+     "- Caries prevention: twice-daily brushing, daily flossing, 1.1 percent neutral sodium fluoride gel, and dental follow-up at least twice yearly.",
+     "- Secretagogue: {secret:not indicated|cevimeline|pilocarpine|under consideration}.",
+     "- Hydroxychloroquine for arthralgia and fatigue: {hcq:continued|started today|not indicated}.",
+     "- Counseled to report persistent unilateral parotid enlargement or new lymphadenopathy given lymphoma risk."
+   ].join("\n"),
+   lab:"IgG: ***\nC4: ***\nSPEP with immunofixation: ***",
+   ex:"Eyes: no conjunctival injection, no scleral icterus. Oral mucosa: {oralex:moist|dry, tongue adherent to tongue blade|erythematous}, dentition {dent:intact|multiple restorations|caries present}. Parotid and submandibular glands: {gland:not enlarged, nontender|enlarged}. No cervical lymphadenopathy. Joint exam: ***.",
+   hpi:"presenting with {presentation:dry eyes and dry mouth|parotid swelling|fatigue and arthralgia|positive SSA antibody} for {duration}. Reviewed for ocular and oral dryness, salivary swelling, dental caries, vaginal dryness, arthralgia, Raynaud phenomenon, neuropathy, and lymphadenopathy. Medication review for anticholinergic contributors performed. Pertinent positives: ***.",
+   npobj:"Serologies: ANA ***, SSA/Ro ***, SSB/La ***, RF ***, IgG ***, C3 ***, C4 ***, SPEP ***.\nSchirmer test or ocular staining score: ***.\nMinor salivary gland biopsy if performed: ***."},
+
+  {k:"myositis", n:"Idiopathic Inflammatory Myopathy", cat:"Myositis",
+   dx:"{myotype:dermatomyositis|polymyositis|immune-mediated necrotizing myopathy|antisynthetase syndrome|inclusion body myositis}",
+   imm:true,
+   iv:[
+     "Pain level: ***/10",
+     "PGA: ***/10",
+     "Proximal strength: {strength:back to baseline|improving|unchanged|worsening}; able to rise from a chair {chair:without hands|with hands|unable}, able to climb stairs {stairs:without difficulty|with difficulty|unable}",
+     "Dysphagia: {dysphagia:absent|solids only|solids and liquids|with nasal regurgitation}",
+     "Dyspnea or cough: {resp:absent|exertional dyspnea|dry cough|both}",
+     "Rash: {rash:resolved|Gottron papules|heliotrope|shawl sign|mechanic's hands|V-sign}",
+     "CK trend: ***",
+     "Cancer screening status: ***"
+   ].join("\n"),
+   ser:"ANA: ***\nMyositis-specific and myositis-associated antibodies (Jo-1, PL-7, PL-12, Mi-2, TIF1-gamma, NXP2, MDA5, SRP, HMGCR, Ku, PM-Scl, U1-RNP): ***",
+   ap:[
+     "{myotype2:Dermatomyositis|Polymyositis|Immune-mediated necrotizing myopathy|Antisynthetase syndrome|Inclusion body myositis}, {activity:in remission|improving|active}.",
+     "- Muscle enzymes and strength testing followed at each visit. CK ***.",
+     "- Interstitial lung disease surveillance: pulmonary function tests {pft:current|ordered today|due} and high-resolution chest CT {hrct:current|ordered today|not indicated}.",
+     "- Dysphagia assessment: {swallow:no symptoms|speech and swallow evaluation ordered|modified barium swallow performed}.",
+     "- Malignancy screening per the IMACS international guideline, stratified by antibody profile and clinical risk. Screening performed or planned: ***.",
+     "- Physical and occupational therapy: {rehab:ongoing|referred today|declined}.",
+     "- Photoprotection and topical therapy for cutaneous disease where applicable."
+   ].join("\n"),
+   lab:"CK: ***\nAldolase: ***\n[[LAB:AST]]\n[[LAB:ALT]]",
+   ex:"Skin: {skinex:no active rash|Gottron papules over MCPs and PIPs|heliotrope rash|shawl sign|mechanic's hands|periungual telangiectasias|calcinosis}. Strength: deltoids ***/5, hip flexors ***/5, neck flexors ***/5, distal strength ***/5. No muscle tenderness. Gait: {gait:normal|waddling|antalgic}. Lungs: {lungs:clear|bibasilar inspiratory crackles}.",
+   hpi:"presenting with {presentation:proximal muscle weakness|rash|elevated CK|dyspnea|dysphagia} for {duration}. Reviewed for difficulty rising from a chair, climbing stairs, lifting overhead, dysphagia, dyspnea, arthralgia, Raynaud phenomenon, and rash. Statin and other myotoxic exposures reviewed. Pertinent positives: ***.",
+   npobj:"CK ***, aldolase ***, AST ***, ALT ***, LDH ***.\nMyositis antibody panel: ***.\nEMG and nerve conduction studies: ***. MRI of the thigh: ***. Muscle biopsy: ***.\nPulmonary function tests and high-resolution chest CT: ***.\nAge-appropriate and antibody-directed malignancy screening: ***."},
+
+  {k:"ssc", n:"Systemic Sclerosis", cat:"Scleroderma",
+   dx:"{ssctype:limited cutaneous|diffuse cutaneous} systemic sclerosis",
+   imm:true,
+   iv:[
+     "Pain level: ***/10",
+     "PGA: ***/10",
+     "Raynaud phenomenon: {raynaud:stable|more frequent|with digital ulceration|with critical ischemia}; attacks per day ***",
+     "Digital ulcers: {ulcers:none|healed|active at ***}",
+     "Skin thickening: {skin:stable|progressing|softening}; modified Rodnan skin score ***",
+     "Gastrointestinal: reflux {gerd:controlled|breakthrough symptoms}, dysphagia {dys:absent|present}, bloating or diarrhea {gi:absent|present}",
+     "Cardiopulmonary: dyspnea on exertion {dyspnea:absent|with strenuous activity|with routine activity|at rest}, cough {cough:absent|dry|productive}, palpitations {palp:absent|present}",
+     "Home blood pressure readings: ***"
+   ].join("\n"),
+   ser:"ANA: ***\nCentromere: ***\nScl-70 (topoisomerase I): ***\nRNA polymerase III: ***",
+   ap:[
+     "{ssctype2:Limited cutaneous|Diffuse cutaneous} systemic sclerosis, {activity:stable|progressive skin disease|with organ involvement}. Organ systems involved: ***.",
+     "- Annual pulmonary function testing with DLCO and transthoracic echocardiogram for pulmonary hypertension surveillance: {screen:current|ordered today|due}.",
+     "- Interstitial lung disease: {ild:none identified|present, stable|present, progressive}. High-resolution chest CT {hrct:current|ordered today}.",
+     "- Raynaud management: cold avoidance, calcium channel blocker {ccb:continued|started today|not tolerated}. Counseled to report any new digital ulcer promptly.",
+     "- Gastroesophageal reflux: proton pump inhibitor, elevate head of bed, avoid late meals.",
+     "- Scleroderma renal crisis: counseled to monitor home blood pressure and report readings above *** or new headache. ACE inhibitors reserved for renal crisis.",
+     "- Skin care, hand therapy, and range of motion exercises reviewed."
+   ].join("\n"),
+   lab:"[[LAB:CREATININE]]\nNT-proBNP: ***\nUrinalysis: ***",
+   ex:"Skin: {skinex:no sclerodactyly|sclerodactyly|proximal skin thickening|digital pitting scars|telangiectasias|calcinosis}. Modified Rodnan skin score ***. Nailfold capillaries: {caps:normal|dilated loops|dropout}. Digits: {digits:no ulcers, well perfused|active ulcer at ***}. Oral aperture: {aperture:normal|reduced}. Lungs: {lungsex:clear|bibasilar fine inspiratory crackles}. Cardiovascular: {cv:RRR, no m/g/r|accentuated P2}.",
+   hpi:"presenting with {presentation:Raynaud phenomenon|skin thickening|digital ulcers|reflux|dyspnea|positive ANA} for {duration}. Reviewed for Raynaud attacks, digital ulceration, skin tightening, telangiectasias, calcinosis, reflux, dysphagia, bowel dysmotility, dyspnea, and blood pressure elevation. Pertinent positives: ***.",
+   npobj:"Serologies: ANA *** (pattern ***), centromere ***, Scl-70 ***, RNA polymerase III ***.\nNailfold capillaroscopy: ***.\nPulmonary function tests with DLCO: ***. Transthoracic echocardiogram: ***. High-resolution chest CT: ***.\nCreatinine ***, urinalysis ***, NT-proBNP ***."},
+
+  {k:"anca", n:"ANCA-Associated Vasculitis", cat:"Vasculitis",
+   dx:"{ancatype:granulomatosis with polyangiitis|microscopic polyangiitis|eosinophilic granulomatosis with polyangiitis}",
+   imm:true,
+   iv:[
+     "PGA: ***/10",
+     "Constitutional: fever {fever:absent|present}, weight loss {wtloss:none|*** lb}, night sweats {sweats:absent|present}",
+     "Sinonasal: crusting {crust:absent|present}, epistaxis {epistaxis:absent|present}, hearing change {hearing:none|conductive|sensorineural}",
+     "Pulmonary: cough {cough:absent|dry|productive}, hemoptysis {hemoptysis:absent|present}, dyspnea {dyspnea:absent|exertional|at rest}",
+     "Renal: hematuria {hematuria:absent|present}, edema {edema:absent|present}; most recent creatinine ***",
+     "Neurologic: {neuro:no deficits|numbness|foot drop|mononeuritis multiplex}",
+     "Ocular: {ocular:no symptoms|red eye|scleritis|proptosis}",
+     "Current therapy and last rituximab or maintenance dose: ***"
+   ].join("\n"),
+   ser:"ANCA: *** (p-ANCA corresponds to MPO; c-ANCA corresponds to PR3)\nMPO: ***    PR3: ***\nComplement and cryoglobulins if obtained: ***",
+   ap:[
+     "{ancatype2:Granulomatosis with polyangiitis|Microscopic polyangiitis|Eosinophilic granulomatosis with polyangiitis}, {activity:in remission|low-grade activity|relapsing|active}. Organ systems involved: ***.",
+     "- Urinalysis with microscopy and urine protein-to-creatinine ratio at every visit to detect renal relapse.",
+     "- Maintenance therapy: {maint:rituximab|azathioprine|methotrexate|mycophenolate}; next dose due ***.",
+     "- Pneumocystis prophylaxis: {pjp:trimethoprim-sulfamethoxazole|atovaquone|not indicated}.",
+     "- Immunoglobulin levels and CD19 counts monitored on B-cell depleting therapy.",
+     "- Glucocorticoid-induced osteoporosis prevention with calcium, vitamin D, and DXA per the 2022 ACR guideline.",
+     "- Counseled to report hemoptysis, new sinus symptoms, dark urine, or new numbness promptly."
+   ].join("\n"),
+   lab:"[[LAB:CREATININE]]\nUrinalysis with microscopy: ***\nUrine protein-to-creatinine ratio: ***\nQuantitative immunoglobulins: ***\nCD19 count (if on rituximab): ***",
+   ex:"HEENT: nasal mucosa {nasal:normal|crusting|septal perforation|saddle nose deformity}, oropharynx {oro:clear|ulceration}, tympanic membranes {tm:normal|effusion}. Lungs: {lungsex:clear|crackles|wheezes}. Skin: {skinex:no purpura|palpable purpura|nodules|ulcers}. Neurologic: {neuroex:sensation and strength intact|distal sensory deficit|foot drop}. Extremities: {edemaex:no edema|pitting edema}.",
+   hpi:"presenting with {presentation:sinonasal symptoms|hemoptysis|renal abnormality|neuropathy|constitutional symptoms|positive ANCA} for {duration}. Reviewed for sinus crusting, epistaxis, hearing loss, cough, hemoptysis, dyspnea, hematuria, edema, purpura, numbness, and weakness. Pertinent positives: ***.",
+   npobj:"ANCA ***, MPO ***, PR3 ***.\nCreatinine ***, urinalysis with microscopy ***, urine protein-to-creatinine ratio ***.\nChest imaging: ***. Sinus imaging: ***. Biopsy: ***.\nHepatitis B, hepatitis C, HIV, QuantiFERON, and quantitative immunoglobulins prior to immunosuppression."},
+
+  {k:"op", n:"Osteoporosis", cat:"Bone",
+   dx:"{optype:postmenopausal osteoporosis|glucocorticoid-induced osteoporosis|osteoporosis|osteopenia}",
+   imm:false,
+   iv:[
+     "New fractures since last visit: {fx:none|vertebral|hip|wrist|other}",
+     "Falls since last visit: {falls:none|one|two or more}",
+     "Height today compared with prior: ***",
+     "Calcium intake: {calcium:adequate from diet|supplement taken|inadequate}",
+     "Vitamin D supplementation: {vitd:none|1000 IU daily|2000 IU daily|other}",
+     "Current osteoporosis therapy and last dose date: ***",
+     "Dental status before or during antiresorptive therapy: ***",
+     "Weight-bearing exercise: {exercise:regular|occasional|none}"
+   ].join("\n"),
+   ser:"Calcium: ***    Albumin: ***\n25-hydroxyvitamin D: ***\nPTH: ***\nAlkaline phosphatase: ***    TSH: ***\n24-hour urine calcium and creatinine: ***",
+   ap:[
+     "{optype2:Postmenopausal osteoporosis|Glucocorticoid-induced osteoporosis|Osteoporosis|Osteopenia}. Lowest T-score *** at ***.",
+     "- FRAX 10-year risk: major osteoporotic fracture *** percent, hip *** percent. Glucocorticoid correction applied where daily dose exceeds 7.5 mg (multiply major osteoporotic fracture risk by 1.15 and hip fracture risk by 1.2).",
+     "- Fracture risk category: {risk:low|moderate|high}.",
+     "- Therapy: {optx:continue current agent|start an oral bisphosphonate|start zoledronic acid|start denosumab|start an anabolic agent|drug holiday}: ***",
+     "- Denosumab timing is critical; counseled that a missed or delayed dose risks rapid bone loss and vertebral fracture, and that a follow-on antiresorptive is required if it is stopped.",
+     "- Calcium 1000 to 1200 mg daily from diet and supplement combined, and vitamin D to maintain a 25-hydroxyvitamin D level above 30 ng/mL.",
+     "- DXA and repeat risk assessment every {dxaint:1 year|2 years}. Fall prevention and weight-bearing exercise reviewed."
+   ].join("\n"),
+   lab:"Calcium: ***\n25-hydroxyvitamin D: ***\nPTH: ***\nAlkaline phosphatase: ***\n24-hour urine calcium: ***",
+   ex:"General: {posture:no kyphosis|thoracic kyphosis}. Height *** measured today. Gait and balance: {gaitex:steady, normal tandem gait|unsteady}. Timed up and go: *** seconds. Spine: {spineex:no midline tenderness|midline tenderness at ***}. No new deformity.",
+   hpi:"presenting for evaluation of {presentation:low bone density on DXA|fragility fracture|glucocorticoid exposure|height loss|secondary osteoporosis} for {duration}. Reviewed fracture history, falls, height loss, family history of hip fracture, calcium and vitamin D intake, tobacco and alcohol use, glucocorticoid exposure, and prior osteoporosis therapy. Pertinent positives: ***.",
+   npobj:"DXA: lumbar spine T-score ***, femoral neck T-score ***, total hip T-score ***, dated ***.\nSecondary workup: calcium ***, albumin ***, 25-hydroxyvitamin D ***, PTH ***, alkaline phosphatase ***, creatinine ***, TSH ***, SPEP ***, tissue transglutaminase ***, 24-hour urine calcium and creatinine ***, testosterone if applicable ***.\nVertebral fracture assessment or thoracolumbar radiographs: ***."},
+
+  {k:"fibro", n:"Fibromyalgia", cat:"Fibromyalgia",
+   dx:"fibromyalgia",
+   imm:false,
+   iv:[
+     "Pain level: ***/10",
+     "PGA: ***/10",
+     "Widespread pain distribution: ***",
+     "Sleep quality: {sleep:restorative|frequent awakening|nonrestorative|evaluated for sleep apnea}",
+     "Fatigue: ***/10",
+     "Cognitive symptoms: {cog:none|mild difficulty with concentration|significant}",
+     "Mood: {mood:stable|anxious|depressed|receiving counseling}",
+     "Exercise program: {exercise:30 minutes at least 5 days weekly|3 to 4 days weekly|starting|not yet started}",
+     "Current medications for pain regulation and response: ***"
+   ].join("\n"),
+   ser:"CBC, comprehensive metabolic panel, TSH, ESR, CRP: *** (obtained to exclude alternative causes)",
+   ap:[
+     "Fibromyalgia, {activity:improved|stable|worse} since last visit. No evidence of inflammatory arthritis on examination today.",
+     "- Reinforced that exercise is the single most effective intervention. Goal is at least 30 minutes of low-impact aerobic activity at least 5 days weekly, starting slowly and increasing as tolerated.",
+     "- Non-pharmacologic measures: stretching, physical therapy, yoga, meditation or relaxation therapy, and acupuncture.",
+     "- Sleep: screening for and treatment of sleep apnea and other sleep disorders {sleepplan:not indicated|referral placed|ongoing}.",
+     "- Counseling for coping with chronic pain and for coexisting anxiety or depression: {counsel:ongoing|referred today|declined}.",
+     "- Medication for pain regulation: {fmmed:none|cyclobenzaprine|amitriptyline|duloxetine|gabapentin|pregabalin}. Counseled that these improve pain rather than eliminate it, and reviewed drowsiness, dryness, constipation, and weight gain.",
+     "- Opioids are not recommended; long-term outcomes are worse. Reviewed with the patient.",
+     "- Patient education handout provided."
+   ].join("\n"),
+   lab:"TSH: ***\nVitamin D: ***",
+   ex:"General: well appearing, no acute distress. Musculoskeletal: no synovitis, no joint swelling, full range of motion throughout. Widespread soft tissue tenderness at *** sites. Strength 5/5 throughout. Neurologic: sensation intact, no focal deficit. Gait normal.",
+   hpi:"presenting with {presentation:widespread pain|fatigue|nonrestorative sleep|cognitive complaints} for {duration}. Pain distribution ***. Reviewed sleep, mood, exercise tolerance, prior treatments, and functional impact. Screened for inflammatory features including joint swelling, morning stiffness over one hour, rash, and constitutional symptoms, which are absent. Pertinent positives: ***.",
+   npobj:"CBC ***, comprehensive metabolic panel ***, TSH ***, ESR ***, CRP ***, 25-hydroxyvitamin D ***, creatine kinase ***.\nAdditional serologies obtained only where clinically indicated: ***.\nWidespread Pain Index *** and Symptom Severity Scale *** if scored."}
+
+  );
+
+  // ---------- builders ----------
+  function mkFU(d){
+    const ap = [];
+    ap.push("ASSESSMENT & PLAN");
+    ap.push("[[DXLIST]]");
+    if (d.imm) ap.push(IMMUNO);
+    ap.push(VAX);
+    ap.push("");
+    ap.push(d.ap);
+    if (d.imm) ap.push(MONITOR);
+    ap.push(RTC);
+    ap.push("[[APEND]]");
+
+    const data = ["Labs/pathology (for review purposes):", CORELABS];
+    if (d.lab) data.push(d.lab);
+    data.push("");
+    data.push(INFXN);
+    data.push("");
+    data.push("Imaging/procedures (for review purposes):");
+    data.push("***");
+
+    return {
+      id: "t2-fu-" + d.k,
+      name: d.n + " Follow-Up",
+      cat: "Tailored Follow-Up",
+      sections: [
+        {noTitle:true, title:"Lead-in & ID", body: LEAD + "\n\nID: [[NAME]] is a [[AGE]] [[SEX]] with a history of " + d.dx + "."},
+        {noTitle:true, title:"Assessment & Plan", body: ap.join("\n")},
+        {noTitle:true, title:"Interval History", body:
+          "_______________________________________________________\n\n[[SUBJ]]\n[[NAME]] is here today {accompanied:alone|with a family member|with a caregiver|with an interpreter|by video} for follow-up of " + d.n.toLowerCase() + ".\n\nINTERVAL HISTORY:\nDOLV: [[LASTVISIT]], at which time ***.\n" + d.iv + "\n" + INTERVAL_TAIL},
+        {noTitle:true, title:"Rheumatologic Disease History", body:
+          "RHEUMATOLOGIC DISEASE HISTORY:\nDiagnosis: " + d.n + "\nOnset: Symptoms began ***\nInitial Symptoms: ***\nPrior Workup: ***\nTreatment History: ***\nCurrent Therapy: ***\nSerologies:\n" + d.ser + "\n\nInterest in pregnancy in next 12 months: ***"},
+        {noTitle:true, title:"ROS, PMH, Family & Social", body: ROSPMH},
+        {noTitle:true, title:"Medications", body: MEDSEC},
+        {noTitle:true, title:"Objective & Exam", body: OBJHEAD + "\n\nFocused exam: " + d.ex},
+        {noTitle:true, title:"Data Reviewed", body: data.join("\n")},
+        {noTitle:true, title:"Signature & Attestation", body: ATTEST}
+      ]
+    };
+  }
+
+  function mkNP(d){
+    const imp = [];
+    imp.push("IMPRESSION & RECOMMENDATIONS:");
+    imp.push("[[NAME]] is a [[AGE]] [[SEX]] who was seen today for evaluation of " + d.n.toLowerCase() + ".");
+    imp.push("[[DXLIST]]");
+    if (d.imm) imp.push(IMMUNO);
+    imp.push(VAX);
+    imp.push("");
+    imp.push(d.ap);
+    if (d.imm) imp.push(MONITOR);
+    imp.push("Return to clinic in {return interval:4 weeks|6 weeks|2 months|3 months|4 months|6 months}.");
+
+    const obj = [];
+    obj.push("Labs:");
+    obj.push(CORELABS);
+    if (d.lab) obj.push(d.lab);
+    obj.push("");
+    obj.push("Serologies and studies:");
+    obj.push(d.npobj);
+    obj.push("");
+    obj.push("Imaging:");
+    obj.push("[[IMAGING]]");
+    obj.push("");
+    obj.push("Pathology:");
+    obj.push("***");
+    obj.push("");
+    obj.push("INFECTION RISK:");
+    obj.push("[[INFXN]]");
+
+    return {
+      id: "t2-np-" + d.k,
+      name: d.n + " New Consult",
+      cat: "Tailored Consult",
+      sections: [
+        {noTitle:true, title:"Header", body:
+          LEAD + "\n\nConsult/New Patient Note\nDate of service: [[TODAY]]\nPATIENT: [[NAME]]\n            MRN: [[MRN]]\n            DOB: [[DOB]]\nREFERRING PROVIDER: [[REFPROV]]\nPRIMARY CARE PROVIDER: [[PCP]]\nID/CC: ***"},
+        {noTitle:true, title:"Impression & Recommendations", body: imp.join("\n")},
+        {noTitle:true, title:"HPI", body:
+          "[[SUBJ]]\nHISTORY OF PRESENT ILLNESS:\n[[NAME]] is a [[AGE]] [[SEX]], here today " + d.hpi},
+        {noTitle:true, title:"Past History", body: NP_PASTHX},
+        {noTitle:true, title:"Rheumatologic Disease History", body:
+          "RHEUMATOLOGIC DISEASE HISTORY:\nDiagnosis: " + d.n + "\nOnset: ***\nInitial symptoms: ***\nWorkup: ***\nTreatment history: ***\nCurrent treatment: ***"},
+        {noTitle:true, title:"ROS", body:
+          "REVIEW OF SYSTEMS:\nA complete review of symptoms has been performed and is negative except as noted in the HPI."},
+        {noTitle:true, title:"Problem List & Allergies", body:
+          "CURRENT PROBLEM LIST:\n[[PROBLIST]]\n\nALLERGIES: [[ALLERGIES]]"},
+        {noTitle:true, title:"Records Reviewed", body: NP_RECORDS},
+        {noTitle:true, title:"Objective", body: "[[OBJ]]\n" + obj.join("\n")},
+        {noTitle:true, title:"Physical Exam", body:
+          "PHYSICAL EXAMINATION:\n[[VITALS]]\n" + NORMAL_EXAM + "\n\nDisease-focused findings: " + d.ex},
+        {noTitle:true, title:"Signature", body: SIG}
+      ]
+    };
+  }
+
+  // v9: the 24 per-disease templates are retired. The two modular notes in data3.js
+  // build the same output from the same disease modules, so mkFU and mkNP stay here
+  // as the reference source but nothing is added to the library.
+  void mkFU; void mkNP;
+
+  // ---------- new phrases ----------
+  DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
+
+  {id:"p2-ancamap", name:"ANCA pattern to antigen", dot:".ancamap", cat:"Reference", body:
+`p-ANCA corresponds to MPO. c-ANCA corresponds to PR3.`},
+
+  {id:"p2-gcasteroid", name:"GCA: steroid, ultrasound and biopsy timing", dot:".gcatiming", cat:"Plans", body:
+`Glucocorticoids are started as soon as giant cell arteritis is suspected. Temporal artery color Doppler ultrasound is performed when the diagnosis is suspected, before or as early as possible after initiation of therapy, ideally within one week, because glucocorticoid treatment rapidly reduces the sensitivity of ultrasound for diagnosis. Temporal artery biopsy is performed within two to four weeks of starting treatment. Beyond four weeks of high-dose glucocorticoid exposure, biopsy is reserved for selected cases that require diagnostic confirmation.`},
+
+  {id:"p2-giop", name:"2022 ACR glucocorticoid-induced osteoporosis", dot:".giop", cat:"Reference", body:
+`2022 ACR guideline for the treatment and prevention of glucocorticoid-induced osteoporosis.
+Initial assessment in adults over 40: history of glucocorticoid use, evaluation for falls, fractures, frailty, and secondary causes of osteoporosis, FRAX with glucocorticoid adjustment, and BMD testing.
+Follow-up during glucocorticoid treatment: FRAX and BMD every 1 to 2 years for untreated patients; BMD every 1 to 2 years for treated patients, whether receiving or having completed osteoporosis therapy.
+FRAX glucocorticoid correction: if the daily dose exceeds 7.5 mg, multiply the 10-year major osteoporotic fracture risk by 1.15 and the hip fracture risk by 1.2.
+Fracture risk categories in patients not yet on osteoporosis treatment:
+- High: prior osteoporotic fracture, or hip or spine BMD T-score at or below -2.5, or glucocorticoid-adjusted FRAX major osteoporotic fracture risk at or above 20 percent or hip risk at or above 3 percent, or glucocorticoid dose at or above 30 mg daily or cumulative dose at or above 5 grams per year.
+- Moderate: glucocorticoid-adjusted FRAX major osteoporotic fracture risk of 10 to under 20 percent, hip risk over 1 and under 3 percent.
+- Low: glucocorticoid-adjusted FRAX major osteoporotic fracture risk under 10 percent, hip risk at or below 1 percent.`},
+
+  {id:"p2-livevax", name:"Live vaccine precautions on immunosuppression", dot:".livevax", cat:"Reference", body:
+`Live vaccine precautions for immunosuppressed patients:
+- Hold TNF inhibitor for 1 dosing interval before and 1 month after.
+- Hold other biologics for 3 to 12 months, varying by agent.
+- Hold methotrexate above 0.4 mg/kg/week for 1 to 3 months.
+- Hold high-dose glucocorticoids above 20 mg daily for 1 month.
+Live vaccines include MMR, varicella, oral typhoid, yellow fever, oral polio, and intranasal influenza.`},
+
+  {id:"p2-myocancer", name:"Myositis-associated cancer screening", dot:".myocancer", cat:"Plans", body:
+`We discussed the risk of malignancy associated with {antibody} antibodies in the setting of {dxmyo:dermatomyositis|polymyositis|immune-mediated necrotizing myopathy}. The patient will undergo {screening} cancer screening per current recommendations.
+Reference: Oldroyd AGS, Callen JP, Chinoy H, et al; International Myositis Assessment and Clinical Studies Group Cancer Screening Expert Group; Aggarwal R. International Guideline for Idiopathic Inflammatory Myopathy-Associated Cancer Screening: an International Myositis Assessment and Clinical Studies Group (IMACS) initiative. Nat Rev Rheumatol. 2023 Dec;19(12):805-817. doi: 10.1038/s41584-023-01045-w. PMID: 37945774; PMCID: PMC10834225.`},
+
+  {id:"p2-ana80", name:"ANA 1:80 referral denial", dot:".ana80", cat:"Reference", body:
+`Denied. The referral for rheumatology evaluation based solely on a positive antinuclear antibody (ANA) titer of 1:80, in the absence of disease-specific autoantibodies and with only nonspecific clinical findings, is not supported by current evidence.`},
+
+  {id:"p2-longitudinal", name:"Longitudinal specialty care attestation", dot:".longitudinal", cat:"Reference", body:
+`This visit represents ongoing and longitudinal specialty care provided to this patient.`},
+
+  {id:"p2-recordsrev", name:"Records reviewed attestation", dot:".recordsrev", cat:"Reference", body:
+`I personally reviewed and interpreted the history, physical exams, lab testing, and imaging results in the patient's EMR as discussed in the HPI above. Outside records reviewed: {records:none available|prior rheumatology notes|primary care notes|outside labs|outside imaging|hospital records}.`},
+
+  {id:"p2-drymouth", name:"Dry mouth and caries counseling", dot:".drymouth", cat:"Counseling", body:
+`Dry mouth management strategies were reviewed:
+- Staying well hydrated by taking frequent sips of water throughout the day.
+- Stimulating salivary flow with sugar-free candies, mints, and gum.
+- Rinsing with normal saline, prepared by dissolving 3/4 teaspoon of salt in 32 ounces of water.
+- Over-the-counter dry mouth products such as Biotene rinse, spray, or gel, Xerostom rinse, spray, or gel, Mouth Kote rinse, adhesive tablets (Xylimelts), or adhesive strips (Xerostrips).
+- Prescription oil-based spray (Aquoral) to prolong tissue coating.
+- Medications to stimulate salivary flow, such as cevimeline or pilocarpine.
+The patient is aware that chronic dry mouth increases the risk for dental complications, most notably dental caries, and will continue a routine of consistent twice-daily brushing and once-daily flossing, and will incorporate 1.1 percent neutral sodium fluoride gel daily.
+Caries prevention strategies were reviewed:
+- Maintaining excellent oral hygiene with brushing twice daily and flossing once daily.
+- Daily use of a fluoride-containing toothpaste, including prescription strength.
+- Regular dental follow-up at least twice yearly for examination.
+- Professional application of fluoride varnish at dental visits.
+- Limiting sugary foods, beverages, and sticky carbohydrates to mealtimes whenever possible. When consuming sugary drinks, doing so relatively quickly rather than sipping throughout the day preserves the buffering effect of saliva. Rinse the mouth with water after sugar intake.
+- Diligent management of dry mouth.`}
+
+  ]);
+
+  // ---------- new patient instructions ----------
+  DEFAULT_DATA.instructions = DEFAULT_DATA.instructions.concat([
+
+  {id:"i2-punctual", name:"Appointment length and punctuality", body:
+`APPOINTMENT LENGTH AND ARRIVAL TIME
+Follow-up visits are 30 minutes long. That time includes history taking, physical exam, chart review, and post-visit documentation.
+Please arrive 15 minutes before your appointment time so the front desk can check you in and you can be roomed on time.
+We try our best to remain punctual and we appreciate your cooperation.`, bodyEs:
+`DURACION DE LA CITA Y HORA DE LLEGADA
+Las citas de seguimiento duran 30 minutos. Ese tiempo incluye la historia clinica, el examen fisico, la revision del expediente y la documentacion posterior a la visita.
+Por favor llegue 15 minutos antes de la hora de su cita para que la recepcion pueda registrarlo y pasarlo al consultorio a tiempo.
+Hacemos todo lo posible por mantener la puntualidad y agradecemos su cooperacion.`},
+
+  {id:"i2-urinecalcium", name:"24-hour urine calcium collection", body:
+`24-HOUR URINARY CALCIUM COLLECTION INSTRUCTIONS
+I have requested a 24-hour urine calcium test to evaluate your calcium levels. This test involves collecting all your urine over a 24-hour period. You will likely need to pick up a large container from the lab. Follow these steps carefully to ensure accurate results.
+1. Preparation
+- You may need to avoid certain foods and medications for several days before the test.
+- Do not stop taking any medication without checking with me first.
+2. Starting the collection
+- Begin by urinating into the toilet as usual. Do not collect this first urine.
+- Write down the time you urinated. This marks the start of your 24-hour collection period.
+3. Collecting urine
+- For the next 24 hours, collect all your urine in the provided container.
+- Store the container in a refrigerator or in a cooler with ice to preserve the sample.
+4. Ending the collection
+- 24 hours after starting, try to urinate one last time and collect this urine in the container. This is your final sample.
+5. Returning the sample
+- Return the container to the laboratory as instructed.
+IMPORTANT NOTES
+- If you have hemorrhoids that bleed, or if you are having your menstrual period, tell me before starting the test.
+- Completeness of the collection is confirmed by measuring urinary creatinine excretion in the same 24-hour sample.
+Following these instructions helps provide accurate results for your urinary calcium test and aids in the evaluation of your calcium intake and absorption.
+REFERENCES
+1. Calcium in Urine Test. National Library of Medicine (MedlinePlus).
+2. Crystals in Urine. National Library of Medicine (MedlinePlus).
+3. Camacho PM, Petak SM, Binkley N, et al. American Association of Clinical Endocrinologists/American College of Endocrinology Clinical Practice Guidelines for the Diagnosis and Treatment of Postmenopausal Osteoporosis, 2020 Update. Endocr Pract. 2020;26(Suppl 1):1-46. doi:10.4158/GL-2020-0524SUPPL.`, bodyEs:
+`INSTRUCCIONES PARA LA RECOLECCION DE CALCIO EN ORINA DE 24 HORAS
+He solicitado una prueba de calcio en orina de 24 horas para evaluar sus niveles de calcio. Esta prueba consiste en recolectar toda su orina durante un periodo de 24 horas. Probablemente necesite recoger un recipiente grande en el laboratorio. Siga estos pasos con cuidado para obtener resultados exactos.
+1. Preparacion
+- Es posible que deba evitar ciertos alimentos y medicamentos durante varios dias antes de la prueba.
+- No deje de tomar ningun medicamento sin consultarme primero.
+2. Inicio de la recoleccion
+- Comience orinando en el inodoro como de costumbre. No recoja esta primera orina.
+- Anote la hora en que orino. Ese es el inicio de su periodo de recoleccion de 24 horas.
+3. Recoleccion de la orina
+- Durante las siguientes 24 horas, recoja toda su orina en el recipiente proporcionado.
+- Guarde el recipiente en el refrigerador o en una hielera con hielo para conservar la muestra.
+4. Fin de la recoleccion
+- 24 horas despues de comenzar, trate de orinar una ultima vez y recoja esa orina en el recipiente. Esa es su muestra final.
+5. Entrega de la muestra
+- Lleve el recipiente al laboratorio segun las indicaciones.
+NOTAS IMPORTANTES
+- Si tiene hemorroides que sangran, o si esta en su periodo menstrual, digamelo antes de comenzar la prueba.
+- La recoleccion completa se confirma midiendo la excrecion de creatinina en la misma muestra de 24 horas.
+Seguir estas instrucciones ayuda a obtener resultados exactos y a evaluar su consumo y absorcion de calcio.`},
+
+  {id:"i2-gouturate", name:"Gout and high uric acid plan", body:
+`YOUR PLAN FOR HIGH URIC ACID AND GOUT
+We need to treat your high uric acid, prevent gout flares, and prevent other problems that high uric acid can cause, such as kidney stones and kidney damage. Here is the plan.
+DIET AND FLUIDS
+- Minimize alcohol.
+- Minimize shellfish such as clams, mussels, and crab. Avoid liver and organ meats.
+- Stay well hydrated. Dehydration can trigger a gout attack.
+STARTING ALLOPURINOL
+I prescribed the 100 mg size so you can increase the dose easily.
+- Step 1: allopurinol 100 mg each day for 3 to 4 weeks.
+- Step 2: increase to 200 mg daily for 3 to 4 weeks.
+- Step 3: increase to 300 mg once daily and stay at this level. You take three 100 mg pills together or one 300 mg pill. When you refill, do not buy more of the 100 mg size. Contact us for the 300 mg size, which is more convenient.
+LAB TESTS
+Lab tests check safety and confirm you are on the right dose. You can have them done at my clinic, or with your primary care doctor if the results are faxed to us.
+- At about 6 weeks: liver function tests only.
+- At 12 to 16 weeks: CBC, chemistry panel including liver function tests, and uric acid.
+IF PAIN INCREASES
+If you have more pain while increasing the allopurinol, use colchicine 1 tablet daily, or 1 tablet twice daily, for 5 days.
+WARNING SIGNS
+Watch for allergy symptoms from allopurinol. If you develop fever, rash, or a scalded sensation in your mouth or mucous membranes, STOP the allopurinol and contact us.
+DO NOT RUN OUT
+If allopurinol is working well and you are taking it regularly, do not run out. Stopping allopurinol abruptly can trigger a gout attack.`, bodyEs:
+`SU PLAN PARA EL ACIDO URICO ALTO Y LA GOTA
+Necesitamos tratar su acido urico alto, prevenir los ataques de gota y evitar otros problemas que el acido urico alto puede causar, como calculos renales y dano a los rinones. Este es el plan.
+DIETA Y LIQUIDOS
+- Reduzca el alcohol al minimo.
+- Reduzca los mariscos como almejas, mejillones y cangrejo. Evite el higado y las visceras.
+- Mantengase bien hidratado. La deshidratacion puede provocar un ataque de gota.
+COMO EMPEZAR EL ALOPURINOL
+Le recete la presentacion de 100 mg para que pueda aumentar la dosis con facilidad.
+- Paso 1: alopurinol 100 mg cada dia durante 3 a 4 semanas.
+- Paso 2: aumente a 200 mg diarios durante 3 a 4 semanas.
+- Paso 3: aumente a 300 mg una vez al dia y mantengase en esta dosis. Puede tomar tres pastillas de 100 mg juntas o una de 300 mg. Cuando renueve la receta, no compre mas de la presentacion de 100 mg. Comuniquese con nosotros para la de 300 mg, que es mas conveniente.
+ANALISIS DE LABORATORIO
+Los analisis verifican la seguridad y confirman que la dosis es la correcta. Puede hacerlos en mi clinica, o con su medico de cabecera si nos envian los resultados por fax.
+- Alrededor de las 6 semanas: solo pruebas de funcion hepatica.
+- A las 12 a 16 semanas: hemograma completo, panel quimico con pruebas de funcion hepatica y acido urico.
+SI EL DOLOR AUMENTA
+Si tiene mas dolor mientras aumenta el alopurinol, use colchicina 1 tableta al dia, o 1 tableta dos veces al dia, durante 5 dias.
+SENALES DE ALARMA
+Vigile los sintomas de alergia al alopurinol. Si presenta fiebre, sarpullido o una sensacion de quemadura en la boca o las mucosas, DETENGA el alopurinol y comuniquese con nosotros.
+NO SE QUEDE SIN MEDICAMENTO
+Si el alopurinol le funciona bien y lo toma con regularidad, no se quede sin el. Suspender el alopurinol de forma abrupta puede provocar un ataque de gota.`},
+
+  {id:"i2-fibro", name:"Fibromyalgia: what it is and how to manage it", body:
+`FIBROMYALGIA
+Fibromyalgia is a disorder of pain regulation that causes you to feel pain throughout your body. The cause is unknown, but it does not appear to be an inflammatory or autoimmune condition. Although it is uncomfortable, fibromyalgia is not life-threatening and does not damage your joints or internal organs.
+There is no cure for fibromyalgia, but there are some things that help improve your pain and allow you to maintain a fairly normal lifestyle. This includes:
+- EXERCISE. This is the most important step in managing chronic pain.
+    - Low impact aerobic exercises are best: walking, cycling, swimming, elliptical.
+    - The goal is at least 30 minutes of exercise at least 5 days a week. Start slow and increase as tolerated.
+    - If you have not been exercising regularly, you may have more pain at first, especially the following day. Sometimes it helps to cut back on the intensity or length of time you exercise until your body gets used to the activity, then increase gradually as tolerated.
+- Stretching, physical therapy, yoga.
+- Meditation or relaxation therapy, acupuncture.
+- Counseling to help with coping with chronic pain, and to address any coexisting anxiety or depression.
+- Evaluating for and treating any underlying condition affecting sleep, such as sleep apnea.
+- Medications to regulate the chemicals that cause pain. This includes muscle relaxers such as cyclobenzaprine, antidepressants such as amitriptyline and duloxetine, and anti-seizure medications such as gabapentin and Lyrica. Narcotic and opioid pain medications are not recommended for treatment, as studies have shown people do worse in the long run.
+    - Although these medications help, they often do not eliminate pain altogether. They are used to improve pain alongside the measures above. Side effects such as drowsiness, dryness, constipation, and weight gain can occur.
+FOR MORE INFORMATION
+National Fibromyalgia Association: www.fmaware.org
+The Arthritis Foundation: www.arthritis.org/about-arthritis/types/fibromyalgia
+American College of Rheumatology: www.rheumatology.org/I-Am-A/Patient-Caregiver/Diseases-Conditions/Fibromyalgia`, bodyEs:
+`FIBROMIALGIA
+La fibromialgia es un trastorno de la regulacion del dolor que hace que sienta dolor en todo el cuerpo. Se desconoce la causa, pero no parece ser una afeccion inflamatoria o autoinmune. Aunque es incomoda, la fibromialgia no pone en peligro la vida y no dana las articulaciones ni los organos internos.
+No existe cura para la fibromialgia, pero hay algunas cosas que pueden ayudar a mejorar el dolor y permitirle mantener un estilo de vida bastante normal. Esto incluye:
+- EJERCICIO: este es el paso mas importante para controlar el dolor cronico.
+    - Lo mejor son los ejercicios aerobicos de bajo impacto (caminar, andar en bicicleta, nadar, eliptica).
+    - El objetivo es hacer al menos 30 minutos de ejercicio al menos 5 dias a la semana. Comience despacio y aumente su ejercicio segun lo tolere.
+    - Si no ha hecho ejercicio con regularidad, es posible que al principio sienta mas dolor al comenzar un nuevo programa, especialmente al dia siguiente. A veces es util reducir la intensidad o la duracion del ejercicio hasta que el cuerpo se acostumbre a la actividad y luego aumentar gradualmente segun la tolerancia.
+- Estiramiento, fisioterapia, yoga.
+- Terapia de meditacion o relajacion, acupuntura.
+- Asesoramiento para ayudar a afrontar el dolor cronico y abordar cualquier ansiedad o depresion coexistente.
+- Evaluar y tratar cualquier afeccion subyacente que afecte el sueno, como la apnea del sueno.
+- Medicamentos para regular las sustancias quimicas que causan dolor. Esto incluye relajantes musculares (es decir, ciclobenzaprina), antidepresivos (es decir, amitriptilina, duloxetina) y medicamentos anticonvulsivos (es decir, gabapentina, Lyrica). Los analgesicos narcoticos y opioides no se recomiendan para el tratamiento, ya que los estudios han demostrado que a las personas les va peor a largo plazo.
+    - Aunque estos medicamentos pueden ayudar, a menudo no eliminan el dolor por completo. Se utilizan para ayudar a mejorar el dolor junto con las modalidades anteriores. Pueden producirse efectos secundarios como somnolencia, sequedad, estrenimiento y aumento de peso.
+PARA MAS INFORMACION
+Asociacion Nacional de Fibromialgia: www.fmaware.org
+La Fundacion de Artritis: www.arthritis.org/about-arthritis/types/fibromyalgia
+American College of Rheumatology: www.rheumatology.org/I-Am-A/Patient-Caregiver/Diseases-Conditions/Fibromyalgia`},
+
+  {id:"i2-fullplate", name:"Prescription: Full Plate Living program", body:
+`PRESCRIPTION: ENROLL IN THE FULL PLATE LIVING PROGRAM
+Full Plate Living helps you build the habit of eating healthier meals.
+Enroll in the Full Plate Living program, a free service of the Ardmore Institute of Health. It uses a small-step approach that can lead to big health outcomes. Membership gives you access to courses, a supportive community, and resources that improve your health. Specifically, it helps you move toward eating enough fiber foods.
+Some of the effects you may see include:
+- Improved blood sugar
+- Lower cholesterol levels
+- Better blood pressure
+- Weight loss
+- Increased energy
+- Better sleep
+- Improved digestive regularity
+Enroll at fullplateliving.org.`, bodyEs:
+`RECETA: INSCRIBASE EN EL PROGRAMA FULL PLATE LIVING
+Full Plate Living le ayuda a crear el habito de comer comidas mas saludables.
+Inscribase en el programa Full Plate Living, un servicio gratuito del Ardmore Institute of Health. Usa un enfoque de pasos pequenos que puede llevar a grandes resultados de salud. La membresia le da acceso a cursos, a una comunidad de apoyo y a recursos que mejoran su salud. En particular, le ayuda a avanzar hacia el consumo suficiente de alimentos con fibra.
+Algunos de los efectos que puede notar incluyen:
+- Mejor nivel de azucar en la sangre
+- Niveles mas bajos de colesterol
+- Mejor presion arterial
+- Perdida de peso
+- Mas energia
+- Mejor sueno
+- Mejor regularidad digestiva
+Inscribase en fullplateliving.org.`},
+
+  {id:"i2-welcome", name:"Welcome to Rheumatology", body:
+`WELCOME TO RHEUMATOLOGY
+It was a pleasure meeting you and seeing you in clinic.
+APPOINTMENTS
+Initial visits give us 60 minutes to understand your health concerns thoroughly. Follow-ups are 30 minutes to monitor your progress. To make the most of our time together:
+- Please arrive 15 minutes early.
+- Let us discuss your concerns at the start of each visit so we can address them fully.
+- If additional concerns arise at the end of our visit, we may need to schedule a follow-up to give them proper attention.
+- If you are running more than 15 minutes late, we may need to reschedule so you receive the time you need.
+COMMUNICATION
+To provide thoughtful care for all patients:
+- I review portal messages within 3 business days.
+- Medication refills are typically processed within 3 business days. Plan accordingly if you are traveling or running out of medication.
+- If your results are normal or stable, I may not reach out directly. I review all test results carefully, and if anything concerning comes up I will contact you promptly. If you would like to review normal results or have questions, message me.
+- Forms and paperwork typically take 3 to 7 business days, as I set aside dedicated time each week to review them carefully.
+- For any urgent health concern, reach out to your primary care doctor or seek emergency care.
+MEDICATIONS AND INSURANCE
+- Some medications need insurance approval before we can start them.
+- We work promptly on authorizations, but insurance timing varies.
+- We will keep you informed about any delays or requirements.
+- Let us know if you have any difficulty getting your medications.
+VIDEO VISITS
+- Find a quiet, well-lit space where you feel comfortable.
+- Join 5 to 15 minutes early to test your connection.
+- Have your current symptoms noted.
+- Keep your pharmacy information current.
+BETWEEN VISITS
+- Note any significant change in your symptoms and let me know through the portal or by calling the clinic. If you are feeling unwell, reach out to your primary care doctor or seek emergency care.
+- Take medications as discussed.
+- Keep your follow-up appointments as recommended.
+I look forward to working together to manage your rheumatologic conditions.`, bodyEs:
+`BIENVENIDO A REUMATOLOGIA
+Fue un placer conocerlo y atenderlo en la clinica.
+CITAS
+Las visitas iniciales nos dan 60 minutos para comprender a fondo sus problemas de salud. Las visitas de seguimiento son de 30 minutos para vigilar su progreso. Para aprovechar al maximo nuestro tiempo juntos:
+- Por favor llegue 15 minutos antes.
+- Hablemos de sus inquietudes al inicio de cada visita para poder atenderlas por completo.
+- Si surgen inquietudes adicionales al final de la visita, es posible que necesitemos programar un seguimiento para darles la atencion adecuada.
+- Si llega con mas de 15 minutos de retraso, es posible que debamos reprogramar para que reciba el tiempo que necesita.
+COMUNICACION
+Para brindar atencion cuidadosa a todos los pacientes:
+- Reviso los mensajes del portal dentro de 3 dias habiles.
+- Las renovaciones de medicamentos se procesan normalmente dentro de 3 dias habiles. Planifique con tiempo si va a viajar o si se le esta acabando el medicamento.
+- Si sus resultados son normales o estables, es posible que no me comunique directamente. Reviso todos los resultados con cuidado y, si aparece algo preocupante, lo contactare de inmediato. Si desea revisar resultados normales o tiene preguntas, envieme un mensaje.
+- Los formularios y el papeleo suelen tomar de 3 a 7 dias habiles, ya que reservo tiempo cada semana para revisarlos con cuidado.
+- Para cualquier problema de salud urgente, comuniquese con su medico de cabecera o busque atencion de emergencia.
+MEDICAMENTOS Y SEGURO
+- Algunos medicamentos necesitan aprobacion del seguro antes de comenzar.
+- Trabajamos con rapidez en las autorizaciones, pero los tiempos del seguro varian.
+- Le informaremos sobre cualquier retraso o requisito.
+- Avisenos si tiene dificultad para obtener sus medicamentos.
+VISITAS POR VIDEO
+- Busque un espacio tranquilo y bien iluminado donde se sienta comodo.
+- Conectese de 5 a 15 minutos antes para probar su conexion.
+- Tenga anotados sus sintomas actuales.
+- Mantenga actualizada la informacion de su farmacia.
+ENTRE VISITAS
+- Anote cualquier cambio importante en sus sintomas y aviseme por el portal o llamando a la clinica. Si se siente mal, comuniquese con su medico de cabecera o busque atencion de emergencia.
+- Tome los medicamentos como se discutio.
+- Mantenga sus citas de seguimiento segun lo recomendado.
+Espero trabajar juntos para manejar sus condiciones reumatologicas.`},
+
+  {id:"i2-drymouth", name:"Dry mouth care and cavity prevention", body:
+`DRY MOUTH CARE AND CAVITY PREVENTION
+MANAGING DRY MOUTH
+- Stay well hydrated by taking frequent sips of water throughout the day.
+- Stimulate saliva flow with sugar-free candies, mints, and gum.
+- Rinse with salt water. Dissolve 3/4 teaspoon of salt in 32 ounces of water.
+- Use over-the-counter dry mouth products such as Biotene rinse, spray, or gel, Xerostom rinse, spray, or gel, Mouth Kote rinse, adhesive tablets (Xylimelts), or adhesive strips (Xerostrips).
+- A prescription oil-based spray (Aquoral) coats the tissue for longer.
+- Prescription medications that stimulate saliva flow, such as cevimeline or pilocarpine, are an option we can discuss.
+PROTECTING YOUR TEETH
+Chronic dry mouth raises your risk of dental problems, most notably cavities.
+- Brush twice daily and floss once daily.
+- Use a fluoride toothpaste daily, including prescription strength if recommended.
+- Add 1.1 percent neutral sodium fluoride gel daily.
+- See your dentist at least twice a year for examinations.
+- Ask about professional fluoride varnish at dental visits.
+- Limit sugary foods, drinks, and sticky carbohydrates to mealtimes whenever possible. When you drink something sugary, finish it relatively quickly rather than sipping throughout the day, so saliva can buffer the acid. Rinse your mouth with water after sugar.
+- Keep managing dry mouth diligently.`, bodyEs:
+`CUIDADO DE LA BOCA SECA Y PREVENCION DE CARIES
+COMO MANEJAR LA BOCA SECA
+- Mantengase bien hidratado tomando sorbos de agua con frecuencia durante el dia.
+- Estimule el flujo de saliva con caramelos, mentas y chicles sin azucar.
+- Enjuaguese con agua salada. Disuelva 3/4 de cucharadita de sal en 32 onzas de agua.
+- Use productos de venta libre para la boca seca como Biotene (enjuague, aerosol o gel), Xerostom (enjuague, aerosol o gel), Mouth Kote (enjuague), tabletas adhesivas (Xylimelts) o tiras adhesivas (Xerostrips).
+- Un aerosol con base de aceite con receta (Aquoral) cubre el tejido por mas tiempo.
+- Los medicamentos con receta que estimulan la saliva, como la cevimelina o la pilocarpina, son una opcion que podemos discutir.
+COMO PROTEGER SUS DIENTES
+La boca seca cronica aumenta el riesgo de problemas dentales, sobre todo las caries.
+- Cepillese dos veces al dia y use hilo dental una vez al dia.
+- Use pasta dental con fluoruro todos los dias, incluida la de concentracion recetada si se le indica.
+- Agregue gel de fluoruro de sodio neutro al 1.1 por ciento a diario.
+- Visite a su dentista al menos dos veces al ano para revisiones.
+- Pregunte por la aplicacion profesional de barniz de fluoruro en sus visitas dentales.
+- Limite los alimentos y bebidas azucarados y los carbohidratos pegajosos a las horas de comida siempre que sea posible. Cuando tome algo azucarado, terminelo relativamente rapido en lugar de beberlo poco a poco durante el dia, para que la saliva pueda neutralizar el acido. Enjuaguese la boca con agua despues de consumir azucar.
+- Siga manejando la boca seca con constancia.`}
+
+  ]);
+
+  DEFAULT_DATA.modules = D;
+  DEFAULT_DATA._blocks = {LEAD:LEAD, IMMUNO:IMMUNO, VAX:VAX, MONITOR:MONITOR, RTC:RTC,
+    INTERVAL_TAIL:INTERVAL_TAIL, ROSPMH:ROSPMH, MEDSEC:MEDSEC, OBJHEAD:OBJHEAD,
+    CORELABS:CORELABS, INFXN:INFXN, SIG:SIG, ATTEST:ATTEST, NORMAL_EXAM:NORMAL_EXAM,
+    NP_PASTHX:NP_PASTHX, NP_RECORDS:NP_RECORDS};
+
+  DEFAULT_DATA.version = 9;
+})();
+/* ---------------------------------------------------------------
+   RheumPad data3.js - MODULAR NOTES (preview build)
+
+   Two templates instead of twenty-four. Each one carries the shared
+   skeleton of a note; the disease-specific parts sit behind markers
+   written as <<AP>>, <<IV>>, <<SER>>, <<EX>>, <<LAB>>, <<HPI>>.
+
+   Picking a disease at the top of the composer swaps those markers for
+   that disease's content. Picking nothing leaves generic blanks, so the
+   same template is also the plain follow-up note.
+
+   Sections can be switched off individually. A section switched off is
+   hidden and is left out of Copy full note.
+   --------------------------------------------------------------- */
+(function(){
+  if (typeof DEFAULT_DATA === "undefined" || !DEFAULT_DATA) return;
+  if (!DEFAULT_DATA.modules || !DEFAULT_DATA._blocks) return;
+
+  const B = DEFAULT_DATA._blocks;
+  const SEP = "_______________________________________________________";
+
+  // Precompute the two conditional blocks per disease so the composer only
+  // ever does a field lookup, never a decision.
+  DEFAULT_DATA.modules.forEach(m=>{
+    m.mImmuno  = m.imm ? B.IMMUNO  : "";
+    m.mMonitor = m.imm ? B.MONITOR : "";
+  });
+
+  const FU = {
+    id: "t3-fu",
+    name: "Follow-Up Note",
+    cat: "Modular Notes",
+    modular: true,
+    modKind: "fu",
+    blurb: "Pick a disease at the top. Everything disease-specific fills in. Pick nothing for a plain follow-up.",
+    sections: [
+      {noTitle:true, title:"Lead-in & ID", body:
+        B.LEAD + "\n\nID: [[NAME]] is a [[AGE]] [[SEX]] with a history of <<DX>>."},
+
+      {noTitle:true, title:"Assessment & Plan", body:
+        "ASSESSMENT & PLAN\n[[DXLIST]]\n<<IMMUNO>>\n" + B.VAX + "\n\n<<AP>>\n<<MONITOR>>\n" + B.RTC + "\n[[APEND]]"},
+
+      {noTitle:true, title:"Interval History", body:
+        SEP + "\n\n[[SUBJ]]\n[[NAME]] is here today {accompanied:alone|with a family member|with a caregiver|with an interpreter|by video} for follow-up of <<DXLOWER>>.\n\nINTERVAL HISTORY:\nDOLV: [[LASTVISIT]], at which time ***.\n<<IV>>\n" + B.INTERVAL_TAIL},
+
+      {noTitle:true, title:"Disease History & Serologies", off:true, body:
+        "RHEUMATOLOGIC DISEASE HISTORY:\nDiagnosis: <<DXNAME>>\nOnset: Symptoms began ***\nInitial Symptoms: ***\nPrior Workup: ***\nTreatment History: ***\nCurrent Therapy: ***\nSerologies:\n<<SER>>\n\nInterest in pregnancy in next 12 months: ***"},
+
+      {noTitle:true, title:"ROS, PMH, Family & Social", off:true, body: B.ROSPMH},
+
+      {noTitle:true, title:"Medications", off:true, body: B.MEDSEC},
+
+      {noTitle:true, title:"Objective & Exam", body:
+        B.OBJHEAD + "\n\nFocused exam: <<EX>>"},
+
+      {noTitle:true, title:"Data Reviewed", off:true, body:
+        "Labs/pathology (for review purposes):\n" + B.CORELABS + "\n<<LAB>>\n\n" + B.INFXN + "\n\nImaging/procedures (for review purposes):\n***"},
+
+      {noTitle:true, title:"Signature & Attestation", body: B.ATTEST}
+    ]
+  };
+
+  const NP = {
+    id: "t3-np",
+    name: "New Consult Note",
+    cat: "Modular Notes",
+    modular: true,
+    modKind: "np",
+    blurb: "Same idea for new patients. The HPI prompt, serology workup, and focused exam follow the disease you pick.",
+    sections: [
+      {noTitle:true, title:"Header", body:
+        "Date of service: [[TODAY]]\nPatient: [[NAME]]    MRN: [[MRN]]    DOB: [[DOB]]\nReferring provider: [[REFPROV]]\nPrimary care: [[PCP]]\n\n" + B.LEAD},
+
+      {noTitle:true, title:"Impression & Recommendations", body:
+        "IMPRESSION AND RECOMMENDATIONS\n[[DXLIST]]\n\n<<AP>>\n<<MONITOR>>\n" + B.RTC + "\n[[APEND]]"},
+
+      {noTitle:true, title:"HPI", body:
+        SEP + "\n\nHISTORY OF PRESENT ILLNESS:\n[[NAME]] is a [[AGE]] [[SEX]] referred by [[REFPROV]] for evaluation of ***, <<HPI>>"},
+
+      {noTitle:true, title:"Past History", off:true, body: B.NP_PASTHX},
+
+      {noTitle:true, title:"Disease History & Serologies", body:
+        "RHEUMATOLOGIC DISEASE HISTORY:\nWorking diagnosis: <<DXNAME>>\nOnset: ***\nInitial Symptoms: ***\nPrior Workup: ***\nTreatment History: ***\nSerologies:\n<<SER>>\n\nInterest in pregnancy in next 12 months: ***"},
+
+      {noTitle:true, title:"ROS, PMH, Family & Social", off:true, body: B.ROSPMH},
+
+      {noTitle:true, title:"Records Reviewed", off:true, body: B.NP_RECORDS},
+
+      {noTitle:true, title:"Objective", body:
+        "[[OBJ]]\n<<NPOBJ>>\n<<LAB>>"},
+
+      {noTitle:true, title:"Physical Exam", body:
+        B.NORMAL_EXAM + "\n\nFocused exam: <<EX>>"},
+
+      {noTitle:true, title:"Signature", body: B.SIG}
+    ]
+  };
+
+  DEFAULT_DATA.templates = [FU, NP].concat(DEFAULT_DATA.templates);
+})();
 // ====================== CORE ======================
 const KEY = "rheumpad_v1";
 let DATA, FAVS, PRECHART, META = {};
 let storageOK = true;
+let FIRST_RUN = false;
 
 function loadState(){
   let stored = null;
@@ -1098,11 +2116,37 @@ function loadState(){
         const def = DEFAULT_DATA.drugs.find(x=>x.id === "d-il17");
         il17.name = def.name; il17.dosing = def.dosing; il17.se = def.se;
       }
+      // v9: the per-disease note templates retire. The two modular notes replace them,
+      // so drop the retired ids from the stored library and from favorites.
+      if ((stored.seededVersion || 1) < 9) {
+        const gone = new Set(["t-fura","t-fulupus","t-fupsa","t-fugout","t-fupmr","t-fuop"]);
+        (DEFAULT_DATA.modules || []).forEach(m=>{ gone.add("t2-fu-" + m.k); gone.add("t2-np-" + m.k); });
+        DATA.templates = (DATA.templates || []).filter(t=>!gone.has(t.id));
+        FAVS = (FAVS || []).filter(k=>!gone.has(String(k).split(":").slice(1).join(":")));
+      }
+      // v8: signatures moved out of template text and into one Settings field
+      if ((stored.seededVersion || 1) < 8) {
+        const OLDSIG = "Dominique Feterman, MD\nRheumatology";
+        if (DATA.sig === undefined || DATA.sig === "") {
+          const used = (DATA.templates || []).some(t=>(t.sections||[]).some(s=>s.body.indexOf(OLDSIG) >= 0));
+          DATA.sig = used ? OLDSIG : "";
+        }
+        (DATA.templates || []).forEach(t=>(t.sections || []).forEach(s=>{
+          s.body = s.body.split(OLDSIG).join("[[ME]]")
+                         .split("***, MD\nBoard-Certified Rheumatologist").join("[[ME]]")
+                         .split("***, MD").join("[[ME]]");
+        }));
+      }
     }
     if (DATA.clinic === undefined) DATA.clinic = "";
+    if (DATA.sig === undefined) DATA.sig = "";
+    if (DATA.emr === undefined) DATA.emr = "generic";
   } else {
     DATA = JSON.parse(JSON.stringify(DEFAULT_DATA)); FAVS = []; PRECHART = []; META = {};
+    FIRST_RUN = true;
   }
+  // Disease modules are built-in reference content, never user-edited, so always take the current set
+  if (DEFAULT_DATA.modules) DATA.modules = DEFAULT_DATA.modules;
   if (!META.firstRun) META.firstRun = Date.now();
 }
 function saveState(){
@@ -1131,9 +2175,62 @@ function fallbackCopy(text, done){
   document.body.removeChild(ta);
 }
 
+// ---------- EMR tokens ----------
+// One template body carries [[TOKEN]] markers. They become Epic SmartLinks in Epic mode
+// and plain bracketed cues in generic mode. Generic cues render as TEXT, never as input
+// fields, so no identifier can be typed into this app in either mode.
+const TOKENS = {
+  NAME:      ["@NAME@",                    "[patient name]"],
+  AGE:       ["@AGEDETAILEDREFRESH@",      "[age]"],
+  SEX:       ["@SEX@",                     "[sex]"],
+  TODAY:     ["@TODAYDATE@",               "[date of service]"],
+  MRN:       ["@MRN@",                     "[MRN]"],
+  DOB:       ["@DOB@",                     "[DOB]"],
+  REFPROV:   ["@REFPROVFLNAME@",           "[referring provider]"],
+  PCP:       ["@PCPADD@",                  "[primary care provider]"],
+  DXLIST:    ["@DIAGMEDREFRESH@",          "[encounter diagnoses]"],
+  PROBLIST:  ["@PROBPLAIN@",               "[problem list]"],
+  MEDS:      ["@MEDSCONDENSEDREFRESH@",    "[current medication list]"],
+  ALLERGIES: ["@ALGSINGLE@",               "[allergies]"],
+  LASTVISIT: ["@LASTENCTHISDEPT365@",      "[date of last visit]"],
+  SUBJ:      ["@SUBJECTIVE@",              "SUBJECTIVE"],
+  OBJ:       ["@OBJECTIVE@",               "OBJECTIVE"],
+  APEND:     ["@ASSESSMENTPLANEND@",       ""],
+  VITALS:    ["@VS@",                      "[vital signs]"],
+  WT:        ["@LASTWT(10)@",              "[weight, last 10]"],
+  BP:        ["@LASTBP(10)@",              "[blood pressure, last 10]"],
+  EXAM:      ["@PHYSEXAM@",                "[physical exam]"],
+  IMAGING:   ["@LASTIMGRESULTS@",          "[imaging results]"],
+  INFXN:     ["@RESUFAST(hepbintrp,hivagabint,hepcintrp,qftbintrp)@",
+              "HBV [ ]   HCV [ ]   HIV [ ]   QuantiFERON [ ]"]
+};
+const TOK_RE = /\[\[([A-Z]+)(?::([^\]]*))?\]\]/g;
+// The signature is the clinician's own, typed once in Settings and reused everywhere.
+// It is not patient data, so it saves and exports with the library.
+function sigBlock(){
+  const s = (typeof DATA !== "undefined" && DATA && DATA.sig) ? String(DATA.sig).trim() : "";
+  return s || "[your name and credentials]";
+}
+const Tok = {
+  mode(){ return (typeof DATA !== "undefined" && DATA && DATA.emr === "epic") ? "epic" : "generic"; },
+  apply(body){
+    if (!body || body.indexOf("[[") < 0) return body;
+    const epic = this.mode() === "epic";
+    return body.replace(TOK_RE, (m, key, arg)=>{
+      if (key === "ME") return sigBlock();
+      if (key === "MENAME") return sigBlock().split("\n")[0];
+      if (key === "LAB") return epic ? "@LABRSLTLINE(" + (arg||"") + ")@" : (arg||"") + ": [        ]";
+      const t = TOKENS[key];
+      if (!t) return m;
+      return epic ? t[0] : t[1];
+    });
+  }
+};
+
 // ---------- Fill-in rendering ----------
 const PH_RE = /\{([^{}|:]+):([^{}]*)\}|\{([^{}|:]+)\}|\*\*\*/g;
 function renderFillable(body, container){
+  body = Tok.apply(body);
   container.textContent = "";
   let last = 0, m;
   PH_RE.lastIndex = 0;
@@ -1172,7 +2269,7 @@ function collectText(node){
   return out;
 }
 function preview(body){
-  return body.replace(PH_RE, (mm,a,b,c)=> a ? "["+a.trim()+"]" : (c ? "["+c.trim()+"]" : "[___]"));
+  return Tok.apply(body).replace(PH_RE, (mm,a,b,c)=> a ? "["+a.trim()+"]" : (c ? "["+c.trim()+"]" : "[___]"));
 }
 
 // ====================== APP (tabs, modal, search, favorites) ======================
@@ -1214,7 +2311,7 @@ const App = {
     const acts = document.createElement("div"); acts.className = "modal-actions";
     const mk = (label, cls, fn)=>{ const b=document.createElement("button"); b.className="btn "+cls; b.textContent=label; b.onclick=fn; acts.appendChild(b); };
     if (kind !== "phrase") mk("Print", "", ()=>App.printSheet(item.name, collectText(fill), lang));
-    mk("Copy with blanks (***)", "", ()=>{ copyText(curBody().replace(PH_RE, "***")); });
+    mk("Copy with blanks (***)", "", ()=>{ copyText(Tok.apply(curBody()).replace(PH_RE, "***")); });
     mk("Copy", "primary", ()=>{ copyText(collectText(fill)); App.closeModal(); });
     mk("Close", "", ()=>App.closeModal());
     modal.appendChild(acts);
@@ -1269,7 +2366,9 @@ const App = {
       ["Where your work saves", "Everything you edit saves in this browser only, on this computer. Export (top right) writes your whole library to a file; Import loads it anywhere. Moving between computers or backing up = Export here, Import there."],
       ["Handouts", "Patient instruction sheets fill like phrases, toggle to Spanish where available, and Print gives a clean one-page sheet with your clinic name (set it in Settings)."],
       ["No patient information", "The app stores no names, dates of birth, or identifiers by design. Pre-chart uses slot numbers matched to your schedule order. Keep it that way."],
-      ["Make it yours", "Settings edits every phrase, template, pick list, handout, and drug card. Star anything to pin it to the top bar."]
+      ["Your signature", "Settings, Your signature. Type it once and every note, letter, and attestation uses it. Leave it blank and notes print [your name and credentials] instead."],
+      ["Make it yours", "Settings edits every phrase, template, pick list, handout, and drug card. Star anything to pin it to the top bar."],
+      ["Longer guide", "The Start Here tab, last on the tab bar, covers setup, the modular notes, and backing up."]
     ];
     blocks.forEach(([t, txt])=>{
       const b = document.createElement("div"); b.className = "helpblock";
@@ -1400,9 +2499,31 @@ function renderFavbar(){
 }
 
 // ====================== TEMPLATES + COMPOSER ======================
+// ---- Disease modules: <<AP>>, <<IV>>, <<SER>> etc. swapped for the picked disease ----
+const MOD_MAP = {DX:"dx", DXNAME:"n", IV:"iv", SER:"ser", AP:"ap", LAB:"lab", EX:"ex",
+                 HPI:"hpi", NPOBJ:"npobj", IMMUNO:"mImmuno", MONITOR:"mMonitor"};
+function modValue(mod, key){
+  if (!mod) return key === "DXNAME" || key === "DXLOWER" ? "***" : "***";
+  if (key === "DXLOWER") return (mod.n || "").toLowerCase();
+  const f = MOD_MAP[key];
+  return f ? (mod[f] || "") : "";
+}
+function hasModule(body){ return /<<[A-Z]+>>/.test(body); }
+function applyModule(body, mod){
+  const out = [];
+  body.split("\n").forEach(ln=>{
+    const m = ln.match(/<<([A-Z]+)>>/);
+    if (!m) { out.push(ln); return; }
+    const val = modValue(mod, m[1]);
+    if (!val && ln.trim() === m[0]) return;            // empty block: drop the line entirely
+    out.push(ln.replace(/<<([A-Z]+)>>/g, (_, k)=>modValue(mod, k)));
+  });
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
 function renderTemplates(){
   const wrap = document.getElementById("template-groups"); wrap.innerHTML = "";
   const cats = [...new Set(DATA.templates.map(t=>t.cat))];
+  cats.sort((a,b)=>(a==="Modular Notes"?0:1)-(b==="Modular Notes"?0:1));
   cats.forEach(cat=>{
     const h = document.createElement("h2"); h.className = "sect"; h.textContent = cat; wrap.appendChild(h);
     const grid = document.createElement("div"); grid.className = "cardgrid";
@@ -1410,7 +2531,8 @@ function renderTemplates(){
       const card = document.createElement("div"); card.className = "card";
       card.innerHTML = '<h3></h3><p class="preview"></p><button class="star" title="Pin to top bar">&#9733;</button>';
       card.querySelector("h3").textContent = t.name;
-      card.querySelector(".preview").textContent = t.sections.map(s=>s.title).join(" · ");
+      card.querySelector(".preview").textContent = t.blurb || t.sections.map(s=>s.title).join(" · ");
+      if (t.modular) card.classList.add("modcard");
       const star = card.querySelector(".star");
       if (App.isFav("template", t.id)) star.classList.add("faved");
       star.onclick = (e)=>App.toggleFav("template", t.id, e);
@@ -1436,14 +2558,19 @@ const Composer = {
     copyAll.onclick = ()=>Composer.copyAll();
     btns.appendChild(back); btns.appendChild(copyAll);
     top.appendChild(h2); top.appendChild(btns); comp.appendChild(top);
+    this.tpl = t; this.mod = null;
+    if (t.modular) comp.appendChild(this.buildPicker(t));
+    comp.appendChild(this.buildSectionBar(t));
     t.sections.forEach((s, i)=>{
-      const sec = document.createElement("div"); sec.className = "comp-section";
+      const sec = document.createElement("div"); sec.className = "comp-section"; sec.dataset.idx = i;
       const h4 = document.createElement("h4");
       const span = document.createElement("span"); span.textContent = s.title;
       const cbtn = document.createElement("button"); cbtn.className = "btn small"; cbtn.textContent = "Copy section";
       h4.appendChild(span); h4.appendChild(cbtn); sec.appendChild(h4);
-      const body = document.createElement("div"); body.className = "comp-body"; body.dataset.title = s.title;
-      renderFillable(s.body, body); sec.appendChild(body);
+      const body = document.createElement("div"); body.className = "comp-body"; body.dataset.title = s.title; body.dataset.notitle = s.noTitle ? "1" : "0";
+      body.dataset.mod = hasModule(s.body) ? "1" : "0";
+      renderFillable(applyModule(s.body, null), body); sec.appendChild(body);
+      if (s.off) { sec.style.display = "none"; sec.dataset.off = "1"; }
       cbtn.onclick = ()=>copyText(collectText(body));
       body.querySelectorAll('input[title="msk"]').forEach(inp=>{
         const jb = document.createElement("button"); jb.className = "btn small"; jb.style.marginLeft = "6px";
@@ -1464,7 +2591,91 @@ const Composer = {
     this.wireCdai(comp);
     window.scrollTo({top:0});
   },
+  buildPicker(t){
+    const row = document.createElement("div"); row.className = "modpick";
+    const lab = document.createElement("label"); lab.textContent = "Disease";
+    const sel = document.createElement("select"); sel.id = "mod-select";
+    const none = document.createElement("option"); none.value = ""; none.textContent = "General (no disease picked)";
+    sel.appendChild(none);
+    (DATA.modules || []).forEach(m=>{
+      const o = document.createElement("option"); o.value = m.k; o.textContent = m.n; sel.appendChild(o);
+    });
+    sel.onchange = ()=>Composer.setDisease(sel.value);
+    const hint = document.createElement("span"); hint.className = "modhint";
+    hint.textContent = "Swaps the assessment, interval history, serologies, exam, and labs. Nothing you have already typed elsewhere is lost.";
+    row.appendChild(lab); row.appendChild(sel); row.appendChild(hint);
+    return row;
+  },
+  buildSectionBar(t){
+    const row = document.createElement("div"); row.className = "secbar";
+    const lab = document.createElement("span"); lab.className = "seclab"; lab.textContent = "Sections";
+    row.appendChild(lab);
+    t.sections.forEach((s, i)=>{
+      const chip = document.createElement("button");
+      chip.className = "secchip" + (s.off ? "" : " on");
+      chip.textContent = s.title;
+      chip.title = "Show or hide this section. Hidden sections are left out of Copy full note.";
+      chip.onclick = ()=>{
+        const sec = document.querySelector('#composer .comp-section[data-idx="' + i + '"]');
+        if (!sec) return;
+        const hidden = sec.dataset.off === "1";
+        sec.dataset.off = hidden ? "0" : "1";
+        sec.style.display = hidden ? "block" : "none";
+        chip.classList.toggle("on", hidden);
+      };
+      row.appendChild(chip);
+    });
+    return row;
+  },
+  setDisease(k){
+    const t = this.tpl; if (!t) return;
+    this.mod = k ? (DATA.modules || []).find(m=>m.k === k) : null;
+    const comp = document.getElementById("composer");
+    t.sections.forEach((s, i)=>{
+      if (!hasModule(s.body)) return;
+      const sec = comp.querySelector('.comp-section[data-idx="' + i + '"]');
+      if (!sec) return;
+      const body = sec.querySelector(".comp-body");
+      body.innerHTML = "";
+      renderFillable(applyModule(s.body, this.mod), body);
+      this.wireMsk(body);
+    });
+    this.wireCdai(comp);
+  },
+  // Signature changed in Settings while a note is open: redraw only the sections that
+  // carry it, and put back anything already typed into those sections.
+  refreshSig(){
+    const t = this.tpl; if (!t) return;
+    const comp = document.getElementById("composer");
+    if (!comp) return;
+    t.sections.forEach((s, i)=>{
+      if (s.body.indexOf("[[ME]]") < 0 && s.body.indexOf("[[MENAME]]") < 0) return;
+      const sec = comp.querySelector('.comp-section[data-idx="' + i + '"]');
+      if (!sec) return;
+      const body = sec.querySelector(".comp-body");
+      const vals = [...body.querySelectorAll("input,select")].map(el=>el.value);
+      body.innerHTML = "";
+      renderFillable(applyModule(s.body, this.mod), body);
+      this.wireMsk(body);
+      [...body.querySelectorAll("input,select")].forEach((el, j)=>{
+        if (vals[j] !== undefined && vals[j] !== "") el.value = vals[j];
+      });
+    });
+  },
+  wireMsk(body){
+    body.querySelectorAll('input[title="msk"]').forEach(inp=>{
+      const jb = document.createElement("button"); jb.className = "btn small"; jb.style.marginLeft = "6px";
+      jb.textContent = "Use joint exam"; jb.title = "Insert the exam built on the Joint Exam tab";
+      jb.onclick = ()=>{
+        const txt = document.getElementById("je-out").textContent;
+        if (txt.startsWith("Tap joints")) { toast("Build the exam on the Joint Exam tab first"); return; }
+        inp.value = txt.replace(/\n/g, " "); inp.size = Math.min(inp.value.length, 80);
+      };
+      inp.after(jb);
+    });
+  },
   wireCdai(comp){
+    if (comp.querySelector(".cdai-jb")) return;
     const g = t => comp.querySelector('input[title="' + t + '"]');
     const tj = g("tjc"), sj = g("sjc"), pg = g("pga2"), eg = g("ega"), cd = g("cdai");
     if (!(tj && sj && pg && eg && cd)) return;
@@ -1477,7 +2688,7 @@ const Composer = {
       if (lvl) lvl.value = cdai <= 2.8 ? "remission" : cdai <= 10 ? "low" : cdai <= 22 ? "moderate" : "high";
     };
     [tj, sj, pg, eg].forEach(i=>i.addEventListener("input", recalc));
-    const jb = document.createElement("button"); jb.className = "btn small"; jb.style.marginLeft = "6px";
+    const jb = document.createElement("button"); jb.className = "btn small cdai-jb"; jb.style.marginLeft = "6px";
     jb.textContent = "Use joint exam counts"; jb.title = "Fill TJC/SJC from the Joint Exam tab";
     jb.onclick = ()=>{
       tj.value = document.getElementById("tjc").textContent;
@@ -1494,7 +2705,10 @@ const Composer = {
   copyAll(){
     const parts = [];
     document.querySelectorAll("#composer .comp-body").forEach(b=>{
-      parts.push(b.dataset.title.toUpperCase() + ":\n" + collectText(b));
+      const sec = b.closest(".comp-section");
+      if (sec && sec.dataset.off === "1") return;
+      const txt = collectText(b);
+      parts.push(b.dataset.notitle === "1" ? txt : b.dataset.title.toUpperCase() + ":\n" + txt);
     });
     copyText(parts.join("\n\n"));
   }
@@ -1915,7 +3129,7 @@ const Launcher = {
     if (x.kind === "code") { copyText(x.item.code); return; }
     PH_RE.lastIndex = 0;
     if (PH_RE.test(x.item.body)) { PH_RE.lastIndex = 0; App.openFill(x.kind, x.item.id); }
-    else copyText(x.item.body);
+    else copyText(Tok.apply(x.item.body));
   },
   key(e){
     if (e.key === "Escape") { this.close(); return; }
@@ -2793,11 +4007,33 @@ const PG = {
 };
 
 // ====================== BOOT ======================
+const EMR_SAMPLE = `ID: [[NAME]] is a [[AGE]] [[SEX]] with a history of seropositive rheumatoid arthritis.
+DOLV: [[LASTVISIT]]
+[[LAB:ESR]]
+[[LAB:CRP]]`;
+function renderEmrPreview(){
+  const el = document.getElementById("emr-preview");
+  if (!el) return;
+  el.textContent = Tok.apply(EMR_SAMPLE);
+}
+
+function renderSigPreview(){
+  const el = document.getElementById("sig-preview");
+  if (!el) return;
+  el.textContent = "Sincerely,\n\n" + sigBlock();
+}
+
 function renderAll(){
   renderPhrases(); renderTemplates(); renderPicklists(); renderInstructions(); Drugs.render(); Codes.render();
   renderFavbar(); ED.renderLists(); PC.render();
   const ci = document.getElementById("set-clinic");
   if (ci && document.activeElement !== ci) ci.value = DATA.clinic || "";
+  const si = document.getElementById("set-sig");
+  if (si && document.activeElement !== si) si.value = DATA.sig || "";
+  renderSigPreview();
+  const es = document.getElementById("set-emr");
+  if (es) es.value = DATA.emr || "generic";
+  renderEmrPreview();
   saveState();
 }
 document.addEventListener("DOMContentLoaded", ()=>{
@@ -2825,6 +4061,17 @@ document.addEventListener("DOMContentLoaded", ()=>{
     }
   });
   document.getElementById("set-clinic").addEventListener("input", (e)=>{ DATA.clinic = e.target.value; saveState(); });
+  const sigBox = document.getElementById("set-sig");
+  if (sigBox) sigBox.addEventListener("input", (e)=>{
+    DATA.sig = e.target.value; saveState(); renderSigPreview();
+    if (Composer.tpl) Composer.refreshSig();
+  });
+  const emrSel = document.getElementById("set-emr");
+  if (emrSel) emrSel.addEventListener("change", (e)=>{
+    DATA.emr = e.target.value === "epic" ? "epic" : "generic";
+    saveState(); renderEmrPreview(); renderTemplates();
+    toast(DATA.emr === "epic" ? "Epic SmartLinks on" : "Generic cues on");
+  });
   JE.render();
   Calc.init();
   Taper.init();
@@ -2833,6 +4080,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
   PG.init();
   renderAll();
   App.checkBackup();
+  // A colleague opening this for the first time lands on the guide, not on a wall of cards
+  if (FIRST_RUN) App.showTab("start");
 });
 
 </script>
