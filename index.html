@@ -218,6 +218,8 @@
   .calc-attr p:last-child{margin-bottom:0;}
   .calc-attr b{color:var(--ink); font-weight:600;}
   .calc-attr .lic{color:var(--accent-ink);}
+  .calc-attr a, #calc-body a{color:var(--accent-ink); font-weight:600; text-decoration:underline; word-break:break-all;}
+  .calc-attr a:hover, #calc-body a:hover{opacity:.75;}
   #dictbar{margin-bottom:12px; padding:9px 14px; border-radius:10px; font-size:.85rem;
     background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent-ink);}
   #dictbar.bad{background:#fef3c7; border-color:#f2d48a; color:#92400e;}
@@ -233,12 +235,15 @@
   .helpblock b{display:block; font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:var(--accent-ink); margin-bottom:2px;}
   .helpblock p{font-size:.9rem;}
   .modfoot{font-size:.78rem; color:var(--muted); margin:14px 4px 4px;}
+  #accuracybar{font-size:.76rem; color:var(--muted); padding:7px 18px 0;}
+  #accuracybar b{color:var(--ink);}
   .guidetag{display:inline-block; font-size:.7rem; color:var(--muted); border:1px solid var(--line);
     border-radius:999px; padding:2px 10px; margin-top:8px;}
   .actbadge{font-size:.72rem; font-weight:700; border-radius:999px; padding:3px 11px; text-transform:uppercase; letter-spacing:.05em;}
   .actbadge.go{background:var(--ok-soft); color:var(--ok);}
   .actbadge.hold{background:var(--tender-soft); color:#92400e;}
   .actbadge.time{background:var(--swollen-soft); color:#1d4ed8;}
+  .actbadge.none{background:var(--line); color:var(--muted);}
   .po-dates{display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;}
   .po-dates div{font-size:.85rem;}
   .po-dates b{display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);}
@@ -295,7 +300,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v3.3</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v3.6</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -315,7 +320,7 @@
   <button data-tab="calc">Calculators</button>
   <button data-tab="taper">Taper Builder</button>
   <button data-tab="periop">Peri-Op</button>
-  <button data-tab="preg">Pregnancy</button>
+  <button data-tab="preg">Reproductive Health</button>
   <button data-tab="lifestyle">Lifestyle</button>
   <button data-tab="screening">Screening</button>
   <button data-tab="prechart">Pre-Chart</button>
@@ -326,6 +331,8 @@
   <button data-tab="start">Start Here</button>
 </nav>
 
+<p id="accuracybar"><b>Content was drafted with AI assistance from published guidelines and may contain errors.</b> Verify anything you act on. Full disclaimer sits at the bottom of Settings.</p>
+
 <div id="favbar"><span class="favlabel">Pinned</span></div>
 <div id="backupbar">
   <span>It has been over a week since your last backup. Your library lives only in this browser until you export a copy.</span>
@@ -335,7 +342,7 @@
 
 <main>
   <section class="tab active" id="tab-phrases">
-    <p class="tab-intro">Your SmartPhrase library. Tap a card, fill any blanks, copy, paste into Meditech. Star a phrase to pin it to the top bar.</p>
+    <p class="tab-intro">Your SmartPhrase library. Tap a card, fill any blanks, copy, paste into your EMR. Star a phrase to pin it to the top bar.</p>
     <div class="catrow" id="phrase-cats"></div>
     <div class="cardgrid" id="phrase-grid"></div>
   </section>
@@ -387,7 +394,7 @@
   </section>
 
   <section class="tab" id="tab-calc">
-    <p class="tab-intro">Disease activity calculators. Pick one, fill the fields, copy the scored sentence into your note.</p>
+    <p class="tab-intro">Disease activity and fracture risk calculators. Pick one, fill the fields, copy the scored sentence into your note.</p>
     <div class="pc-chips" id="calc-pick" style="margin-bottom:14px;"></div>
     <div class="comp-section"><div id="calc-body" class="pc-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr));"></div></div>
     <div class="comp-section"><h4><span>Result</span><button class="btn small primary" onclick="Calc.copy()">Copy for the note</button></h4>
@@ -440,9 +447,9 @@
   </section>
 
   <section class="tab" id="tab-preg">
-    <p class="tab-intro">Medication compatibility for conception, pregnancy, and lactation. Pick the drug and the patient's status. <b>ACR 2020 reproductive health guideline.</b></p>
+    <p class="tab-intro">Medication compatibility for conception, pregnancy, lactation, and fathering a child. Pick the drug and the timepoint. <b>ACR 2020 reproductive health guideline.</b></p>
     <div class="comp-section">
-      <h4><span>Patient status</span></h4>
+      <h4><span>Timepoint</span></h4>
       <div class="pc-chips" id="pg-status"></div>
     </div>
     <div class="comp-section">
@@ -453,8 +460,9 @@
     <div class="modal-actions" style="justify-content:flex-start;">
       <button class="btn primary" onclick="PG.copyCard()">Copy guidance for the note</button>
       <button class="btn" onclick="PG.printHandout()">Print bilingual patient handout</button>
+      <button class="btn" onclick="App.openFill('phrase', 'p2-repro')">ACR reproductive health reference</button>
     </div>
-    <p class="modfoot">Decision support only, clinical judgment overrides every output. Based on the ACR 2020 reproductive health guideline.</p>
+    <p class="modfoot">Where the guideline reviewed a drug in men and found the data too limited to recommend, the card says so instead of guessing. Decision support only, clinical judgment overrides every output. Based on the ACR 2020 reproductive health guideline.</p>
   </section>
 
   <section class="tab" id="tab-lifestyle">
@@ -1790,6 +1798,57 @@ Fracture risk categories in patients not yet on osteoporosis treatment:
 - High: prior osteoporotic fracture, or hip or spine BMD T-score at or below -2.5, or glucocorticoid-adjusted FRAX major osteoporotic fracture risk at or above 20 percent or hip risk at or above 3 percent, or glucocorticoid dose at or above 30 mg daily or cumulative dose at or above 5 grams per year.
 - Moderate: glucocorticoid-adjusted FRAX major osteoporotic fracture risk of 10 to under 20 percent, hip risk over 1 and under 3 percent.
 - Low: glucocorticoid-adjusted FRAX major osteoporotic fracture risk under 10 percent, hip risk at or below 1 percent.`},
+
+  {id:"p2-repro", name:"2020 ACR reproductive health", dot:".repro", cat:"Reference", body:
+`2020 ACR guideline for the management of reproductive health in rheumatic and musculoskeletal diseases.
+
+CONTRACEPTION
+- Effective contraception over less effective methods for all women with rheumatic disease and childbearing potential. Strong.
+- An IUD or a subdermal progestin implant over other methods. Conditional.
+- SLE with moderate or severe activity: progestin-only methods or an IUD over combined estrogen-progestin. Strong.
+- Antiphospholipid antibody positive, with or without APS: against combined estrogen-progestin contraceptives. Strong. An IUD or the progestin-only pill is recommended. Strong.
+- On immunosuppression: an IUD is recommended despite the hypothetical infection risk. Strong.
+- Where osteoporosis risk is a concern: against depot medroxyprogesterone acetate. Conditional.
+- On mycophenolate: an IUD alone, or two other methods used together. Conditional.
+- SLE with stable or low activity and negative antiphospholipid antibodies: against the transdermal estrogen-progestin patch. Conditional.
+
+FERTILITY PRESERVATION
+- Monthly GnRH agonist co-therapy during cyclophosphamide in premenopausal women. Conditional.
+- Sperm cryopreservation before intravenous cyclophosphamide in men who want children, ideally before the first dose. Good practice statement.
+- Against testosterone co-therapy in men receiving cyclophosphamide. Conditional.
+
+ASSISTED REPRODUCTIVE TECHNOLOGY
+- Proceed when disease is stable or quiescent and antiphospholipid antibodies are negative. Strong.
+- Defer while SLE is moderately or severely active. Strong.
+- Against an empiric increase in prednisone during ovarian stimulation. Conditional.
+- Asymptomatic antiphospholipid antibody positive: prophylactic heparin or low molecular weight heparin during stimulation. Conditional.
+- Obstetric APS: prophylactic anticoagulation. Strong. Thrombotic APS: therapeutic anticoagulation. Strong.
+- Oocyte or embryo cryopreservation: continue necessary immunosuppressive and biologic therapy, cyclophosphamide excepted. Strong.
+
+ANTI-Ro, ANTI-La, AND FETAL MONITORING
+- Test anti-Ro/SSA and anti-La/SSB once, before or early in pregnancy. Strong. Against repeating the tests during pregnancy. Strong.
+- Hydroxychloroquine for all anti-Ro or anti-La positive women during pregnancy. Conditional.
+- No prior infant with neonatal lupus: serial fetal echocardiography less often than weekly, from 16 to 18 weeks through 26 weeks. Conditional.
+- Prior infant with neonatal lupus or congenital heart block: weekly fetal echocardiography over the same window. Conditional.
+- First or second degree fetal heart block: oral dexamethasone 4 mg daily. Conditional. Against dexamethasone for isolated complete heart block with a structurally normal heart. Conditional.
+
+ASPIRIN
+- Antiphospholipid antibody positive without APS: aspirin 81 or 100 mg daily as preeclampsia prophylaxis. Conditional.
+- SLE: aspirin 81 or 100 mg daily starting in the first trimester. Conditional.
+
+MENOPAUSAL HORMONE THERAPY
+- Rheumatic disease without SLE or antiphospholipid antibodies, severe vasomotor symptoms: hormone therapy is appropriate. Good practice statement.
+- SLE, antiphospholipid antibody negative: hormone therapy. Conditional.
+- Asymptomatic antiphospholipid antibody positive: against hormone therapy. Conditional.
+- Obstetric or thrombotic APS: against hormone therapy. Strong.
+
+PATERNAL EXPOSURE
+- Continue for men attempting conception, strong: hydroxychloroquine, azathioprine or 6-mercaptopurine, colchicine, and TNF inhibitors.
+- Continue for men attempting conception, conditional: anakinra, NSAIDs and COX-2 inhibitors, cyclosporine, tacrolimus, leflunomide, methotrexate, mycophenolate mofetil and mycophenolic acid, rituximab, and sulfasalazine.
+- Stop cyclophosphamide 12 weeks before attempting conception. Strong. Stop thalidomide 4 weeks before. Conditional.
+- The guideline reviewed abatacept, apremilast, baricitinib, belimumab, secukinumab, tocilizumab, tofacitinib, and ustekinumab in men and was unable to make a recommendation for or against, because the data were too limited.
+
+Sammaritano LR, Bermas BL, Chakravarty EE, et al. 2020 American College of Rheumatology Guideline for the Management of Reproductive Health in Rheumatic and Musculoskeletal Diseases. Arthritis Rheumatol. 2020;72(4):529-556.`},
 
   {id:"p2-livevax", name:"Live vaccine precautions on immunosuppression", dot:".livevax", cat:"Reference", body:
 `Live vaccine precautions for immunosuppressed patients:
@@ -3643,11 +3702,11 @@ DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
 
 {id:"p-giop-plan", name:"Glucocorticoid bone protection plan", dot:".gioprx", cat:"Plans", body:
 `This patient is starting or continuing glucocorticoid therapy at a dose and duration that meets the threshold for fracture risk assessment, defined as a prednisone equivalent of 2.5 mg daily or more for 3 months or longer. Bone health was addressed today.
-Fracture risk: {frax:FRAX with glucocorticoid adjustment calculated today|FRAX to be calculated once bone density is available|patient under 40, FRAX not applicable, risk assessed on history and bone density}.
+Fracture risk: {frax:FRAX with glucocorticoid adjustment calculated today|FRAX calculated today without bone density, femoral neck field left blank|patient under 40, FRAX not applicable, risk assessed on history and bone density}.
 Bone density: {dexa:DEXA ordered today|DEXA within the last 2 years reviewed|DEXA due and ordered|DEXA deferred, rationale documented below}.
 Calcium and vitamin D: counseled on {ca:1000|1200} mg of elemental calcium daily from diet and supplement combined, and vitamin D {vitd:600|800|1000|2000} international units daily.
 Lifestyle: weight-bearing and resistance exercise, fall risk review, and counseling on tobacco and alcohol.
-Pharmacologic therapy: {rx:none indicated at this fracture risk|oral bisphosphonate started|intravenous bisphosphonate planned|denosumab planned|teriparatide or abaloparatide planned|deferred pending bone density}.
+Pharmacologic therapy: {rx:none indicated at this fracture risk|oral bisphosphonate started|intravenous bisphosphonate planned|denosumab planned|teriparatide or abaloparatide planned|romosozumab planned, high or very high fracture risk with intolerance to other agents, no myocardial infarction or stroke in the last year|deferred pending bone density}.
 Secondary causes reviewed: {sec:none identified|vitamin D deficiency|hypogonadism|primary hyperparathyroidism|malabsorption|chronic kidney disease|thyroid disease}.
 Glucocorticoid exposure will be held to the lowest effective dose for the shortest duration required to control disease. Bone density will be reassessed every 1 to 2 years while glucocorticoid treatment continues.`},
 
@@ -3862,7 +3921,7 @@ G: {
 
 };
 
-(function(){ DEFAULT_DATA.version = 14; })();
+(function(){ DEFAULT_DATA.version = 17; })();
 // ====================== CORE ======================
 const KEY = "rheumpad_v1";
 let DATA, FAVS, PRECHART, META = {};
@@ -3890,6 +3949,23 @@ function loadState(){
       if (il17 && /bimekizumab/i.test(il17.name + " " + il17.se)) {
         const def = DEFAULT_DATA.drugs.find(x=>x.id === "d-il17");
         il17.name = def.name; il17.dosing = def.dosing; il17.se = def.se;
+      }
+      // v14 -> v15: one dropdown option in the glucocorticoid bone protection phrase said
+      // FRAX waits for bone density. FRAX runs without it. Repair that clause in a stored
+      // copy and leave every other edit the user made to the phrase alone.
+      if ((stored.seededVersion || 1) < 15) {
+        const bad = "FRAX to be calculated once bone density is available";
+        const good = "FRAX calculated today without bone density, femoral neck field left blank";
+        const gp = (DATA.phrases || []).find(x=>x.id === "p-giop-plan");
+        if (gp && gp.body && gp.body.indexOf(bad) >= 0) gp.body = gp.body.split(bad).join(good);
+      }
+      if ((stored.seededVersion || 1) < 16) {
+        const oldRx = "|teriparatide or abaloparatide planned|deferred pending bone density}";
+        const newRx = "|teriparatide or abaloparatide planned|romosozumab planned, high or very high fracture risk with intolerance to other agents, no myocardial infarction or stroke in the last year|deferred pending bone density}";
+        const gp2 = (DATA.phrases || []).find(x=>x.id === "p-giop-plan");
+        if (gp2 && gp2.body && gp2.body.indexOf("romosozumab") < 0 && gp2.body.indexOf(oldRx) >= 0) {
+          gp2.body = gp2.body.split(oldRx).join(newRx);
+        }
       }
       // v10 -> v11: the Spanish handouts gained their accent marks. If a stored copy
       // differs from the shipped text only by accents, it is the old shipped text, so
@@ -5053,7 +5129,8 @@ const Launcher = {
 // ====================== DISEASE ACTIVITY CALCULATORS ======================
 const Calc = {
   current: "das28", f: {},
-  LIST: [["das28","RA: DAS28 / SDAI"],["basdai","axSpA: BASDAI"],["asdas","axSpA: ASDAS-CRP"],["sledai","SLE: SLEDAI-2K"],["dapsa","PsA: DAPSA"]],
+  LIST: [["das28","RA: DAS28 / SDAI"],["basdai","axSpA: BASDAI"],["asdas","axSpA: ASDAS-CRP"],["sledai","SLE: SLEDAI-2K"],["dapsa","PsA: DAPSA"],["frax","Bone: FRAX risk correction"]],
+  FRAX_URL: "https://www.fraxplus.org/calculation-tool",
   SLEDAI_ITEMS: [
     [8,"Seizure (recent onset)"],[8,"Psychosis"],[8,"Organic brain syndrome"],[8,"Visual disturbance (retinal changes)"],
     [8,"Cranial nerve disorder"],[8,"Lupus headache"],[8,"CVA (new)"],[8,"Vasculitis"],
@@ -5089,7 +5166,16 @@ const Calc = {
       ["DAPSA", "Schoels M, Aletaha D, Funovits J, Kavanaugh A, Baker D, Smolen JS. Application of the DAREA/DAPSA score for assessment of disease activity in psoriatic arthritis. Ann Rheum Dis. 2010;69(8):1441-1447.",
        "No license fee. Free for clinical and research use."],
       ["Remission cut-offs", "Schoels MM, Aletaha D, Alasti F, Smolen JS. Disease activity in psoriatic arthritis: defining remission and treatment success using the DAPSA score. Ann Rheum Dis. 2016;75(5):811-818.", ""]
+    ],
+    frax: [
+      ["FRAX", "Kanis JA, Johnell O, Oden A, Johansson H, McCloskey E. FRAX and the assessment of fracture probability in men and women from the UK. Osteoporos Int. 2008;19(4):385-397.",
+       "FRAX was developed at the Centre for Metabolic Bone Diseases, University of Sheffield. Copyright 2008 to 2026 Osteoporosis Research Ltd, UK. FRAX and FRAXplus are registered trademarks. The algorithm is proprietary and calibrated by country, so RheumPad links to the official tool instead of reproducing the calculation. Read the terms on the FRAX site before any use beyond individual patient care."],
+      ["Glucocorticoid correction", "Kanis JA, Johansson H, Oden A, McCloskey EV. Guidance for the adjustment of FRAX according to the dose of glucocorticoids. Osteoporos Int. 2011;22(3):809-816.", ""],
+      ["Risk categories", "Humphrey MB, Russell L, Danila MI, et al. 2022 American College of Rheumatology guideline for the prevention and treatment of glucocorticoid-induced osteoporosis. Arthritis Rheumatol. 2023;75(12):2088-2102.", ""]
     ]
+  },
+  LINKS: {
+    frax: [["Open the FRAX calculation tool", "https://www.fraxplus.org/calculation-tool"]]
   },
   renderAttr(){
     const host = document.getElementById("calc-attr");
@@ -5102,6 +5188,14 @@ const Calc = {
       const b = document.createElement("b"); b.textContent = name + ". ";
       p.appendChild(b); p.appendChild(document.createTextNode(cite));
       if (lic) { const s = document.createElement("span"); s.className = "lic"; s.textContent = " " + lic; p.appendChild(s); }
+      host.appendChild(p);
+    });
+    (this.LINKS[this.current] || []).forEach(([label, href])=>{
+      const p = document.createElement("p");
+      const b = document.createElement("b"); b.textContent = label + ". ";
+      const a = document.createElement("a");
+      a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = href;
+      p.appendChild(b); p.appendChild(a);
       host.appendChild(p);
     });
   },
@@ -5170,6 +5264,23 @@ const Calc = {
       this.num(host, "pain", "Pain (0-10)", {max:10, step:0.5});
       this.num(host, "ptg", "Patient global (0-10)", {max:10, step:0.5});
       this.num(host, "crp", "CRP (mg/dL)", {max:40, step:0.1});
+    } else if (c === "frax") {
+      const note = document.createElement("div");
+      note.style.cssText = "grid-column:1/-1;";
+      const p1 = document.createElement("p"); p1.className = "hint"; p1.style.margin = "0 0 6px";
+      p1.textContent = "FRAX runs with or without bone density. Leave the femoral neck field blank and the tool returns a 10-year risk from the clinical risk factors alone. A bone density result narrows the estimate, and no bone density result stops you from calculating.";
+      const p2 = document.createElement("p"); p2.style.margin = "0 0 6px";
+      const a = document.createElement("a");
+      a.href = this.FRAX_URL; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.id = "frax-link"; a.textContent = "Open the FRAX calculation tool";
+      p2.appendChild(a);
+      const p3 = document.createElement("p"); p3.className = "hint"; p3.style.margin = "0";
+      p3.textContent = "Run FRAX on the official site, then bring the two percentages back here to apply the glucocorticoid correction and read the 2022 ACR risk category. Enter numbers only. Nothing identifying belongs in this app.";
+      note.appendChild(p1); note.appendChild(p2); note.appendChild(p3);
+      host.appendChild(note);
+      this.num(host, "mof", "FRAX major osteoporotic fracture, 10-year percent", {max:100, step:0.1});
+      this.num(host, "hip", "FRAX hip fracture, 10-year percent", {max:100, step:0.1});
+      this.num(host, "gcdose", "Prednisone equivalent, mg daily", {max:200, step:0.5});
     }
     if (c !== "sledai") host.style.display = "";
     this.renderAttr();
@@ -5232,6 +5343,26 @@ const Calc = {
       const s = t + s6 + pain + ptg + crp;
       const sc = s <= 4 ? "remission" : s <= 14 ? "low disease activity" : s <= 28 ? "moderate disease activity" : "high disease activity";
       return "DAPSA " + r1(s) + " (" + sc + ").";
+    }
+    if (c === "frax") {
+      const mof = this.v("mof"), hip = this.v("hip"), dose = this.v("gcdose");
+      if (mof === null || hip === null) return null;
+      const corr = dose !== null && dose > 7.5;
+      const cm = corr ? mof * 1.15 : mof, ch = corr ? hip * 1.2 : hip;
+      let cat = "low";
+      if (cm >= 20 || ch >= 3) cat = "high";
+      else if (cm >= 10 || ch > 1) cat = "moderate";
+      const highDose = dose !== null && dose >= 30;
+      if (highDose) cat = "high";
+      const lines = [];
+      lines.push("FRAX 10-year risk: major osteoporotic fracture " + r1(cm) + " percent, hip fracture " + r1(ch) + " percent.");
+      if (corr) lines.push("Glucocorticoid correction applied for a prednisone equivalent above 7.5 mg daily, major osteoporotic fracture risk multiplied by 1.15 and hip fracture risk by 1.2. Uncorrected values were " + r1(mof) + " percent and " + r1(hip) + " percent.");
+      else if (dose !== null) lines.push("No glucocorticoid correction applied at " + r1(dose) + " mg daily, which is at or below the 7.5 mg threshold.");
+      else lines.push("No glucocorticoid correction applied, no daily dose entered.");
+      lines.push("Fracture risk category " + cat + " by the 2022 ACR glucocorticoid-induced osteoporosis thresholds for adults over 40 not yet on osteoporosis treatment.");
+      if (highDose) lines.push("A prednisone equivalent at or above 30 mg daily meets the high risk category on its own, whatever the FRAX result.");
+      lines.push("Prior fragility fracture or a hip or spine T-score at or below -2.5 also places a patient in the high risk category.");
+      return lines.join(" ");
     }
     return null;
   },
@@ -5724,51 +5855,58 @@ const PO = {
 // ====================== PREGNANCY & LACTATION REFERENCE (ACR 2020) ======================
 const PG = {
   GUIDE: "ACR 2020 reproductive health guideline",
-  STATUSES: [["plan","Planning conception"],["t1","Pregnant, 1st trimester"],["t2","Pregnant, 2nd trimester"],["t3","Pregnant, 3rd trimester"],["lact","Lactating"]],
+  STATUSES: [["plan","Planning conception"],["t1","Pregnant, 1st trimester"],["t2","Pregnant, 2nd trimester"],["t3","Pregnant, 3rd trimester"],["lact","Lactating"],["dad","Fathering a child"]],
   DRUGS: [
     {id:"pg-hcq", name:"Hydroxychloroquine",
       plan:"Compatible. Continue through conception attempts.",
       preg:"Compatible throughout pregnancy. Continue, since stopping raises flare risk.",
       lact:"Compatible with breastfeeding.",
-      en:{plan:"This medicine is safe while you try to get pregnant. Keep taking it.", preg:"This medicine is safe during pregnancy. Keeping your disease quiet protects you and your baby, so do not stop it on your own.", lact:"This medicine is safe while breastfeeding."},
-      es:{plan:"Este medicamento es seguro mientras intenta quedar embarazada. Siga tomándolo.", preg:"Este medicamento es seguro durante el embarazo. Mantener su enfermedad tranquila los protege a usted y a su bebé, así que no lo deje por su cuenta.", lact:"Este medicamento es seguro mientras amamanta."}},
+      dad:"Continue. Strong recommendation for men attempting conception.",
+      en:{dad:"This medicine is safe to keep taking while you and your partner try for a baby.", plan:"This medicine is safe while you try to get pregnant. Keep taking it.", preg:"This medicine is safe during pregnancy. Keeping your disease quiet protects you and your baby, so do not stop it on your own.", lact:"This medicine is safe while breastfeeding."},
+      es:{dad:"Este medicamento es seguro mientras usted y su pareja intentan tener un bebé.", plan:"Este medicamento es seguro mientras intenta quedar embarazada. Siga tomándolo.", preg:"Este medicamento es seguro durante el embarazo. Mantener su enfermedad tranquila los protege a usted y a su bebé, así que no lo deje por su cuenta.", lact:"Este medicamento es seguro mientras amamanta."}},
     {id:"pg-aza", name:"Azathioprine",
       plan:"Compatible. May continue through conception.",
       preg:"Compatible throughout pregnancy.",
       lact:"Compatible with breastfeeding.",
-      en:{plan:"This medicine is considered safe while trying to get pregnant.", preg:"This medicine is considered safe during pregnancy at usual doses.", lact:"This medicine is considered safe while breastfeeding."},
-      es:{plan:"Este medicamento se considera seguro mientras intenta quedar embarazada.", preg:"Este medicamento se considera seguro durante el embarazo en las dosis habituales.", lact:"Este medicamento se considera seguro mientras amamanta."}},
+      dad:"Continue. Strong recommendation for men attempting conception, covering azathioprine and 6-mercaptopurine.",
+      en:{dad:"This medicine is safe to keep taking while you and your partner try for a baby.", plan:"This medicine is considered safe while trying to get pregnant.", preg:"This medicine is considered safe during pregnancy at usual doses.", lact:"This medicine is considered safe while breastfeeding."},
+      es:{dad:"Este medicamento es seguro mientras usted y su pareja intentan tener un bebé.", plan:"Este medicamento se considera seguro mientras intenta quedar embarazada.", preg:"Este medicamento se considera seguro durante el embarazo en las dosis habituales.", lact:"Este medicamento se considera seguro mientras amamanta."}},
     {id:"pg-ssz", name:"Sulfasalazine",
       plan:"Compatible. Continue with folic acid supplementation.",
       preg:"Compatible throughout pregnancy with folic acid.",
       lact:"Compatible, with caution in preterm or G6PD-deficient infants.",
-      en:{plan:"This medicine is safe while trying to get pregnant. Take folic acid every day with it.", preg:"This medicine is safe during pregnancy. Take folic acid every day with it.", lact:"This medicine is usually safe while breastfeeding. Tell your baby's doctor if your baby was born early or has G6PD deficiency."},
-      es:{plan:"Este medicamento es seguro mientras intenta quedar embarazada. Tome ácido fólico todos los días junto con él.", preg:"Este medicamento es seguro durante el embarazo. Tome ácido fólico todos los días junto con él.", lact:"Este medicamento suele ser seguro mientras amamanta. Avise al médico de su bebé si nació prematuro o tiene deficiencia de G6PD."}},
+      dad:"Continue. Conditional recommendation. Sulfasalazine lowers sperm count in some men and the effect reverses after stopping. Order a semen analysis if the couple has trouble conceiving.",
+      en:{dad:"Keep taking this medicine. In some men it lowers sperm count, and the count comes back after stopping. Tell us if you and your partner have trouble getting pregnant, and we will check a semen sample.", plan:"This medicine is safe while trying to get pregnant. Take folic acid every day with it.", preg:"This medicine is safe during pregnancy. Take folic acid every day with it.", lact:"This medicine is usually safe while breastfeeding. Tell your baby's doctor if your baby was born early or has G6PD deficiency."},
+      es:{dad:"Siga tomando este medicamento. En algunos hombres baja el conteo de espermatozoides, y el conteo se recupera al suspenderlo. Avísenos si usted y su pareja tienen dificultad para lograr un embarazo, y revisaremos una muestra de semen.", plan:"Este medicamento es seguro mientras intenta quedar embarazada. Tome ácido fólico todos los días junto con él.", preg:"Este medicamento es seguro durante el embarazo. Tome ácido fólico todos los días junto con él.", lact:"Este medicamento suele ser seguro mientras amamanta. Avise al médico de su bebé si nació prematuro o tiene deficiencia de G6PD."}},
     {id:"pg-col", name:"Colchicine",
       plan:"Compatible.",
       preg:"Compatible throughout pregnancy.",
       lact:"Compatible with breastfeeding.",
-      en:{plan:"This medicine is considered safe while trying to get pregnant.", preg:"This medicine is considered safe during pregnancy.", lact:"This medicine is considered safe while breastfeeding."},
-      es:{plan:"Este medicamento se considera seguro mientras intenta quedar embarazada.", preg:"Este medicamento se considera seguro durante el embarazo.", lact:"Este medicamento se considera seguro mientras amamanta."}},
+      dad:"Continue. Strong recommendation for men attempting conception.",
+      en:{dad:"This medicine is safe to keep taking while you and your partner try for a baby.", plan:"This medicine is considered safe while trying to get pregnant.", preg:"This medicine is considered safe during pregnancy.", lact:"This medicine is considered safe while breastfeeding."},
+      es:{dad:"Este medicamento es seguro mientras usted y su pareja intentan tener un bebé.", plan:"Este medicamento se considera seguro mientras intenta quedar embarazada.", preg:"Este medicamento se considera seguro durante el embarazo.", lact:"Este medicamento se considera seguro mientras amamanta."}},
     {id:"pg-pred", name:"Prednisone (low dose)",
       plan:"Compatible at the lowest effective dose.",
       preg:"Compatible at low dose; taper to the lowest dose controlling disease.",
       lact:"Compatible. If the dose is over 20 mg, delay feeding 4 hours after the dose.",
-      en:{plan:"Low doses of this steroid are considered safe while trying to get pregnant. We aim for the lowest dose your disease allows.", preg:"Low doses of this steroid are considered safe in pregnancy. We aim for the lowest dose your disease allows.", lact:"This steroid is safe while breastfeeding. If your dose is over 20 mg, feed your baby first and wait 4 hours after taking it."},
-      es:{plan:"Las dosis bajas de este esteroide se consideran seguras mientras intenta quedar embarazada. Buscamos la dosis más baja posible.", preg:"Las dosis bajas de este esteroide se consideran seguras en el embarazo. Buscamos la dosis más baja posible.", lact:"Este esteroide es seguro mientras amamanta. Si su dosis es mayor de 20 mg, amamante primero y espere 4 horas después de tomarlo."}},
+      dad:"The guideline does not address glucocorticoids for men attempting conception. No recommendation to quote. Decide with the patient and document the reasoning.",
+      en:{dad:"The guideline we follow does not cover this medicine for men trying to have a baby. We will decide together.", plan:"Low doses of this steroid are considered safe while trying to get pregnant. We aim for the lowest dose your disease allows.", preg:"Low doses of this steroid are considered safe in pregnancy. We aim for the lowest dose your disease allows.", lact:"This steroid is safe while breastfeeding. If your dose is over 20 mg, feed your baby first and wait 4 hours after taking it."},
+      es:{dad:"La guía que seguimos no cubre este medicamento para hombres que intentan tener un bebé. Lo decidiremos juntos.", plan:"Las dosis bajas de este esteroide se consideran seguras mientras intenta quedar embarazada. Buscamos la dosis más baja posible.", preg:"Las dosis bajas de este esteroide se consideran seguras en el embarazo. Buscamos la dosis más baja posible.", lact:"Este esteroide es seguro mientras amamanta. Si su dosis es mayor de 20 mg, amamante primero y espere 4 horas después de tomarlo."}},
     {id:"pg-czp", name:"Certolizumab",
       plan:"Compatible. Preferred TNF inhibitor for pregnancy planning.",
       preg:"Compatible for the FULL pregnancy, with minimal placental transfer. Preferred TNF inhibitor.",
       lact:"Compatible with breastfeeding.",
-      en:{plan:"This biologic is a preferred choice when planning pregnancy. It barely crosses to the baby.", preg:"This biologic can be continued through the whole pregnancy. Very little of it reaches the baby.", lact:"This biologic is safe while breastfeeding."},
-      es:{plan:"Este biológico es una opción preferida al planear un embarazo. Casi no pasa al bebé.", preg:"Este biológico puede continuarse durante todo el embarazo. Muy poco llega al bebé.", lact:"Este biológico es seguro mientras amamanta."}},
+      dad:"Continue. Strong recommendation. The TNF inhibitor recommendation for men covers every agent in the class, so certolizumab holds no special status here the way it does in pregnancy.",
+      en:{dad:"This medicine is safe to keep taking while you and your partner try for a baby.", plan:"This biologic is a preferred choice when planning pregnancy. It barely crosses to the baby.", preg:"This biologic can be continued through the whole pregnancy. Very little of it reaches the baby.", lact:"This biologic is safe while breastfeeding."},
+      es:{dad:"Este medicamento es seguro mientras usted y su pareja intentan tener un bebé.", plan:"Este biológico es una opción preferida al planear un embarazo. Casi no pasa al bebé.", preg:"Este biológico puede continuarse durante todo el embarazo. Muy poco llega al bebé.", lact:"Este biológico es seguro mientras amamanta."}},
     {id:"pg-tnf", name:"TNF inhibitors (other)",
       plan:"Compatible. Continue through conception.",
       preg:"Compatible; individualize continuation in the third trimester (placental transfer rises late).",
       lact:"Compatible with breastfeeding.",
       t3:"Third trimester: individualize. Placental transfer increases late in pregnancy, so discuss timing of the last dose.",
-      en:{plan:"This type of biologic is considered safe while trying to get pregnant.", preg:"This biologic is considered safe in pregnancy. Near the end of pregnancy, more can pass to the baby, so we decide together about the last doses.", lact:"This biologic is safe while breastfeeding."},
-      es:{plan:"Este tipo de biológico se considera seguro mientras intenta quedar embarazada.", preg:"Este biológico se considera seguro en el embarazo. Cerca del final del embarazo puede pasar más al bebé, así que decidiremos juntas sobre las últimas dosis.", lact:"Este biológico es seguro mientras amamanta."}},
+      dad:"Continue. Strong recommendation covering all TNF inhibitors.",
+      en:{dad:"This medicine is safe to keep taking while you and your partner try for a baby.", plan:"This type of biologic is considered safe while trying to get pregnant.", preg:"This biologic is considered safe in pregnancy. Near the end of pregnancy, more can pass to the baby, so we decide together about the last doses.", lact:"This biologic is safe while breastfeeding."},
+      es:{dad:"Este medicamento es seguro mientras usted y su pareja intentan tener un bebé.", plan:"Este tipo de biológico se considera seguro mientras intenta quedar embarazada.", preg:"Este biológico se considera seguro en el embarazo. Cerca del final del embarazo puede pasar más al bebé, así que decidiremos juntas sobre las últimas dosis.", lact:"Este biológico es seguro mientras amamanta."}},
     {id:"pg-nsaid", name:"NSAIDs",
       plan:"Usable before pregnancy; consider holding if difficulty conceiving.",
       preg:"Stop by 20 weeks. Avoid after 20 weeks of pregnancy.",
@@ -5776,98 +5914,114 @@ const PG = {
       t1:"Usable in the first trimester when needed; plan to stop by 20 weeks.",
       t2:"Stop by 20 weeks and avoid for the rest of pregnancy after that point.",
       t3:"Avoid. Do not use after 20 weeks.",
-      en:{plan:"Pain relievers like ibuprofen are okay for now. We will stop them by week 20 of pregnancy.", preg:"Stop pain relievers like ibuprofen and naproxen by week 20 of pregnancy. After 20 weeks they can affect the baby's kidneys and heart.", lact:"Pain relievers like ibuprofen are safe while breastfeeding. Ibuprofen is the best choice."},
-      es:{plan:"Analgésicos como el ibuprofeno están bien por ahora. Los suspenderemos antes de la semana 20 del embarazo.", preg:"Suspenda analgésicos como el ibuprofeno y el naproxeno antes de la semana 20 del embarazo. Después de la semana 20 pueden afectar los riñones y el corazón del bebé.", lact:"Analgésicos como el ibuprofeno son seguros mientras amamanta. El ibuprofeno es la mejor opción."}},
+      dad:"Continue. Conditional recommendation covering nonselective NSAIDs and COX-2 inhibitors. The 20-week stop rule applies to the pregnant partner, not to him.",
+      en:{dad:"Keep taking this medicine while you and your partner try for a baby. The information in men is limited, and what exists does not show harm.", plan:"Pain relievers like ibuprofen are okay for now. We will stop them by week 20 of pregnancy.", preg:"Stop pain relievers like ibuprofen and naproxen by week 20 of pregnancy. After 20 weeks they can affect the baby's kidneys and heart.", lact:"Pain relievers like ibuprofen are safe while breastfeeding. Ibuprofen is the best choice."},
+      es:{dad:"Siga tomando este medicamento mientras usted y su pareja intentan tener un bebé. La información en hombres es limitada, y lo que existe no muestra daño.", plan:"Analgésicos como el ibuprofeno están bien por ahora. Los suspenderemos antes de la semana 20 del embarazo.", preg:"Suspenda analgésicos como el ibuprofeno y el naproxeno antes de la semana 20 del embarazo. Después de la semana 20 pueden afectar los riñones y el corazón del bebé.", lact:"Analgésicos como el ibuprofeno son seguros mientras amamanta. El ibuprofeno es la mejor opción."}},
     {id:"pg-mtx", name:"Methotrexate",
       plan:"STOP 1 to 3 months before conception.",
       preg:"NOT compatible. Stop immediately and call the office if pregnancy occurs on this drug.",
       lact:"NOT compatible with breastfeeding.",
-      en:{plan:"Stop this medicine 1 to 3 months before trying to get pregnant. It can cause birth defects.", preg:"This medicine is not safe in pregnancy. If you are pregnant and still taking it, stop now and call our office today.", lact:"Do not take this medicine while breastfeeding."},
-      es:{plan:"Deje este medicamento de 1 a 3 meses antes de intentar quedar embarazada. Puede causar defectos de nacimiento.", preg:"Este medicamento no es seguro en el embarazo. Si está embarazada y todavía lo toma, deje de tomarlo ahora y llame a nuestro consultorio hoy.", lact:"No tome este medicamento mientras amamanta."}},
+      dad:"Continue. Conditional recommendation on limited evidence. Note the contrast with the recommendation for women, where methotrexate stops before conception.",
+      en:{dad:"Keep taking this medicine while you and your partner try for a baby. The information in men is limited, and what exists does not show harm.", plan:"Stop this medicine 1 to 3 months before trying to get pregnant. It can cause birth defects.", preg:"This medicine is not safe in pregnancy. If you are pregnant and still taking it, stop now and call our office today.", lact:"Do not take this medicine while breastfeeding."},
+      es:{dad:"Siga tomando este medicamento mientras usted y su pareja intentan tener un bebé. La información en hombres es limitada, y lo que existe no muestra daño.", plan:"Deje este medicamento de 1 a 3 meses antes de intentar quedar embarazada. Puede causar defectos de nacimiento.", preg:"Este medicamento no es seguro en el embarazo. Si está embarazada y todavía lo toma, deje de tomarlo ahora y llame a nuestro consultorio hoy.", lact:"No tome este medicamento mientras amamanta."}},
     {id:"pg-mmf", name:"Mycophenolate",
       plan:"STOP 6 weeks before conception.",
       preg:"NOT compatible. Stop immediately and call the office if pregnancy occurs on this drug.",
       lact:"NOT compatible with breastfeeding.",
-      en:{plan:"Stop this medicine at least 6 weeks before trying to get pregnant. It can cause birth defects.", preg:"This medicine is not safe in pregnancy. If you are pregnant and still taking it, stop now and call our office today.", lact:"Do not take this medicine while breastfeeding."},
-      es:{plan:"Deje este medicamento al menos 6 semanas antes de intentar quedar embarazada. Puede causar defectos de nacimiento.", preg:"Este medicamento no es seguro en el embarazo. Si está embarazada y todavía lo toma, deje de tomarlo ahora y llame a nuestro consultorio hoy.", lact:"No tome este medicamento mientras amamanta."}},
+      dad:"Continue. Conditional recommendation covering mycophenolate mofetil and mycophenolic acid. Note the contrast with the recommendation for women, where mycophenolate stops before conception.",
+      en:{dad:"Keep taking this medicine while you and your partner try for a baby. The information in men is limited, and what exists does not show harm.", plan:"Stop this medicine at least 6 weeks before trying to get pregnant. It can cause birth defects.", preg:"This medicine is not safe in pregnancy. If you are pregnant and still taking it, stop now and call our office today.", lact:"Do not take this medicine while breastfeeding."},
+      es:{dad:"Siga tomando este medicamento mientras usted y su pareja intentan tener un bebé. La información en hombres es limitada, y lo que existe no muestra daño.", plan:"Deje este medicamento al menos 6 semanas antes de intentar quedar embarazada. Puede causar defectos de nacimiento.", preg:"Este medicamento no es seguro en el embarazo. Si está embarazada y todavía lo toma, deje de tomarlo ahora y llame a nuestro consultorio hoy.", lact:"No tome este medicamento mientras amamanta."}},
     {id:"pg-cyc", name:"Cyclophosphamide",
       plan:"STOP 3 months before conception.",
       preg:"NOT compatible. Reserved only for life-threatening disease after specialist discussion.",
       lact:"NOT compatible with breastfeeding.",
-      en:{plan:"Stop this medicine 3 months before trying to get pregnant.", preg:"This medicine is not safe in pregnancy except in rare emergencies your doctors would discuss with you.", lact:"Do not take this medicine while breastfeeding."},
-      es:{plan:"Deje este medicamento 3 meses antes de intentar quedar embarazada.", preg:"Este medicamento no es seguro en el embarazo salvo en emergencias raras que sus médicos hablarían con usted.", lact:"No tome este medicamento mientras amamanta."}},
+      dad:"Stop 12 weeks before attempting conception. Strong recommendation. Offer sperm cryopreservation before starting intravenous cyclophosphamide, ideally before the first dose. Do not use testosterone co-therapy to preserve fertility.",
+      en:{dad:"Stop this medicine 12 weeks before you and your partner start trying for a baby. If you want children later, bank sperm before you start this medicine, ideally before the first dose. Testosterone does not protect your fertility.", plan:"Stop this medicine 3 months before trying to get pregnant.", preg:"This medicine is not safe in pregnancy except in rare emergencies your doctors would discuss with you.", lact:"Do not take this medicine while breastfeeding."},
+      es:{dad:"Deje este medicamento 12 semanas antes de que usted y su pareja empiecen a intentar tener un bebé. Si quiere tener hijos más adelante, congele esperma antes de comenzar este medicamento, idealmente antes de la primera dosis. La testosterona no protege su fertilidad.", plan:"Deje este medicamento 3 meses antes de intentar quedar embarazada.", preg:"Este medicamento no es seguro en el embarazo salvo en emergencias raras que sus médicos hablarían con usted.", lact:"No tome este medicamento mientras amamanta."}},
     {id:"pg-csa", name:"Cyclosporine",
       plan:"Compatible. Continue at the lowest effective dose.",
       preg:"Compatible; use the lowest effective dose and monitor blood pressure and renal function.",
       lact:"Compatible with breastfeeding (conditional).",
-      en:{plan:"This medicine is considered safe while trying to get pregnant, at the lowest dose that works.", preg:"This medicine is considered safe in pregnancy. We use the lowest dose that works and watch your blood pressure and kidneys.", lact:"This medicine is considered safe while breastfeeding. Tell your baby's doctor you take it."},
-      es:{plan:"Este medicamento se considera seguro mientras intenta quedar embarazada, en la dosis más baja que funcione.", preg:"Este medicamento se considera seguro en el embarazo. Usamos la dosis más baja que funcione y vigilamos su presión y sus riñones.", lact:"Este medicamento se considera seguro mientras amamanta. Avise al médico de su bebé que usted lo toma."}},
+      dad:"Continue. Conditional recommendation covering the calcineurin inhibitors.",
+      en:{dad:"Keep taking this medicine while you and your partner try for a baby. The information in men is limited, and what exists does not show harm.", plan:"This medicine is considered safe while trying to get pregnant, at the lowest dose that works.", preg:"This medicine is considered safe in pregnancy. We use the lowest dose that works and watch your blood pressure and kidneys.", lact:"This medicine is considered safe while breastfeeding. Tell your baby's doctor you take it."},
+      es:{dad:"Siga tomando este medicamento mientras usted y su pareja intentan tener un bebé. La información en hombres es limitada, y lo que existe no muestra daño.", plan:"Este medicamento se considera seguro mientras intenta quedar embarazada, en la dosis más baja que funcione.", preg:"Este medicamento se considera seguro en el embarazo. Usamos la dosis más baja que funcione y vigilamos su presión y sus riñones.", lact:"Este medicamento se considera seguro mientras amamanta. Avise al médico de su bebé que usted lo toma."}},
     {id:"pg-tac", name:"Tacrolimus",
       plan:"Compatible. Continue at the lowest effective dose.",
       preg:"Compatible; monitor levels, blood pressure, glucose, and renal function.",
       lact:"Compatible with breastfeeding (conditional).",
-      en:{plan:"This medicine is considered safe while trying to get pregnant, at the lowest dose that works.", preg:"This medicine is considered safe in pregnancy. We check drug levels, blood pressure, sugar, and kidneys along the way.", lact:"This medicine is considered safe while breastfeeding. Tell your baby's doctor you take it."},
-      es:{plan:"Este medicamento se considera seguro mientras intenta quedar embarazada, en la dosis más baja que funcione.", preg:"Este medicamento se considera seguro en el embarazo. Revisamos los niveles del medicamento, la presión, el azúcar y los riñones durante el proceso.", lact:"Este medicamento se considera seguro mientras amamanta. Avise al médico de su bebé que usted lo toma."}},
+      dad:"Continue. Conditional recommendation covering the calcineurin inhibitors.",
+      en:{dad:"Keep taking this medicine while you and your partner try for a baby. The information in men is limited, and what exists does not show harm.", plan:"This medicine is considered safe while trying to get pregnant, at the lowest dose that works.", preg:"This medicine is considered safe in pregnancy. We check drug levels, blood pressure, sugar, and kidneys along the way.", lact:"This medicine is considered safe while breastfeeding. Tell your baby's doctor you take it."},
+      es:{dad:"Siga tomando este medicamento mientras usted y su pareja intentan tener un bebé. La información en hombres es limitada, y lo que existe no muestra daño.", plan:"Este medicamento se considera seguro mientras intenta quedar embarazada, en la dosis más baja que funcione.", preg:"Este medicamento se considera seguro en el embarazo. Revisamos los niveles del medicamento, la presión, el azúcar y los riñones durante el proceso.", lact:"Este medicamento se considera seguro mientras amamanta. Avise al médico de su bebé que usted lo toma."}},
     {id:"pg-ivig", name:"IVIG",
       plan:"Compatible.",
       preg:"Compatible throughout pregnancy.",
       lact:"Compatible with breastfeeding.",
-      en:{plan:"This infusion is considered safe while trying to get pregnant.", preg:"This infusion is considered safe during pregnancy.", lact:"This infusion is considered safe while breastfeeding."},
-      es:{plan:"Esta infusión se considera segura mientras intenta quedar embarazada.", preg:"Esta infusión se considera segura durante el embarazo.", lact:"Esta infusión se considera segura mientras amamanta."}},
+      dad:"The guideline does not address immunoglobulin for men attempting conception. No recommendation to quote. Decide with the patient and document the reasoning.",
+      en:{dad:"The guideline we follow does not cover this medicine for men trying to have a baby. We will decide together.", plan:"This infusion is considered safe while trying to get pregnant.", preg:"This infusion is considered safe during pregnancy.", lact:"This infusion is considered safe while breastfeeding."},
+      es:{dad:"La guía que seguimos no cubre este medicamento para hombres que intentan tener un bebé. Lo decidiremos juntos.", plan:"Esta infusión se considera segura mientras intenta quedar embarazada.", preg:"Esta infusión se considera segura durante el embarazo.", lact:"Esta infusión se considera segura mientras amamanta."}},
     {id:"pg-rtx", name:"Rituximab",
       plan:"Discontinue at conception (conditional). May be dosed before conception attempts.",
       preg:"Stop at conception; consider during pregnancy only for life- or organ-threatening disease. Late-pregnancy exposure can deplete the newborn's B cells.",
       lact:"Compatible with breastfeeding (minimal transfer).",
-      en:{plan:"Plan to stop this infusion when you start trying to get pregnant. Your doctor will time your last dose before then.", preg:"This medicine is usually stopped in pregnancy and used only when the disease itself is dangerous. Call your doctor to make a plan.", lact:"This medicine is considered safe while breastfeeding. Very little reaches your milk."},
-      es:{plan:"Planee suspender esta infusión cuando empiece a intentar quedar embarazada. Su médico programará la última dosis antes de eso.", preg:"Este medicamento normalmente se suspende en el embarazo y se usa solo cuando la enfermedad misma es peligrosa. Llame a su médico para hacer un plan.", lact:"Este medicamento se considera seguro mientras amamanta. Muy poco llega a su leche."}},
+      dad:"Continue. Conditional recommendation on limited evidence.",
+      en:{dad:"Keep taking this medicine while you and your partner try for a baby. The information in men is limited, and what exists does not show harm.", plan:"Plan to stop this infusion when you start trying to get pregnant. Your doctor will time your last dose before then.", preg:"This medicine is usually stopped in pregnancy and used only when the disease itself is dangerous. Call your doctor to make a plan.", lact:"This medicine is considered safe while breastfeeding. Very little reaches your milk."},
+      es:{dad:"Siga tomando este medicamento mientras usted y su pareja intentan tener un bebé. La información en hombres es limitada, y lo que existe no muestra daño.", plan:"Planee suspender esta infusión cuando empiece a intentar quedar embarazada. Su médico programará la última dosis antes de eso.", preg:"Este medicamento normalmente se suspende en el embarazo y se usa solo cuando la enfermedad misma es peligrosa. Llame a su médico para hacer un plan.", lact:"Este medicamento se considera seguro mientras amamanta. Muy poco llega a su leche."}},
     {id:"pg-tcz", name:"Tocilizumab",
       plan:"Discontinue at conception (conditional; limited data).",
       preg:"Stop once pregnancy is confirmed; data are limited.",
       lact:"Considered compatible with breastfeeding (conditional; large molecule, minimal transfer).",
-      en:{plan:"Plan to stop this medicine when you start trying to get pregnant. There is not enough safety information yet.", preg:"This medicine is usually stopped once pregnancy is confirmed because safety information is limited. Call your doctor.", lact:"This medicine is likely safe while breastfeeding; very little reaches your milk."},
-      es:{plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Todavía no hay suficiente información de seguridad.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo porque la información de seguridad es limitada. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta; muy poco llega a su leche."}},
+      dad:"No recommendation. The guideline reviewed tocilizumab in men and found the data too limited to recommend for or against.",
+      en:{dad:"The guideline we follow does not have enough information about this medicine in men trying to have a baby. We will decide together and tell you what is known.", plan:"Plan to stop this medicine when you start trying to get pregnant. There is not enough safety information yet.", preg:"This medicine is usually stopped once pregnancy is confirmed because safety information is limited. Call your doctor.", lact:"This medicine is likely safe while breastfeeding; very little reaches your milk."},
+      es:{dad:"La guía que seguimos no tiene suficiente información sobre este medicamento en hombres que intentan tener un bebé. Lo decidiremos juntos y le diremos lo que se sabe.", plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Todavía no hay suficiente información de seguridad.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo porque la información de seguridad es limitada. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta; muy poco llega a su leche."}},
     {id:"pg-aba", name:"Abatacept",
       plan:"Discontinue at conception (conditional; limited data).",
       preg:"Stop once pregnancy is confirmed; data are limited.",
       lact:"Considered compatible with breastfeeding (conditional).",
-      en:{plan:"Plan to stop this medicine when you start trying to get pregnant. There is not enough safety information yet.", preg:"This medicine is usually stopped once pregnancy is confirmed because safety information is limited. Call your doctor.", lact:"This medicine is likely safe while breastfeeding; very little reaches your milk."},
-      es:{plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Todavía no hay suficiente información de seguridad.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo porque la información de seguridad es limitada. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta; muy poco llega a su leche."}},
+      dad:"No recommendation. The guideline reviewed abatacept in men and found the data too limited to recommend for or against.",
+      en:{dad:"The guideline we follow does not have enough information about this medicine in men trying to have a baby. We will decide together and tell you what is known.", plan:"Plan to stop this medicine when you start trying to get pregnant. There is not enough safety information yet.", preg:"This medicine is usually stopped once pregnancy is confirmed because safety information is limited. Call your doctor.", lact:"This medicine is likely safe while breastfeeding; very little reaches your milk."},
+      es:{dad:"La guía que seguimos no tiene suficiente información sobre este medicamento en hombres que intentan tener un bebé. Lo decidiremos juntos y le diremos lo que se sabe.", plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Todavía no hay suficiente información de seguridad.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo porque la información de seguridad es limitada. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta; muy poco llega a su leche."}},
     {id:"pg-ana", name:"Anakinra",
       plan:"Conditionally stop at conception; may continue when active disease demands it (limited data).",
       preg:"Individualize: usually stopped, but may continue for disease control when needed.",
       lact:"Considered compatible with breastfeeding (conditional).",
-      en:{plan:"We usually pause this medicine before pregnancy, but it may be continued if your disease needs it. Decide together with your doctor.", preg:"This medicine is sometimes continued in pregnancy when the disease requires it. Talk with your doctor about your plan.", lact:"This medicine is likely safe while breastfeeding."},
-      es:{plan:"Normalmente pausamos este medicamento antes del embarazo, pero puede continuarse si su enfermedad lo necesita. Decídalo junto con su médico.", preg:"Este medicamento a veces se continúa en el embarazo cuando la enfermedad lo requiere. Hable con su médico sobre su plan.", lact:"Este medicamento probablemente es seguro mientras amamanta."}},
+      dad:"Continue. Conditional recommendation on limited evidence.",
+      en:{dad:"Keep taking this medicine while you and your partner try for a baby. The information in men is limited, and what exists does not show harm.", plan:"We usually pause this medicine before pregnancy, but it may be continued if your disease needs it. Decide together with your doctor.", preg:"This medicine is sometimes continued in pregnancy when the disease requires it. Talk with your doctor about your plan.", lact:"This medicine is likely safe while breastfeeding."},
+      es:{dad:"Siga tomando este medicamento mientras usted y su pareja intentan tener un bebé. La información en hombres es limitada, y lo que existe no muestra daño.", plan:"Normalmente pausamos este medicamento antes del embarazo, pero puede continuarse si su enfermedad lo necesita. Decídalo junto con su médico.", preg:"Este medicamento a veces se continúa en el embarazo cuando la enfermedad lo requiere. Hable con su médico sobre su plan.", lact:"Este medicamento probablemente es seguro mientras amamanta."}},
     {id:"pg-beli", name:"Belimumab",
       plan:"Discontinue at conception (conditional; limited data).",
       preg:"Stop once pregnancy is confirmed; hydroxychloroquine and other compatible SLE therapy continue.",
       lact:"Considered compatible with breastfeeding (conditional; limited data).",
-      en:{plan:"Plan to stop this medicine when you start trying to get pregnant. Your other lupus medicines that are safe will continue.", preg:"This medicine is usually stopped once pregnancy is confirmed. Your safe lupus medicines continue. Call your doctor.", lact:"This medicine is likely safe while breastfeeding, though information is limited."},
-      es:{plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Sus otros medicamentos para el lupus que son seguros continuarán.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo. Sus medicamentos seguros para el lupus continúan. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta, aunque la información es limitada."}},
+      dad:"No recommendation. The guideline reviewed belimumab in men and found the data too limited to recommend for or against.",
+      en:{dad:"The guideline we follow does not have enough information about this medicine in men trying to have a baby. We will decide together and tell you what is known.", plan:"Plan to stop this medicine when you start trying to get pregnant. Your other lupus medicines that are safe will continue.", preg:"This medicine is usually stopped once pregnancy is confirmed. Your safe lupus medicines continue. Call your doctor.", lact:"This medicine is likely safe while breastfeeding, though information is limited."},
+      es:{dad:"La guía que seguimos no tiene suficiente información sobre este medicamento en hombres que intentan tener un bebé. Lo decidiremos juntos y le diremos lo que se sabe.", plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Sus otros medicamentos para el lupus que son seguros continuarán.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo. Sus medicamentos seguros para el lupus continúan. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta, aunque la información es limitada."}},
     {id:"pg-il17", name:"IL-17 / IL-12-23 biologics (secukinumab, ixekizumab, ustekinumab, guselkumab)",
       plan:"Discontinue at conception (conditional; limited data).",
       preg:"Stop once pregnancy is confirmed; data are limited.",
       lact:"Considered compatible with breastfeeding (conditional).",
-      en:{plan:"Plan to stop this medicine when you start trying to get pregnant. There is not enough safety information yet.", preg:"This medicine is usually stopped once pregnancy is confirmed because safety information is limited. Call your doctor.", lact:"This medicine is likely safe while breastfeeding; very little reaches your milk."},
-      es:{plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Todavía no hay suficiente información de seguridad.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo porque la información de seguridad es limitada. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta; muy poco llega a su leche."}},
+      dad:"No recommendation for secukinumab or ustekinumab. The guideline reviewed both in men and found the data too limited to recommend for or against. Ixekizumab and guselkumab are not covered for men at all.",
+      en:{dad:"The guideline we follow does not have enough information about this medicine in men trying to have a baby. We will decide together and tell you what is known.", plan:"Plan to stop this medicine when you start trying to get pregnant. There is not enough safety information yet.", preg:"This medicine is usually stopped once pregnancy is confirmed because safety information is limited. Call your doctor.", lact:"This medicine is likely safe while breastfeeding; very little reaches your milk."},
+      es:{dad:"La guía que seguimos no tiene suficiente información sobre este medicamento en hombres que intentan tener un bebé. Lo decidiremos juntos y le diremos lo que se sabe.", plan:"Planee suspender este medicamento cuando empiece a intentar quedar embarazada. Todavía no hay suficiente información de seguridad.", preg:"Este medicamento normalmente se suspende al confirmar el embarazo porque la información de seguridad es limitada. Llame a su médico.", lact:"Este medicamento probablemente es seguro mientras amamanta; muy poco llega a su leche."}},
     {id:"pg-jak", name:"JAK inhibitors (tofacitinib, upadacitinib, baricitinib)",
       plan:"STOP before conception - small molecules with no adequate safety data.",
       preg:"NOT recommended in pregnancy.",
       lact:"NOT compatible with breastfeeding - small molecules transfer into milk.",
-      en:{plan:"Stop this pill before trying to get pregnant. It is a small molecule that reaches the baby and there is no good safety information.", preg:"This pill is not recommended in pregnancy. If you are pregnant and taking it, call our office today.", lact:"Do not take this pill while breastfeeding. It passes into breast milk."},
-      es:{plan:"Deje esta pastilla antes de intentar quedar embarazada. Es una molécula pequeña que llega al bebé y no hay buena información de seguridad.", preg:"Esta pastilla no se recomienda en el embarazo. Si está embarazada y la toma, llame a nuestro consultorio hoy.", lact:"No tome esta pastilla mientras amamanta. Pasa a la leche materna."}},
+      dad:"No recommendation for tofacitinib or baricitinib. The guideline reviewed both in men and found the data too limited to recommend for or against. Upadacitinib is not covered for men at all.",
+      en:{dad:"The guideline we follow does not have enough information about this medicine in men trying to have a baby. We will decide together and tell you what is known.", plan:"Stop this pill before trying to get pregnant. It is a small molecule that reaches the baby and there is no good safety information.", preg:"This pill is not recommended in pregnancy. If you are pregnant and taking it, call our office today.", lact:"Do not take this pill while breastfeeding. It passes into breast milk."},
+      es:{dad:"La guía que seguimos no tiene suficiente información sobre este medicamento en hombres que intentan tener un bebé. Lo decidiremos juntos y le diremos lo que se sabe.", plan:"Deje esta pastilla antes de intentar quedar embarazada. Es una molécula pequeña que llega al bebé y no hay buena información de seguridad.", preg:"Esta pastilla no se recomienda en el embarazo. Si está embarazada y la toma, llame a nuestro consultorio hoy.", lact:"No tome esta pastilla mientras amamanta. Pasa a la leche materna."}},
     {id:"pg-apre", name:"Apremilast",
       plan:"Discontinue before conception (insufficient data).",
       preg:"Not recommended - insufficient data.",
       lact:"Not recommended - no data.",
-      en:{plan:"Stop this pill before trying to get pregnant. There is not enough safety information.", preg:"This pill is not recommended in pregnancy because there is not enough safety information. Call your doctor.", lact:"Do not take this pill while breastfeeding; there is no safety information."},
-      es:{plan:"Deje esta pastilla antes de intentar quedar embarazada. No hay suficiente información de seguridad.", preg:"Esta pastilla no se recomienda en el embarazo porque no hay suficiente información de seguridad. Llame a su médico.", lact:"No tome esta pastilla mientras amamanta; no hay información de seguridad."}},
+      dad:"No recommendation. The guideline reviewed apremilast in men and found the data too limited to recommend for or against.",
+      en:{dad:"The guideline we follow does not have enough information about this medicine in men trying to have a baby. We will decide together and tell you what is known.", plan:"Stop this pill before trying to get pregnant. There is not enough safety information.", preg:"This pill is not recommended in pregnancy because there is not enough safety information. Call your doctor.", lact:"Do not take this pill while breastfeeding; there is no safety information."},
+      es:{dad:"La guía que seguimos no tiene suficiente información sobre este medicamento en hombres que intentan tener un bebé. Lo decidiremos juntos y le diremos lo que se sabe.", plan:"Deje esta pastilla antes de intentar quedar embarazada. No hay suficiente información de seguridad.", preg:"Esta pastilla no se recomienda en el embarazo porque no hay suficiente información de seguridad. Llame a su médico.", lact:"No tome esta pastilla mientras amamanta; no hay información de seguridad."}},
     {id:"pg-lef", name:"Leflunomide",
       plan:"STOP before conception with cholestyramine washout and CONFIRMED undetectable drug levels.",
       preg:"NOT compatible. If pregnancy occurs, start cholestyramine washout immediately and call the office.",
       lact:"NOT compatible with breastfeeding.",
-      en:{plan:"This medicine stays in your body a very long time. Before trying to get pregnant you need a special washout medicine (cholestyramine) and a blood test proving the drug is gone.", preg:"This medicine is not safe in pregnancy. If you are pregnant, call our office today and we will start a washout medicine right away.", lact:"Do not take this medicine while breastfeeding."},
-      es:{plan:"Este medicamento permanece en su cuerpo por mucho tiempo. Antes de intentar quedar embarazada necesita un medicamento de lavado (colestiramina) y un análisis de sangre que confirme que el medicamento ya no está.", preg:"Este medicamento no es seguro en el embarazo. Si está embarazada, llame a nuestro consultorio hoy; comenzaremos el medicamento de lavado de inmediato.", lact:"No tome este medicamento mientras amamanta."}}
+      dad:"Continue. Conditional recommendation on limited evidence. Note the contrast with the recommendation for women, where leflunomide needs a cholestyramine washout and a confirmed undetectable level before conception.",
+      en:{dad:"Keep taking this medicine while you and your partner try for a baby. The information in men is limited, and what exists does not show harm.", plan:"This medicine stays in your body a very long time. Before trying to get pregnant you need a special washout medicine (cholestyramine) and a blood test proving the drug is gone.", preg:"This medicine is not safe in pregnancy. If you are pregnant, call our office today and we will start a washout medicine right away.", lact:"Do not take this medicine while breastfeeding."},
+      es:{dad:"Siga tomando este medicamento mientras usted y su pareja intentan tener un bebé. La información en hombres es limitada, y lo que existe no muestra daño.", plan:"Este medicamento permanece en su cuerpo por mucho tiempo. Antes de intentar quedar embarazada necesita un medicamento de lavado (colestiramina) y un análisis de sangre que confirme que el medicamento ya no está.", preg:"Este medicamento no es seguro en el embarazo. Si está embarazada, llame a nuestro consultorio hoy; comenzaremos el medicamento de lavado de inmediato.", lact:"No tome este medicamento mientras amamanta."}}
   ],
   // Explicit caution flags per drug and status. true = show the Caution/stop badge.
   // Trimester keys (t1/t2/t3) override the preg default when present. Unlisted = compatible badge.
@@ -5886,7 +6040,26 @@ const PG = {
     "pg-jak":   {plan:true, preg:true, lact:true},
     "pg-apre":  {plan:true, preg:true, lact:true}
   },
+  DADSTATE: {
+    "pg-cyc":  ["hold", "Stop before conception"],
+    "pg-pred": ["none", "Not addressed for men"],
+    "pg-ivig": ["none", "Not addressed for men"],
+    "pg-tcz":  ["none", "No ACR recommendation"],
+    "pg-aba":  ["none", "No ACR recommendation"],
+    "pg-beli": ["none", "No ACR recommendation"],
+    "pg-il17": ["none", "No ACR recommendation"],
+    "pg-jak":  ["none", "No ACR recommendation"],
+    "pg-apre": ["none", "No ACR recommendation"]
+  },
+  badge(d){
+    if (this.status === "dad") {
+      const st = this.DADSTATE[d.id];
+      return st ? {cls:st[0], text:st[1]} : {cls:"go", text:"Continue"};
+    }
+    return this.flagged(d) ? {cls:"hold", text:"Caution / stop"} : {cls:"go", text:"Compatible"};
+  },
   flagged(d){
+    if (this.status === "dad") { const st = this.DADSTATE[d.id]; return !!st && st[0] === "hold"; }
     const w = this.WARN[d.id]; if (!w) return false;
     if (this.status === "plan") return !!w.plan;
     if (this.status === "lact") return !!w.lact;
@@ -5911,6 +6084,7 @@ const PG = {
   },
   current(){ return this.DRUGS.find(d=>d.id === this.drug); },
   guidance(d){
+    if (this.status === "dad") return d.dad;
     if (this.status === "plan") return d.plan;
     if (this.status === "lact") return d.lact;
     return (d[this.status] || d.preg);
@@ -5921,16 +6095,16 @@ const PG = {
     const d = this.current();
     if (!d) { host.innerHTML = '<div class="empty">Pick a medication above.</div>'; return; }
     const g = this.guidance(d);
-    const bad = this.flagged(d);
+    const bd = this.badge(d);
     const card = document.createElement("div"); card.className = "comp-section";
     const h4 = document.createElement("h4");
     const nm = document.createElement("span"); nm.textContent = d.name + ", " + this.statusLabel();
-    const bg = document.createElement("span"); bg.className = "actbadge " + (bad ? "hold" : "go");
-    bg.textContent = bad ? "Caution / stop" : "Compatible";
+    const bg = document.createElement("span"); bg.className = "actbadge " + bd.cls;
+    bg.textContent = bd.text;
     h4.appendChild(nm); h4.appendChild(bg); card.appendChild(h4);
     const p = document.createElement("p"); p.style.fontSize = ".92rem"; p.textContent = g; card.appendChild(p);
     const all = document.createElement("p"); all.style.cssText = "font-size:.8rem; color:var(--muted); margin-top:8px;";
-    all.textContent = "Full picture. Conception: " + d.plan + " Pregnancy: " + d.preg + " Lactation: " + d.lact;
+    all.textContent = "Full picture. Conception: " + d.plan + " Pregnancy: " + d.preg + " Lactation: " + d.lact + " Fathering a child: " + d.dad;
     card.appendChild(all);
     const tag = document.createElement("span"); tag.className = "guidetag"; tag.textContent = this.GUIDE; card.appendChild(tag);
     host.appendChild(card);
@@ -5943,7 +6117,7 @@ const PG = {
   printHandout(){
     const d = this.current();
     if (!d) { toast("Pick a medication first"); return; }
-    const key = this.status === "plan" ? "plan" : this.status === "lact" ? "lact" : "preg";
+    const key = (this.status === "plan" || this.status === "lact" || this.status === "dad") ? this.status : "preg";
     const closing = {en:"Always talk with your rheumatologist before starting or stopping any medicine.",
       es:"Siempre hable con su reumatólogo antes de comenzar o dejar cualquier medicamento."};
     const text = "ENGLISH\n" + d.en[key] + "\n" + closing.en +
@@ -6530,6 +6704,25 @@ const SCREEN = {
 };
 
 const CHANGELOG = [
+  {v:"3.6", d:"August 2, 2026", items:[
+    "The Pregnancy tab is now Reproductive Health. The tab already cited the ACR 2020 reproductive health guideline on every card, so the name and the source now agree.",
+    "New timepoint chip, Fathering a child. All 23 medications carry a paternal position, so a man asking about his own medication gets an answer on the same grid.",
+    "Eight drugs show a grey No ACR recommendation badge instead of a green or amber one. The guideline reviewed abatacept, apremilast, baricitinib, belimumab, secukinumab, tocilizumab, tofacitinib, and ustekinumab in men and found the data too limited to recommend for or against. Prednisone and immunoglobulin read Not addressed for men. Nothing is filled in that the guideline left blank.",
+    "Cyclophosphamide is the one paternal stop. Twelve weeks before attempting conception, with sperm banking offered before the first intravenous dose.",
+    "New reference phrase .repro carries the full guideline: contraception by risk group, fertility preservation, assisted reproduction, anti-Ro and anti-La fetal monitoring, aspirin, menopausal hormone therapy, and every paternal recommendation. Reach it from the tab or from the phrase library.",
+    "A one-line accuracy note now sits under the tab bar. Content was drafted with AI assistance from published guidelines and may contain errors. The full disclaimer stays at the bottom of Settings."
+  ]},
+  {v:"3.5", d:"August 2, 2026", items:[
+    "Glucocorticoid bone protection plan: romosozumab is now a choice in the pharmacologic therapy line. The option carries its own limits, so the note reads high or very high fracture risk with intolerance to other agents, and no myocardial infarction or stroke in the last year.",
+    "The 2022 ACR guideline recommends romosozumab conditionally, and only for patients who cannot take the other agents. It recommends against it at moderate fracture risk because of myocardial infarction, stroke, and cardiovascular death. The option text keeps those limits in front of you.",
+    "The romosozumab drug card already covers the 12-month course and the antiresorptive that has to follow it. Open Drugs and search romosozumab."
+  ]},
+  {v:"3.4", d:"August 1, 2026", items:[
+    "Calculators: added a FRAX panel. FRAX runs with or without bone density, so the panel says so plainly and links straight to the official calculation tool. Bring the two percentages back and the panel applies the glucocorticoid correction and reads the 2022 ACR risk category.",
+    "Corrected the glucocorticoid bone protection phrase. One dropdown option used to say FRAX waits for bone density. It now reads that FRAX was calculated today with the femoral neck field left blank.",
+    "Phrases tab now says paste into your EMR rather than naming one system.",
+    "Attribution for FRAX credits the University of Sheffield, Osteoporosis Research Ltd, and the original 2008 paper, with a note on why the calculation is linked rather than reproduced."
+  ]},
   {v:"3.3", d:"August 1, 2026", items:[
     "Codes and Billing: added G2211, the visit complexity add-on. Pick the relationship and the modifier 25 situation and the panel tells you whether the code is payable, with a relationship attestation you can copy into the note.",
     "Codes and Billing: added a rules reference covering what changed in 2023 and what is new for 2026, including the prolonged services rebuild, the deleted observation and level 1 consult codes, the unique test counting rule, and the 2026 conversion factors.",
