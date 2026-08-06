@@ -300,7 +300,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v3.8</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v3.9</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -442,6 +442,14 @@
         <div class="pc-field" id="tp-afterwrap"><label>Then</label>
           <select id="tp-after"><option value="stop">stop</option><option value="reassess">reassess at the next visit</option></select></div>
       </div>
+    </div>
+    <div class="comp-section">
+      <h4><span>Pills to dispense</span><button class="btn small primary" onclick="Taper.copy('pills')">Copy</button></h4>
+      <p class="hint" style="margin:0 0 8px;">Pick the tablet strengths you want to prescribe. The count builds each daily dose from the fewest tablets, then multiplies by the days spent on that dose.</p>
+      <div id="tp-strengths" style="margin:0 0 10px;"></div>
+      <label class="hint" style="display:inline-flex; align-items:center; gap:6px; margin:0 0 10px; cursor:pointer;">
+        <input id="tp-half" type="checkbox" style="width:auto; margin:0;"> Allow half tablets, for scored tablets you are willing to split</label>
+      <div id="tp-pills" class="filled" style="margin:0;"></div>
     </div>
     <div id="taper-bone" style="display:none;"></div>
     <div class="comp-section"><h4><span>For the note</span><button class="btn small primary" onclick="Taper.copy('note')">Copy</button></h4>
@@ -5819,6 +5827,7 @@ const Taper = {
 
   paint(){
     const p = this.read();
+    this.strengthsFor(p.drug);
     const noteEl = document.getElementById("taper-note"), ptEl = document.getElementById("taper-pt");
     const esEl = document.getElementById("taper-pt-es");
     const endNote = document.getElementById("tp-endnote");
@@ -5840,6 +5849,8 @@ const Taper = {
       this._spans.forEach(s=>{ s.textContent = ""; });
       const bh = document.getElementById("taper-bone");
       if (bh) { bh.innerHTML = ""; bh.style.display = "none"; }
+      const ph = document.getElementById("tp-pills");
+      if (ph) ph.textContent = "";
       return;
     }
     const d = this.dated(p);
@@ -5879,6 +5890,7 @@ const Taper = {
     noteEl.textContent = note; ptEl.textContent = pt;
     if (esEl) esEl.textContent = ptEs;
     this.bone(p, d);
+    this.pills(p, d);
   },
 
   PRED_EQ: {prednisone:1, prednisolone:1, methylprednisolone:1.25, hydrocortisone:0.25},
@@ -5917,8 +5929,136 @@ const Taper = {
     sec.appendChild(acts);
     host.appendChild(sec);
   },
+  // ---- pill counting ------------------------------------------------
+  // Oral tablet strengths on the US market, taken from the DailyMed labels.
+  STRENGTHS: {
+    prednisone: [1, 2.5, 5, 10, 20, 50],
+    prednisolone: [5, 10, 15, 30],
+    methylprednisolone: [2, 4, 8, 16, 32],
+    hydrocortisone: [5, 10, 20]
+  },
+  // What starts selected. Every strength above stays available as a chip.
+  PICKED: {
+    prednisone: [1, 5, 10, 20],
+    prednisolone: [5],
+    methylprednisolone: [4, 8, 16],
+    hydrocortisone: [5, 10, 20]
+  },
+  picked: null, pickedDrug: null,
+
+  strengthsFor(drug){
+    if (this.pickedDrug !== drug) {
+      this.pickedDrug = drug;
+      this.picked = (this.PICKED[drug] || this.STRENGTHS[drug] || [5]).slice();
+      this.renderStrengths();
+    }
+    return this.picked;
+  },
+
+  toggleStrength(mg){
+    const i = this.picked.indexOf(mg);
+    if (i >= 0) {
+      if (this.picked.length === 1) { toast("Keep at least one strength"); return; }
+      this.picked.splice(i, 1);
+    } else this.picked.push(mg);
+    this.picked.sort((a, b)=>a - b);
+    this.renderStrengths();
+    this.paint();
+  },
+
+  renderStrengths(){
+    const host = document.getElementById("tp-strengths");
+    if (!host) return;
+    host.innerHTML = "";
+    (this.STRENGTHS[this.pickedDrug] || []).forEach(mg=>{
+      const b = document.createElement("button");
+      b.className = "chip" + (this.picked.indexOf(mg) >= 0 ? " on" : "");
+      b.textContent = mg + " mg";
+      b.title = "include or exclude this tablet strength";
+      b.onclick = ()=>this.toggleStrength(mg);
+      host.appendChild(b);
+    });
+  },
+
+  // Fewest tablets that make one daily dose. Quarter-milligram units keep the
+  // arithmetic exact, and a half tablet costs a shade more than a whole one so
+  // whole tablets win every tie.
+  makeDose(mg, strengths, halves){
+    const U = 4, target = Math.round(mg * U);
+    if (!(target > 0) || target > 1600) return null;
+    const items = [];
+    strengths.forEach(s=>{
+      const u = Math.round(s * U);
+      items.push({u: u, mg: s, frac: 1, cost: 100});
+      if (halves && u % 2 === 0) items.push({u: u / 2, mg: s, frac: 0.5, cost: 101});
+    });
+    const best = new Array(target + 1).fill(Infinity), pick = new Array(target + 1).fill(null);
+    best[0] = 0;
+    for (let v = 1; v <= target; v++) {
+      for (let k = 0; k < items.length; k++) {
+        const it = items[k];
+        if (it.u <= v && best[v - it.u] + it.cost < best[v]) { best[v] = best[v - it.u] + it.cost; pick[v] = it; }
+      }
+    }
+    if (best[target] === Infinity) return null;
+    const counts = {};
+    let v = target;
+    while (v > 0) { const it = pick[v]; counts[it.mg] = (counts[it.mg] || 0) + it.frac; v -= it.u; }
+    return counts;
+  },
+
+  pills(p, d){
+    const host = document.getElementById("tp-pills");
+    if (!host) return;
+    const strengths = this.picked || this.strengthsFor(p.drug);
+    const halves = !!(document.getElementById("tp-half") || {}).checked;
+    const cap = p.drug.charAt(0).toUpperCase() + p.drug.slice(1);
+    const legs = d.rows.map(r=>({dose: r.dose, days: r.days}));
+    if (d.hold && d.hold.n) legs.push({dose: d.hold.dose, days: d.hold.days});
+    // A hold at the same dose as the last step is one stretch of pills, so join them.
+    const runs = [];
+    legs.forEach(leg=>{
+      const last = runs[runs.length - 1];
+      if (last && last.dose === leg.dose) last.days += leg.days;
+      else runs.push({dose: leg.dose, days: leg.days});
+    });
+    const totals = {}, lines = [], missing = [];
+    runs.forEach(leg=>{
+      const c = this.makeDose(leg.dose, strengths, halves);
+      if (!c) { if (missing.indexOf(leg.dose) < 0) missing.push(leg.dose); return; }
+      const parts = Object.keys(c).map(Number).sort((a, b)=>b - a);
+      parts.forEach(s=>{ totals[s] = (totals[s] || 0) + c[s] * leg.days; });
+      lines.push(leg.dose + " mg = " + parts.map(s=>s + " mg x " + c[s]).join(" + ") + ", " + leg.days + (leg.days === 1 ? " day" : " days"));
+    });
+    const out = [];
+    if (missing.length) {
+      out.push("No tablet combination makes " + missing.join(" mg, ") + " mg from the strengths you picked. Add a strength or allow half tablets.");
+      out.push("");
+    }
+    const keys = Object.keys(totals).map(Number).sort((a, b)=>b - a);
+    if (keys.length) {
+      let grand = 0;
+      out.push("DISPENSE");
+      keys.forEach(sk=>{
+        const n = Math.ceil(totals[sk] - 0.0001);
+        grand += n;
+        out.push(cap + " " + sk + " mg: " + n + (n === 1 ? " tablet" : " tablets"));
+      });
+      out.push("Total " + grand + (grand === 1 ? " tablet" : " tablets") + " for this schedule.");
+      out.push("");
+      out.push("HOW EACH DOSE IS MADE");
+      lines.forEach(l=>out.push(l));
+    }
+    if (d.hold && !d.hold.n) {
+      out.push("");
+      out.push("The " + d.hold.dose + " mg maintenance dose has no end date, so it is not counted. Set a hold length to include it.");
+    }
+    host.textContent = out.join("\n");
+  },
+
   copy(which){
-    const el = document.getElementById(which === "note" ? "taper-note" : which === "ptes" ? "taper-pt-es" : "taper-pt");
+    const ids = {note: "taper-note", ptes: "taper-pt-es", pills: "tp-pills", pt: "taper-pt"};
+    const el = document.getElementById(ids[which] || ids.pt);
     if (!el || !el.textContent || el.textContent.startsWith("Enter a start")) { toast("Fill the taper fields first"); return; }
     copyText(el.textContent);
   },
@@ -5928,7 +6068,7 @@ const Taper = {
     ["tp-drug","tp-start","tp-step","tp-int","tp-unit","tp-target","tp-date"].forEach(id=>{
       document.getElementById(id).addEventListener("input", ()=>this.build());
     });
-    ["tp-holdlen","tp-holdunit","tp-after"].forEach(id=>{
+    ["tp-holdlen","tp-holdunit","tp-after","tp-half"].forEach(id=>{
       const el = document.getElementById(id);
       if (el) el.addEventListener("input", ()=>this.paint());
     });
@@ -7175,6 +7315,11 @@ const SCREEN = {
 };
 
 const CHANGELOG = [
+  {v:"3.9", d:"August 6, 2026", items:[
+    "The taper tab counts the pills. Pick which tablet strengths you want to prescribe, and the app builds every daily dose from the fewest tablets, multiplies by the days on that dose, and totals what to dispense per strength.",
+    "A half tablet toggle, off by default. Turn it on and the counter uses half tablets where they save pills, and whole tablets still win any tie.",
+    "It shows how each dose is made, so the sig writes itself. If no combination makes a dose from the strengths you picked, it names the dose instead of guessing. A bounded hold at the end is counted, an open-ended one is not, and the block says so."
+  ]},
   {v:"3.8", d:"August 5, 2026", items:[
     "The taper builder now hands you the schedule as an editable table. The numbers still generate it, and then you change any step: a different dose, a longer or shorter step, an extra step in the middle, a step removed. Touch a step and the generator stops rewriting your work. Start over from the numbers gives you a fresh generated taper.",
     "New ending controls. Hold the last dose for a set number of weeks or days, with dates, then either stop or reassess at the next visit. Leave the hold blank and the last dose continues with no end date, the way it worked before.",
