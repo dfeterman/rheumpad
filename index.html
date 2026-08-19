@@ -300,7 +300,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v3.9</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v4.2</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -1063,168 +1063,217 @@ Los mensajes por el portal se responden en {response} días hábiles. En una eme
 
   drugs: [
     {id:"d-mtx", name:"Methotrexate", cls:"Conventional DMARDs",
-      dosing:"7.5-25 mg PO or SC once weekly, with folic acid 1 mg daily.",
-      monitor:"CBC, CMP (LFTs, creatinine) every 2-4 wk for first 3 months, then every 8-12 wk. Baseline: hepatitis B/C, chest imaging.",
-      se:"Nausea, fatigue day after dose, oral ulcers, hair thinning, mild transaminitis.",
-      serious:"Cytopenias, hepatotoxicity, pneumonitis (new dyspnea/cough = hold and evaluate). Teratogen.",
-      pearls:"Hold during active infection. Limit alcohol. Split the dose or switch to SC for nausea. Stop 3 months before conception (either partner)."},
+      dosing:"7.5-25 mg PO or SC once weekly, with folic acid, commonly 1 mg daily. Above 15 mg a week, subcutaneous absorption beats oral, so switch the route rather than pushing tablets higher.",
+      monitor:"CBC, CMP (LFTs, creatinine) every 2-4 wk for the first 3 months, then every 8-12 wk. Baseline hepatitis B and C, chest imaging. Judge response at 3 months and expect full effect by 6.",
+      se:"Nausea, fatigue the day after the dose, oral ulcers, hair thinning, mild transaminitis.",
+      serious:"Cytopenias, hepatotoxicity, pneumonitis (new dyspnea or cough means hold and evaluate). Teratogen.",
+      pearls:"Hold during active infection. Limit alcohol. Split the dose or move to SC for nausea. Stop 3 months before conception, either partner. Avoid trimethoprim-sulfamethoxazole, which stacks the antifolate effect. Holding methotrexate for 2 weeks after an influenza vaccine improves the antibody response, an ACR conditional recommendation."},
     {id:"d-hcq", name:"Hydroxychloroquine", cls:"Conventional DMARDs",
-      dosing:"200-400 mg daily; keep at or below 5 mg/kg/day actual body weight.",
-      monitor:"No routine labs. Baseline eye exam within first year, then annual screening after 5 years of use (sooner if renal disease or tamoxifen).",
+      dosing:"200-400 mg daily, kept at or below 5 mg/kg/day of actual body weight.",
+      monitor:"No routine labs. Baseline eye exam within the first year, then annual screening after 5 years of use, sooner with renal disease, tamoxifen, or dosing above 5 mg/kg. Screening means OCT plus automated visual fields, not a fundus look.",
       se:"GI upset, rash, skin hyperpigmentation, vivid dreams.",
-      serious:"Retinal toxicity (dose and duration dependent), rare cardiomyopathy and QT prolongation.",
-      pearls:"Pregnancy-compatible; continue in SLE indefinitely. Full effect takes 2-3 months. Take with food."},
+      serious:"Retinal toxicity, dose and duration dependent. Rare cardiomyopathy and QT prolongation.",
+      pearls:"Compatible with pregnancy and breastfeeding. Continue indefinitely in SLE, where it cuts flares, thrombosis, and damage accrual. Full effect takes 2-3 months. Take with food."},
     {id:"d-ssz", name:"Sulfasalazine", cls:"Conventional DMARDs",
-      dosing:"Start 500 mg BID, titrate to 1-1.5 g BID.",
+      dosing:"Start 500 mg BID and raise by 500 mg a week to 1-1.5 g BID. The slow climb is what makes it tolerable.",
       monitor:"CBC, LFTs every 2-4 wk for 3 months, then every 3 months. Consider G6PD in at-risk patients.",
-      se:"GI upset, headache, rash, orange-tinted urine, reversible low sperm count.",
-      serious:"Agranulocytosis (usually early), DRESS, hepatitis.",
-      pearls:"Caution with sulfa allergy. Pregnancy-compatible; give folic acid. Enteric-coated helps GI tolerance."},
+      se:"GI upset, headache, rash, orange-tinted urine, reversible low sperm count that recovers within 3 months of stopping.",
+      serious:"Agranulocytosis, usually early. DRESS. Hepatitis.",
+      pearls:"Caution with sulfa allergy. Pregnancy-compatible, and give folic acid since sulfasalazine blocks folate absorption. The enteric-coated form helps GI tolerance. Wait 8-12 weeks before judging response."},
     {id:"d-lef", name:"Leflunomide", cls:"Conventional DMARDs",
-      dosing:"10-20 mg daily.",
-      monitor:"CBC, LFTs, creatinine every 4 wk for 6 months, then every 8-12 wk. Blood pressure each visit.",
+      dosing:"10-20 mg daily. Skip the loading dose, which buys diarrhea and transaminitis without much speed.",
+      monitor:"CBC, LFTs, creatinine every 4 wk for 6 months, then every 8-12 wk. Blood pressure at each visit.",
       se:"Diarrhea, hair thinning, transaminitis, hypertension.",
-      serious:"Hepatotoxicity, cytopenias, peripheral neuropathy. Potent teratogen with a very long washout.",
-      pearls:"Cholestyramine 8 g TID x 11 days for rapid washout (pregnancy planning or toxicity)."},
+      serious:"Hepatotoxicity, cytopenias, peripheral neuropathy. Potent teratogen, and the active metabolite lingers up to 2 years without washout.",
+      pearls:"Cholestyramine 8 g TID for 11 days gives rapid washout for pregnancy planning or toxicity, then confirm two plasma levels below 0.02 mg/L at least 14 days apart. Diarrhea often settles at 10 mg or on alternate days."},
     {id:"d-aza", name:"Azathioprine", cls:"Conventional DMARDs",
-      dosing:"1.5-2.5 mg/kg daily.",
-      monitor:"TPMT (or NUDT15) before starting. CBC, LFTs every 2 wk around dose changes, then every 3 months.",
-      se:"Nausea, fatigue, mild transaminitis.",
-      serious:"Severe myelosuppression (TPMT-deficient), pancreatitis, lymphoma risk.",
-      pearls:"Major interaction: allopurinol and febuxostat (avoid, or cut dose ~75%). Pregnancy-compatible option."},
+      dosing:"1.5-2.5 mg/kg daily, split twice daily for nausea. Effect builds over 8-12 weeks.",
+      monitor:"TPMT or NUDT15 before starting. CBC, LFTs every 2 wk around dose changes, then every 3 months.",
+      se:"Nausea, fatigue, mild transaminitis. An early flu-like reaction with fever and rash means stop and never rechallenge.",
+      serious:"Severe myelosuppression with TPMT deficiency, pancreatitis, lymphoma and skin cancer risk.",
+      pearls:"Halve the dose for intermediate TPMT or NUDT15 activity and avoid the drug when either is deficient. Major interaction with allopurinol and febuxostat, so avoid the pair or cut the dose about 75 percent. Compatible with pregnancy and breastfeeding, which makes it the usual switch from mycophenolate. Annual skin checks and sun protection."},
     {id:"d-mmf", name:"Mycophenolate", cls:"Conventional DMARDs",
-      dosing:"1-1.5 g BID (mofetil).",
-      monitor:"CBC every 1-2 wk initially, then monthly x3, then every 3 months. LFTs periodically.",
-      se:"GI upset, diarrhea, cytopenias.",
-      serious:"Infections; teratogen (REMS - two contraception methods).",
-      pearls:"Six-week washout before conception; usual pregnancy switch is to azathioprine. Separate from antacids."},
+      dosing:"1-1.5 g BID of the mofetil form, or 720-1080 mg BID of enteric-coated mycophenolate sodium when GI upset limits dosing.",
+      monitor:"CBC every 1-2 wk at first, then monthly for 3 months, then every 3 months. LFTs periodically.",
+      se:"GI upset, diarrhea, cytopenias. Splitting the daily total into three or four smaller doses usually fixes the diarrhea.",
+      serious:"Infections. Teratogen with a REMS program and two required contraception methods.",
+      pearls:"First-line for lupus nephritis induction and maintenance, and a mainstay in scleroderma lung disease. Six-week washout before conception, with azathioprine as the usual pregnancy switch. Separate from antacids and iron by 2 hours."},
     {id:"d-pred", name:"Prednisone", cls:"Glucocorticoid",
-      dosing:"Lowest effective dose. Bridging/flares 10-20 mg; PMR 12.5-25 mg; GCA 40-60 mg.",
-      monitor:"Glucose, BP, lipids. Bone density if ≥2.5 mg daily for ≥3 months anticipated.",
-      se:"Insomnia, mood change, appetite/weight gain, hyperglycemia, bruising, fluid retention.",
+      dosing:"Lowest effective dose. Bridging and flares 10-20 mg, PMR 12.5-25 mg, GCA 40-60 mg. Morning dosing limits insomnia.",
+      monitor:"Glucose, blood pressure, lipids. Bone density when 2.5 mg daily or more for 3 months or longer is expected. Weight and mood at each visit.",
+      se:"Insomnia, mood change, appetite and weight gain, hyperglycemia, bruising, fluid retention.",
       serious:"Adrenal suppression, osteoporosis, avascular necrosis, infections, cataracts and glaucoma.",
-      pearls:"Calcium + vitamin D for everyone on chronic steroids; add bisphosphonate if moderate/high fracture risk. Taper, never stop abruptly after >2-3 weeks."},
+      pearls:"Calcium and vitamin D for everyone on chronic steroids, plus a bisphosphonate at moderate or high fracture risk. Taper rather than stopping abruptly after 2-3 weeks of use. Consider PJP prophylaxis at 20 mg daily for a month or longer alongside another immunosuppressant. Below 5 mg, slow the taper and think about adrenal insufficiency."},
     {id:"d-colch", name:"Colchicine", cls:"Gout & crystal",
-      dosing:"Flare: 1.2 mg then 0.6 mg one hour later. Prophylaxis: 0.6 mg daily-BID.",
-      monitor:"Baseline creatinine; CBC and CK if long-term use. Renal dose adjustment.",
+      dosing:"Flare: 1.2 mg, then 0.6 mg an hour later. Prophylaxis: 0.6 mg daily to twice daily, carried 3-6 months after urate-lowering therapy starts.",
+      monitor:"Baseline creatinine. CBC and CK with long-term use. Renal dose adjustment.",
       se:"Diarrhea, nausea, cramping.",
-      serious:"Myotoxicity and neuromyopathy (statins, CKD), cytopenias. Dangerous with strong CYP3A4/P-gp inhibitors (clarithromycin) in renal/hepatic impairment.",
-      pearls:"Reduce dose in CKD. Review the med list for interactions before every prescription."},
+      serious:"Myotoxicity and neuromyopathy, worse with statins and CKD. Cytopenias. Dangerous with strong CYP3A4 or P-gp inhibitors such as clarithromycin, especially in renal or hepatic impairment.",
+      pearls:"Halve the prophylaxis dose in CKD 3 to 4 and avoid the strong 3A4 combination below CrCl 30. Review the medication list before every prescription. Works best when started within 36 hours of flare onset."},
     {id:"d-allo", name:"Allopurinol", cls:"Gout & crystal",
-      dosing:"Start 100 mg daily (50 mg in CKD 3+), titrate every 2-4 wk to urate goal (<6.0, <5.0 if tophi). Max 800 mg.",
+      dosing:"Start 100 mg daily, 50 mg in CKD 3 or worse, and titrate every 2-4 wk to the urate goal, under 6.0 or under 5.0 with tophi. Max 800 mg.",
       monitor:"Urate every 2-4 wk during titration, then every 6-12 months. CBC, LFTs, creatinine periodically.",
       se:"Rash, GI upset.",
-      serious:"Hypersensitivity syndrome / DRESS / SJS. HLA-B*58:01 screening for Han Chinese, Thai, Korean (CKD 3+), and African-descent patients.",
-      pearls:"Continue during flares. CKD slows titration but does not cap the target-directed dose. Stop immediately for any rash early on."},
+      serious:"Hypersensitivity syndrome, DRESS, SJS. Screen HLA-B*58:01 in Han Chinese, Thai, Korean, and African-descent patients.",
+      pearls:"Treat to a urate target, not to a fixed dose. Continue through flares and cover with colchicine while titrating. CKD slows the climb but does not cap the target-directed dose. Stop at once for any early rash. Interacts with azathioprine, warfarin, and theophylline."},
     {id:"d-febux", name:"Febuxostat", cls:"Gout & crystal",
-      dosing:"40 mg daily, increase to 80 mg if urate above goal at 2-4 wk.",
-      monitor:"Urate, LFTs at baseline and periodically.",
+      dosing:"40 mg daily, raised to 80 mg when urate sits above goal at 2-4 wk.",
+      monitor:"Urate and LFTs at baseline and periodically.",
       se:"Transaminitis, rash, arthralgia.",
-      serious:"Boxed warning: cardiovascular mortality signal vs allopurinol (CARES). Never combine with azathioprine or 6-MP.",
-      pearls:"Second-line after allopurinol intolerance/failure. No dose change in mild-moderate CKD."},
+      serious:"Boxed warning for cardiovascular mortality against allopurinol in the CARES trial. Never combine with azathioprine or 6-MP.",
+      pearls:"Second line after allopurinol failure or intolerance. Generic now, so cost rarely decides. Talk through the cardiovascular signal with anyone carrying established heart disease or a prior stroke, where allopurinol stays first. No dose change in mild to moderate CKD, which is where it earns its place."},
     {id:"d-voclo", name:"Voclosporin (Lupkynis)", cls:"Targeted synthetic",
-      dosing:"23.7 mg BID for lupus nephritis, with mycophenolate and low-dose steroids. Dose-adjust for eGFR changes.",
-      monitor:"eGFR and BP every 2 wk for first month, then every 4 wk. Potassium and glucose periodically. No routine drug levels.",
+      dosing:"23.7 mg BID for lupus nephritis, alongside mycophenolate and low-dose steroids. Not recommended at a baseline eGFR of 45 or below. Safety and efficacy past 1 year are not established.",
+      monitor:"eGFR and blood pressure every 2 wk for the first month, then every 4 wk. Potassium and glucose periodically. No routine drug levels.",
       se:"Hypertension, eGFR decline, tremor, GI upset, hyperkalemia.",
-      serious:"Nephrotoxicity, serious infections, QT prolongation at supratherapeutic doses. Avoid strong CYP3A4 inhibitors.",
-      pearls:"Reduce or hold for confirmed eGFR drop >20% from baseline. Three-year AURORA data support sustained renal response with stable eGFR."},
+      serious:"Nephrotoxicity, serious infections, QT prolongation at supratherapeutic doses. Avoid strong CYP3A4 inhibitors and grapefruit.",
+      pearls:"Cut by 7.9 mg BID for a confirmed eGFR drop over 20 percent, and stop when eGFR falls below 60 with a 30 percent drop from baseline. Do not start above 165/105. Three-year AURORA data support sustained renal response with stable eGFR."},
     {id:"d-peglo", name:"Pegloticase (Krystexxa)", cls:"Gout & crystal",
-      dosing:"8 mg IV every 2 wk for refractory or tophaceous gout.",
-      monitor:"Serum urate BEFORE every infusion: stop if >6 mg/dL on two consecutive checks (signals anti-drug antibodies and infusion-reaction risk). G6PD before starting.",
+      dosing:"8 mg IV every 2 wk for refractory or tophaceous gout, infused over at least 120 minutes with an hour of observation after.",
+      monitor:"Serum urate before every infusion, and stop for a level above 6 mg/dL on two consecutive checks, which signals anti-drug antibodies and infusion-reaction risk. G6PD before starting.",
       se:"Infusion reactions, early gout flares.",
-      serious:"Anaphylaxis (risk highest once urate rises), hemolysis and methemoglobinemia in G6PD deficiency.",
-      pearls:"Co-administer weekly methotrexate (MIRROR) to blunt antibody formation and extend response. Stop other oral urate-lowering drugs - they mask the rising-urate warning signal. Premedicate every infusion."},
+      serious:"Anaphylaxis, with risk highest once urate rises. Hemolysis and methemoglobinemia in G6PD deficiency.",
+      pearls:"Give weekly methotrexate alongside it, per MIRROR, to blunt antibody formation and extend response. Stop other oral urate-lowering drugs, which mask the rising-urate warning signal. Premedicate every infusion."},
     {id:"d-tnf", name:"TNF inhibitors (adalimumab, etanercept, infliximab, golimumab, certolizumab)", cls:"Biologics",
-      dosing:"Adalimumab 40 mg SC q2wk; etanercept 50 mg SC weekly; infliximab 3-10 mg/kg IV q4-8wk.",
-      monitor:"Baseline TB test + hepatitis B/C; annual TB if ongoing risk. CBC, CMP every 3-6 months.",
+      dosing:"Adalimumab 40 mg SC q2wk; etanercept 50 mg SC weekly; infliximab 3-10 mg/kg IV at weeks 0, 2, and 6, then q4-8wk; golimumab 50 mg SC monthly; certolizumab 200 mg SC q2wk.",
+      monitor:"Baseline TB test plus hepatitis B and C, with annual TB where risk continues. CBC, CMP every 3-6 months.",
       se:"Injection site or infusion reactions, upper respiratory infections, headache.",
       serious:"Serious and opportunistic infections, TB and hepatitis B reactivation, demyelinating disease, heart failure worsening, drug-induced lupus.",
-      pearls:"Hold for active infection and around major surgery (one dosing cycle). No live vaccines. Certolizumab has minimal placental transfer."},
+      pearls:"Treat latent TB before the first dose. Hold for active infection and around major surgery, one dosing cycle. No live vaccines. Certolizumab has minimal placental transfer, which makes it the pregnancy pick. Infliximab holds up better with concomitant methotrexate, which limits antibody formation."},
     {id:"d-il6", name:"IL-6 inhibitors (tocilizumab, sarilumab)", cls:"Biologics",
-      dosing:"Tocilizumab 162 mg SC weekly or q2wk, or 4-8 mg/kg IV q4wk.",
-      monitor:"CBC, LFTs every 4-8 wk initially then every 3 months; lipid panel at 4-8 wk. Baseline TB/hepatitis.",
+      dosing:"Tocilizumab 162 mg SC weekly or q2wk, or 4-8 mg/kg IV q4wk, with weekly SC dosing in GCA. Sarilumab 200 mg SC q2wk.",
+      monitor:"CBC and LFTs every 4-8 wk at first, then every 3 months. Lipid panel at 4-8 wk. Baseline TB and hepatitis.",
       se:"Transaminitis, neutropenia, hyperlipidemia, injection reactions.",
-      serious:"GI perforation (diverticulitis history + steroids), serious infections. CRP is suppressed - do not rely on it to detect infection.",
-      pearls:"Steroid-sparing agent of choice in GCA. Hold for ANC <1000, platelets <100k, or LFTs >3x ULN."},
+      serious:"GI perforation, mostly with a diverticulitis history plus steroids. Serious infections. CRP is suppressed, so do not lean on it to detect infection.",
+      pearls:"Steroid-sparing agent of choice in GCA. Hold for ANC below 1000, platelets below 100k, or LFTs above 3 times ULN. Avoid with active diverticulitis, and tell patients to report new abdominal pain the same day."},
     {id:"d-jak", name:"JAK inhibitors (tofacitinib, upadacitinib, baricitinib)", cls:"Targeted synthetic",
-      dosing:"Tofacitinib 5 mg BID or 11 mg XR daily; upadacitinib 15 mg daily; baricitinib 2-4 mg daily.",
-      monitor:"CBC, LFTs at 4-8 wk then every 3 months; lipids at 8-12 wk. Baseline TB/hepatitis.",
-      se:"Upper respiratory infections, nausea, acne (upadacitinib), CPK elevation.",
-      serious:"Boxed warnings: MACE, VTE, malignancy, mortality in age >50 with CV risk factors. Herpes zoster - vaccinate first.",
-      pearls:"Give Shingrix before or soon after starting. Oral option when needles are a barrier; dose adjust with strong CYP3A4 inhibitors."},
+      dosing:"Tofacitinib 5 mg BID or 11 mg XR daily; upadacitinib 15 mg daily; baricitinib 2-4 mg daily. Reduce in moderate renal or hepatic impairment.",
+      monitor:"CBC and LFTs at 4-8 wk, then every 3 months. Lipids at 8-12 wk. Baseline TB and hepatitis.",
+      se:"Upper respiratory infections, nausea, acne with upadacitinib, CPK elevation.",
+      serious:"Boxed warnings for major cardiac events, venous thromboembolism, malignancy, and mortality in patients over 50 carrying a cardiovascular risk factor. Herpes zoster, so vaccinate first.",
+      pearls:"ORAL Surveillance drove that boxed warning, so keep JAKs behind a TNF inhibitor in anyone over 65 or with a smoking, clot, or cancer history. Give Shingrix before or soon after starting. The oral route wins when needles are the barrier. Dose adjust with strong CYP3A4 inhibitors."},
     {id:"d-abat", name:"Abatacept", cls:"Biologics",
-      dosing:"125 mg SC weekly, or weight-based IV q4wk.",
-      monitor:"Baseline TB + hepatitis B/C. CBC, CMP periodically.",
+      dosing:"125 mg SC weekly, or weight-based IV every 4 weeks after loading.",
+      monitor:"Baseline TB plus hepatitis B and C. CBC, CMP periodically.",
       se:"Headache, upper respiratory infections, nausea.",
-      serious:"Serious infections; COPD exacerbations reported.",
-      pearls:"Often chosen when infection risk is a concern. Seropositive RA may respond best."},
+      serious:"Serious infections. COPD exacerbations reported, so weigh it in advanced lung disease.",
+      pearls:"The mildest infection signal among the biologics, so a common pick with recurrent infections, older age, or a cancer history. Seropositive RA responds best, and the response builds over 3-6 months rather than weeks. Used off-label in RA-associated interstitial lung disease on observational data."},
     {id:"d-rtx", name:"Rituximab", cls:"Biologics",
-      dosing:"1 g IV x2, days 0 and 14; repeat course ~q6 months by response.",
-      monitor:"Hepatitis B core antibody AND surface antigen before first dose. CBC, quantitative immunoglobulins before each course.",
+      dosing:"1 g IV twice, days 0 and 14, repeated about every 6 months by response. ANCA vasculitis uses 375 mg/m2 weekly for 4 weeks.",
+      monitor:"Hepatitis B core antibody and surface antigen before the first dose. CBC and quantitative immunoglobulins before each course.",
       se:"First-infusion reactions, upper respiratory infections.",
-      serious:"Hepatitis B reactivation (can be fatal - always screen), PML (rare), late-onset neutropenia, hypogammaglobulinemia with recurrent infections.",
-      pearls:"Give needed vaccines ≥4 wk before a course; vaccine responses are blunted after. Premedicate. Check IgG if infections recur."},
+      serious:"Hepatitis B reactivation, fatal at times, so always screen. PML, rare. Late-onset neutropenia. Hypogammaglobulinemia with recurrent infections.",
+      pearls:"Time vaccines about 4 weeks before a course, since responses stay blunted for months after. Premedicate. Check IgG when infections recur and hold further courses when IgG runs low. Often the pick when a lymphoma history or demyelinating disease rules out TNF blockers."},
     {id:"d-il17", name:"IL-17 inhibitors (secukinumab, ixekizumab)", cls:"Biologics",
-      dosing:"Secukinumab 150-300 mg SC q4wk after loading; ixekizumab 80 mg SC q4wk after loading.",
+      dosing:"Secukinumab 150-300 mg SC q4wk after loading. Ixekizumab 80 mg SC q4wk after loading.",
       monitor:"Baseline TB. Watch clinically for candidiasis.",
-      se:"Upper respiratory infections, oral/genital candidiasis, injection reactions.",
-      serious:"New or worsened inflammatory bowel disease - avoid in Crohn/UC. Serious infections.",
-      pearls:"Strong choice for PsA and axSpA with significant psoriasis. Screen for IBD symptoms before starting."},
+      se:"Upper respiratory infections, oral and genital candidiasis, injection reactions.",
+      serious:"New or worsened inflammatory bowel disease, so avoid in Crohn disease and ulcerative colitis. Serious infections.",
+      pearls:"Strong choice for PsA and axSpA carrying significant psoriasis, where skin clears within 4-8 weeks. Screen for IBD symptoms before starting and ask about diarrhea and rectal bleeding at follow-up. Treat mild thrush and keep the biologic going."},
     {id:"d-bime", name:"Bimekizumab (Bimzelx)", cls:"Biologics",
-      dosing:"PsA and axSpA: 160 mg SC q4wk. Psoriasis: 320 mg q4wk x16 wk, then q8wk.",
-      monitor:"Baseline TB. LFTs at baseline and periodically (caution with liver disease or heavy alcohol use). Watch clinically for candidiasis.",
-      se:"Oral candidiasis (notably more than other IL-17s), upper respiratory infections, injection reactions.",
-      serious:"New or worsened inflammatory bowel disease - avoid in Crohn/UC. Serious infections. Monitor mood per label.",
-      pearls:"Dual IL-17A and IL-17F blockade. Treat mild thrush with fluconazole and continue therapy; counsel patients to report white oral patches early."},
+      dosing:"PsA and axSpA: 160 mg SC q4wk. Psoriasis: 320 mg q4wk for 16 weeks, then q8wk.",
+      monitor:"Baseline TB. LFTs at baseline and periodically, with caution in liver disease or heavy alcohol use. Watch clinically for candidiasis.",
+      se:"Oral candidiasis, notably more than with other IL-17s, upper respiratory infections, injection reactions.",
+      serious:"New or worsened inflammatory bowel disease, so avoid in Crohn disease and ulcerative colitis. Serious infections. Monitor mood per label.",
+      pearls:"Dual IL-17A and IL-17F blockade, which drives both the deeper skin clearance and the thrush. Treat mild thrush with fluconazole and continue therapy, and tell patients to report white oral patches early."},
     {id:"d-beli", name:"Belimumab (Benlysta)", cls:"Biologics",
-      dosing:"200 mg SC weekly, or 10 mg/kg IV at weeks 0, 2, 4, then q4wk. Approved for SLE and lupus nephritis.",
-      monitor:"Baseline hepatitis B/C; TB per practice. Otherwise standard SLE labs (CBC, CMP, urine protein, complements, dsDNA).",
+      dosing:"200 mg SC weekly, or 10 mg/kg IV at weeks 0, 2, and 4, then q4wk. Approved for SLE and lupus nephritis.",
+      monitor:"Baseline hepatitis B and C, TB per practice. Otherwise the standard SLE panel: CBC, CMP, urine protein, complements, dsDNA.",
       se:"Nausea, diarrhea, headache, insomnia, infusion or injection reactions.",
-      serious:"Serious infections, depression and suicidality signal - screen mood at visits, PML (rare).",
-      pearls:"Add-on to standard therapy; benefit accrues over months - do not judge at 8 weeks. Combines with HCQ and MMF. Avoid stacking with another biologic."},
+      serious:"Serious infections. A depression and suicidality signal, so screen mood at visits. PML, rare.",
+      pearls:"Add-on to standard therapy, with benefit accruing over months, so do not judge at 8 weeks. Combines with hydroxychloroquine and mycophenolate. Not studied in severe active CNS lupus. The weekly SC autoinjector keeps patients out of the infusion suite."},
     {id:"d-anif", name:"Anifrolumab (Saphnelo)", cls:"Biologics",
-      dosing:"300 mg IV q4wk.",
-      monitor:"Baseline TB and hepatitis B/C. Standard SLE labs.",
-      se:"Infusion reactions, upper respiratory infections, bronchitis.",
-      serious:"Herpes zoster (notable signal - vaccinate before starting when feasible), serious infections. No live vaccines on therapy.",
-      pearls:"Type I interferon receptor blocker; particularly strong for skin and musculoskeletal SLE activity. Not studied in severe active nephritis or CNS lupus."},
+      dosing:"300 mg IV over 30 minutes every 4 weeks.",
+      monitor:"Baseline TB and hepatitis B and C. Standard SLE labs. No routine drug-specific monitoring beyond watching for infection.",
+      se:"Infusion reactions, upper respiratory infections, bronchitis, herpes zoster.",
+      serious:"Herpes zoster, a notable signal, so vaccinate before starting where feasible. Serious infections. No live vaccines on therapy.",
+      pearls:"Type I interferon receptor blocker, strongest for skin and musculoskeletal SLE activity, with steroid sparing shown in the TULIP trials. Skin often responds by 3 months. Not studied in severe active nephritis or CNS lupus."},
     {id:"d-il23", name:"IL-23 / IL-12-23 inhibitors (ustekinumab, guselkumab, risankizumab)", cls:"Biologics",
-      dosing:"Varies; e.g., guselkumab 100 mg SC q8wk after loading.",
+      dosing:"Ustekinumab 45 mg SC, 90 mg above 100 kg, at weeks 0 and 4 then q12wk. Guselkumab 100 mg SC q8wk after loading. Risankizumab 150 mg SC q12wk.",
       monitor:"Baseline TB. Minimal routine lab burden.",
       se:"Upper respiratory infections, injection site reactions.",
-      serious:"Serious infections (rates low overall).",
-      pearls:"Among the best-tolerated biologics; useful with infection concerns. Not effective for axial disease."},
+      serious:"Serious infections, with low rates overall.",
+      pearls:"Among the best tolerated biologics, so useful when infection risk is the main worry, and quarterly dosing suits patients who travel. No IBD worsening signal, unlike the IL-17s, and ustekinumab and risankizumab treat Crohn disease outright. Not effective for axial disease."},
     {id:"d-dmab", name:"Denosumab", cls:"Bone health",
       dosing:"60 mg SC every 6 months, on time.",
-      monitor:"Calcium and vitamin D replete before each dose; check calcium in CKD. Dental health review.",
-      se:"Musculoskeletal pain, hypocalcemia (mainly CKD).",
-      serious:"Rebound vertebral fractures if stopped without transition - never simply stop; ONJ and atypical femur fracture (rare).",
-      pearls:"If discontinuing, transition to a bisphosphonate. Late doses lose bone - build reminders."},
+      monitor:"Calcium and vitamin D replete before each dose, and check calcium in CKD, where hypocalcemia is the real risk. Dental review.",
+      se:"Musculoskeletal pain, hypocalcemia, mainly in CKD.",
+      serious:"Rebound vertebral fractures when stopped without a transition, so never simply stop. ONJ and atypical femur fracture, both rare.",
+      pearls:"When discontinuing, follow with a bisphosphonate, usually zoledronic acid about 6 months after the last dose. Do not let a dose slip past 7 months, since the density gains reverse fast. No renal cutoff, unlike bisphosphonates, which makes it the usual pick in CKD."},
     {id:"d-bis", name:"Bisphosphonates (alendronate, risedronate, zoledronic acid)", cls:"Bone health",
-      dosing:"Alendronate 70 mg PO weekly; zoledronic acid 5 mg IV yearly.",
-      monitor:"Calcium, vitamin D, creatinine before dosing. DEXA ~every 2 years. Reassess need at 3-5 years.",
-      se:"GI upset and esophagitis (oral), acute phase reaction after first IV dose.",
-      serious:"ONJ, atypical femur fracture with long use. Avoid if CrCl <30-35.",
-      pearls:"Oral: empty stomach, full glass of water, stay upright 30 min. Consider drug holiday after 5 yr oral / 3 yr IV if risk is no longer high."},
+      dosing:"Alendronate 70 mg PO weekly, risedronate 35 mg PO weekly, zoledronic acid 5 mg IV yearly.",
+      monitor:"Calcium, vitamin D, creatinine before dosing. DEXA about every 2 years. Reassess the need at 3-5 years.",
+      se:"GI upset and esophagitis with oral forms. Acute phase reaction after the first IV dose.",
+      serious:"ONJ and atypical femur fracture with long use. Avoid below CrCl 30 to 35.",
+      pearls:"Oral dosing means an empty stomach, a full glass of water, and upright for 30 minutes. Hydrate before zoledronic acid and give acetaminophen for the flu-like reaction, which mostly hits the first infusion only. Correct vitamin D first or hypocalcemia follows. Consider a drug holiday after 5 years oral or 3 years IV once fracture risk is no longer high."},
     {id:"d-romo", name:"Romosozumab (Evenity)", cls:"Bone health",
-      dosing:"210 mg SC monthly (given as two 105 mg injections), for 12 months total.",
-      monitor:"Calcium and vitamin D replete before starting; monitor calcium in CKD. Dental review before starting.",
+      dosing:"210 mg SC monthly, given as two 105 mg injections at the same visit, for 12 months total.",
+      monitor:"Calcium and vitamin D replete before starting, with calcium monitoring in CKD. Dental review before starting.",
       se:"Arthralgia, headache, injection site reactions, mild hypocalcemia.",
-      serious:"Boxed warning: MI, stroke, cardiovascular death - do not use within 1 year of MI or stroke. ONJ and atypical femur fracture (rare).",
-      pearls:"Builds and forms bone for exactly 12 months, then must be followed by an antiresorptive (bisphosphonate or denosumab) or the gains are lost. Screen CV history explicitly before prescribing."},
+      serious:"Boxed warning for myocardial infarction, stroke, and cardiovascular death. Do not use within 1 year of an MI or stroke. ONJ and atypical femur fracture, both rare.",
+      pearls:"Builds bone for exactly 12 months, then must be followed by an antiresorptive or the gains are lost. Screen the cardiovascular history explicitly before prescribing, and document that conversation."},
     {id:"d-terip", name:"Teriparatide / Abaloparatide", cls:"Bone health",
-      dosing:"Teriparatide 20 mcg SC daily, up to 2 years.",
-      monitor:"Calcium, urate, creatinine periodically.",
-      se:"Dizziness, leg cramps, nausea, orthostasis, mild hypercalcemia.",
-      serious:"Avoid in Paget disease, prior skeletal radiation, unexplained high alkaline phosphatase, or bone malignancy.",
-      pearls:"Anabolic-first for very high fracture risk. Must follow with an antiresorptive or the gains are lost."},
+      dosing:"Teriparatide 20 mcg SC daily. Abaloparatide 80 mcg SC daily. The 2-year lifetime cap came off the teriparatide label in 2020, so longer use is reasonable when fracture risk stays high.",
+      monitor:"Calcium, urate, creatinine periodically, with a calcium check about a month in.",
+      se:"Dizziness, leg cramps, nausea, orthostasis, mild hypercalcemia. Give the first dose where the patient is able to sit or lie down.",
+      serious:"Avoid in Paget disease, prior skeletal radiation, unexplained high alkaline phosphatase, or bone malignancy. The osteosarcoma boxed warning was removed in 2020.",
+      pearls:"Anabolic first at very high fracture risk, since anabolic then antiresorptive builds more bone than the reverse order. Must be followed by an antiresorptive or the gains are lost within a year."},
     {id:"d-ldn", name:"Low-dose naltrexone (LDN)", cls:"Adjunctive & off-label",
-      dosing:"1.5 mg at bedtime for 1-2 weeks, then 3 mg, then 4.5 mg nightly. Usual range 1.5-4.5 mg. Requires a compounding pharmacy; the commercial 50 mg tablet is not a practical starting point. Off-label for all rheumatologic indications.",
-      monitor:"No routine labs required. Baseline LFTs are reasonable if there is known liver disease. Reassess symptom benefit at 8-12 weeks and stop if there is none.",
-      se:"Vivid dreams, insomnia or sleep disruption in the first 1-2 weeks, headache, nausea, transient anxiety. Usually settles or resolves with a slower titration.",
-      serious:"Precipitates acute withdrawal in anyone on opioids. Confirm the patient is opioid-free for 7-10 days before starting, and warn that opioid analgesia will be blunted in an emergency. Avoid in acute hepatitis or hepatic failure.",
-      pearls:"Proposed mechanism is glial TLR4 antagonism, not opioid receptor blockade, at these doses. Evidence is thin: small crossover trials in fibromyalgia showed benefit, but the largest randomized trial to date (naltrexone 6 mg vs placebo, 99 women, 12 weeks, Lancet Rheumatology 2024) did not meet its primary endpoint for pain reduction. Reasonable to trial in fibromyalgia after standard options, and set expectations accordingly. Not a DMARD and no disease-modifying evidence in inflammatory arthritis. Usually cash pay, roughly 30 to 60 dollars a month compounded. Have the patient carry a card noting naltrexone use for emergencies."}
+      dosing:"1.5 mg at bedtime for 1-2 weeks, then 3 mg, then 4.5 mg nightly. Usual range 1.5-4.5 mg. Needs a compounding pharmacy. Off-label for every rheumatologic indication.",
+      monitor:"No routine labs. Baseline LFTs are reasonable with known liver disease. Reassess benefit at 8-12 weeks and stop when there is none.",
+      se:"Vivid dreams, early insomnia, headache, nausea. Usually settles, or fades with a slower titration.",
+      serious:"Precipitates withdrawal in anyone taking opioids, so confirm 7 to 10 opioid-free days first, and warn that emergency opioid analgesia will be blunted. Avoid in acute hepatitis or hepatic failure.",
+      pearls:"Proposed mechanism at these doses is glial TLR4 antagonism. Evidence is thin: small fibromyalgia crossover trials showed benefit, while the largest randomized trial missed its primary endpoint (6 mg against placebo, 99 women, 12 weeks, Lancet Rheumatology 2024). Usually cash pay, 30 to 60 dollars a month."},
+    {id:"d-slcyclo", name:"Cyclobenzaprine sublingual (Tonmya)", cls:"Fibromyalgia & central pain",
+      dosing:"2.8 mg under the tongue at bedtime for 14 days, then 5.6 mg nightly. Cap at 2.8 mg over age 65 and in mild hepatic impairment, and skip it in moderate or severe impairment. Moisten the mouth, let it dissolve, then nothing by mouth for 15 minutes.",
+      monitor:"No routine labs. Before starting, rule out an MAOI within 14 days, recent MI, arrhythmia, heart block, and untreated hyperthyroidism. Reassess pain, sleep, and fatigue at 6-8 weeks.",
+      se:"Mouth numbness 23 percent against 0.7 percent on placebo, altered taste, somnolence. Some local mouth reaction hits 43 percent against 8 percent and clears within the hour.",
+      serious:"Contraindicated with an MAOI, in acute MI recovery, arrhythmia, heart block, heart failure, and hyperthyroidism. Serotonin syndrome with SSRIs, SNRIs, tricyclics, and tramadol. Anticholinergic effects matter in urinary retention and glaucoma.",
+      pearls:"Approved August 2025, the first new fibromyalgia drug in over 15 years. Sublingual dosing skips first-pass metabolism, so less daytime metabolite and less morning grogginess than the oral tablet. RESILIENT: 1.8 point pain drop against 1.2 on placebo. Brand only, so check coverage."},
+    {id:"d-dulox", name:"Duloxetine (Cymbalta)", cls:"Fibromyalgia & central pain",
+      dosing:"30 mg daily for 1 week, then 60 mg daily. Doses above 60 mg add side effects with no added benefit in fibromyalgia. Taper on stopping.",
+      monitor:"Blood pressure at follow-up. Ask about mood and suicidal thinking in the first month, especially under age 25.",
+      se:"Nausea early, usually gone in 1-2 weeks when taken with food. Dry mouth, constipation, sweating, appetite loss, sexual dysfunction.",
+      serious:"Boxed warning for suicidal thinking in young adults. Serotonin syndrome. Hepatotoxicity, so avoid in cirrhosis and with heavy alcohol use. Not recommended below CrCl 30. Abrupt stopping brings dizziness and electric shock sensations.",
+      pearls:"First pick when depression, anxiety, or osteoarthritis pain sits alongside fibromyalgia, since one drug covers both. Generic and cheap. Try evening dosing when it sedates and morning when it activates, then let the patient choose."},
+    {id:"d-miln", name:"Milnacipran (Savella)", cls:"Fibromyalgia & central pain",
+      dosing:"12.5 mg once on day 1, 12.5 mg BID days 2-3, 25 mg BID days 4-7, then 50 mg BID as the usual target. Maximum 100 mg BID. Halve the maintenance dose at CrCl 5-29, and skip it in end-stage renal disease.",
+      monitor:"Blood pressure and pulse at baseline and every visit. Treatment-emergent hypertension hit 20 percent against 7 percent on placebo, and heart rate rose about 13 beats per minute.",
+      se:"Nausea 37 percent, headache 18 percent, constipation 16 percent, insomnia, hot flush, palpitations.",
+      serious:"Boxed warning for suicidal thinking in young adults. Serotonin syndrome. Sustained hypertension and tachycardia. Liver injury reported after marketing. Urinary hesitancy, more so in men with prostatic enlargement.",
+      pearls:"More noradrenergic than duloxetine, so fatigue responds better while blood pressure, pulse, and anxiety respond worse. Not approved as an antidepressant in the US, which trips up prior authorization."},
+    {id:"d-preg", name:"Pregabalin (Lyrica)", cls:"Fibromyalgia & central pain",
+      dosing:"75 mg BID, up to 150 mg BID within a week, maximum 450 mg a day divided. Renal adjustment: halve at CrCl 30-60, about a quarter at CrCl 15-30. Schedule V.",
+      monitor:"Weight and ankle edema at each visit. Sedation and word-finding trouble in the first 2 weeks. Ask about misuse where there is a substance use history.",
+      se:"Dizziness, somnolence, peripheral edema, weight gain, dry mouth, blurred vision.",
+      serious:"Angioedema of the face, mouth, and airway. Respiratory depression alongside opioids or in COPD. Withdrawal after an abrupt stop, so taper over at least a week.",
+      pearls:"Load the larger share at bedtime to turn sedation into sleep. Weight gain and edema drive most discontinuations, so name both up front. Gabapentin 300 mg at bedtime titrated to 1200-2400 mg a day divided is the cheap off-label stand-in."},
+    {id:"d-amit", name:"Amitriptyline / nortriptyline", cls:"Fibromyalgia & central pain",
+      dosing:"Amitriptyline 10 mg 2-3 hours before bed, raised by 10 mg every 2 weeks to a usual 25-50 mg. Nortriptyline 10-25 mg at bedtime is the better tolerated swap in older adults. Off-label for fibromyalgia.",
+      monitor:"Baseline ECG with known cardiac disease or over age 60 before going above 50 mg. Ask about morning grogginess, constipation, and urinary hesitancy.",
+      se:"Dry mouth, constipation, weight gain, morning hangover, urinary hesitancy, blurred vision.",
+      serious:"Anticholinergic burden and fall risk in older adults, where both sit on the Beers list. Arrhythmia and death in overdose, so watch the quantity dispensed. Contraindicated with an MAOI. Serotonin syndrome when stacked on an SNRI.",
+      pearls:"Cheapest option here and the longest evidence base for sleep in fibromyalgia. Dosing 2-3 hours before bed rather than at lights out cuts the morning hangover most patients quit over."},
+    {id:"d-cyclo", name:"Cyclobenzaprine oral (off-label)", cls:"Fibromyalgia & central pain",
+      dosing:"5 mg at bedtime, up to 10 mg, off-label for fibromyalgia. The label covers muscle spasm for up to 3 weeks. The 2.8 to 5.6 mg sublingual tablet is the approved fibromyalgia form.",
+      monitor:"Morning sedation, dry mouth, and anticholinergic effects. Reassess sleep and pain at 6-8 weeks.",
+      se:"Somnolence, dry mouth, dizziness, constipation.",
+      serious:"Same contraindications as the sublingual form: MAOI within 14 days, acute MI recovery, arrhythmia, heart block, heart failure, hyperthyroidism. Serotonin syndrome with serotonergic drugs. Avoid in older adults, where anticholinergic load and falls matter.",
+      pearls:"Structurally a tricyclic, not a muscle relaxant in any useful sense. Meta-analyses show a small benefit on sleep and pain. Oral dosing leaves higher daytime metabolite levels than the sublingual route, which is where the morning grogginess comes from."},
+    {id:"d-pilo", name:"Pilocarpine (Salagen)", cls:"Sj\u00f6gren & sicca",
+      dosing:"5 mg four times daily for dry mouth in Sjogren syndrome. Radiation xerostomia starts at 5 mg three times daily and titrates to 15-30 mg a day, 10 mg per dose maximum. Start at 5 mg twice daily in moderate hepatic impairment and skip it in severe.",
+      monitor:"No routine labs. Ask about sweating, night vision, and urinary frequency. Give it a full 6 weeks before calling it a failure.",
+      se:"Sweating 40 percent at the Sjogren dose, urinary frequency 10 percent, nausea 9 percent, flushing 9 percent, headache, blurred vision.",
+      serious:"Contraindicated in uncontrolled asthma, narrow-angle glaucoma, and acute iritis. Raises airway resistance and secretions, so caution in COPD and controlled asthma. Able to precipitate renal or biliary colic where stones exist.",
+      pearls:"The cheaper secretagogue and the one with the older evidence base. Sweating is dose related, so three doses a day is a fair compromise when four are too much. Both drugs need residual gland function. Warn about night driving."},
+    {id:"d-cevi", name:"Cevimeline (Evoxac)", cls:"Sj\u00f6gren & sicca",
+      dosing:"30 mg three times daily for dry mouth in Sjogren syndrome, which is also the ceiling since no safety data exist above it. Hepatic impairment was never studied.",
+      monitor:"No routine labs. Ask about sweating, night vision, and palpitations. Recheck the dry mouth at 6-12 weeks.",
+      se:"Sweating 19 percent, nausea 14 percent, sinusitis 12 percent, rhinitis 11 percent, diarrhea, blurred vision at night.",
+      serious:"Contraindicated in uncontrolled asthma, narrow-angle glaucoma, and acute iritis. Alters cardiac conduction and rate, so caution in angina or prior MI. Airway resistance and secretions rise in COPD. Able to precipitate renal or biliary colic where stones exist.",
+      pearls:"Longer acting than pilocarpine, so three doses cover the day where pilocarpine needs four, and sweating runs about half the rate. Beta blockers add conduction risk, and CYP2D6 or 3A4 inhibitors raise levels. Take with food for nausea. Pair either drug with preservative-free artificial tears, then cyclosporine or lifitegrast drops."}
   ],
+
 
   codes: [
     {id:"c-ra", name:"Rheumatoid arthritis", items:[
@@ -3975,7 +4024,7 @@ G: {
 
 };
 
-(function(){ DEFAULT_DATA.version = 18; })();
+(function(){ DEFAULT_DATA.version = 21; })();
 // ====================== CORE ======================
 const KEY = "rheumpad_v1";
 let DATA, FAVS, PRECHART, META = {};
@@ -3983,6 +4032,48 @@ let storageOK = true;
 let FIRST_RUN = false;
 
 // Folic acid strings replaced in v18. Kept beside loadState so the repair stays readable.
+// v19 -> v20: every drug card was rewritten so the cards run a similar length.
+// A stored card whose text still hashes to the v19 shipped text was never edited,
+// so it takes the new text. Any card the user changed keeps their copy.
+// Search ignores accents both ways, so sjogren finds Sjogren and folico finds folico.
+const NOACC = t => (t || "").toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const CARD_HASH = s => { let x = 5381; for (let i = 0; i < s.length; i++) x = ((x * 33) ^ s.charCodeAt(i)) >>> 0; return x.toString(36); };
+const V19_CARDS = {
+  "d-mtx": {dosing:"xbfs2f", monitor:"1ct121t", se:"8atfjx", serious:"8ethbg", pearls:"1ggjkes"},
+  "d-hcq": {dosing:"vm5jx5", monitor:"18kkq1y", serious:"1hx5p7q", pearls:"116a7ke"},
+  "d-ssz": {dosing:"1i28kgp", se:"12jdth6", serious:"1qj8r8b", pearls:"1flumzn"},
+  "d-lef": {dosing:"p7eypi", monitor:"1rni0mg", serious:"3whmpy", pearls:"13m4it0"},
+  "d-aza": {dosing:"1owaamt", monitor:"1othu73", se:"t0alqp", serious:"15xq8ip", pearls:"10ovi4p"},
+  "d-mmf": {dosing:"cina1w", monitor:"hpmihm", se:"1npmolf", serious:"gox8cn", pearls:"y5csql"},
+  "d-pred": {dosing:"r92t4a", monitor:"13kun6s", se:"txsrls", pearls:"nlib9h"},
+  "d-colch": {dosing:"3p863f", monitor:"1vbqg5f", serious:"e6pxms", pearls:"ep00yw"},
+  "d-allo": {dosing:"1jq158z", serious:"158ids2", pearls:"1if4z2"},
+  "d-febux": {dosing:"gc00kt", monitor:"j03i0f", serious:"1as5cdc", pearls:"e5t733"},
+  "d-voclo": {dosing:"16zwwav", monitor:"1ysymxh", serious:"1guu61u", pearls:"1vjjnmd"},
+  "d-peglo": {dosing:"1etlvuu", monitor:"18xqqgl", serious:"vdoeca", pearls:"1ilqj5z"},
+  "d-tnf": {dosing:"5enuam", monitor:"tg21gj", pearls:"1mo9uxb"},
+  "d-il6": {dosing:"108bemd", monitor:"18j2ezr", serious:"125qymm", pearls:"dltsdc"},
+  "d-jak": {dosing:"hdufmv", monitor:"qilfiu", se:"3n5zp6", serious:"1lrf46t", pearls:"1hamudt"},
+  "d-abat": {dosing:"1b81adh", monitor:"1lf5g2t", serious:"geq09b", pearls:"478jw7"},
+  "d-rtx": {dosing:"1t0ny1y", monitor:"kw1nn5", serious:"17b5jsa", pearls:"e2kmxh"},
+  "d-il17": {dosing:"1x2u4eq", se:"par8z9", serious:"c9cxgn", pearls:"okknsn"},
+  "d-bime": {dosing:"rrlnir", monitor:"jinwki", se:"17324hn", serious:"1uyy3yl", pearls:"1iac41u"},
+  "d-beli": {dosing:"17gb8w4", monitor:"qsjpa1", serious:"nykz6n", pearls:"1pwshhf"},
+  "d-anif": {dosing:"1k2gmno", monitor:"1sxgusf", se:"11xcemv", serious:"sf92yh", pearls:"9uu47j"},
+  "d-il23": {dosing:"13l091c", serious:"3y7xyk", pearls:"16hjxxt"},
+  "d-dmab": {monitor:"1k0zviw", se:"1aawm2a", serious:"j1yx4k", pearls:"w4pldn"},
+  "d-bis": {dosing:"no9332", monitor:"1vek1ko", se:"7yvoco", serious:"ma4adn", pearls:"5te61g"},
+  "d-romo": {dosing:"2z9tyc", monitor:"cu8e3p", serious:"1qq77u2", pearls:"j1hgph"},
+  "d-terip": {dosing:"160k9fl", monitor:"sqquc3", se:"udfmzz", serious:"a0dnd8", pearls:"1pp7zf"},
+  "d-ldn": {dosing:"1n378h5", monitor:"1sclyf8", se:"1h0qasn", serious:"16fpit8", pearls:"1yomu97"},
+  "d-slcyclo": {dosing:"tee3xo", monitor:"njbaoc", se:"1yrav28", serious:"ww2fdx", pearls:"17pebar"},
+  "d-dulox": {dosing:"pjrt8s", monitor:"lerr1s", se:"xuz428", serious:"11ys1fk", pearls:"lgb6ve"},
+  "d-miln": {dosing:"1uq3b4l", monitor:"1kl6lch", se:"pvhnnv", serious:"k0otus", pearls:"5g8nqn"},
+  "d-preg": {dosing:"14oxbsm", monitor:"19d5zfx", se:"1gb23ah", serious:"ff2v0x", pearls:"sh9s2q"},
+  "d-amit": {dosing:"1h4sak5", monitor:"1fox58g", serious:"1snq8a7", pearls:"qv76d1"},
+  "d-cyclo": {dosing:"zltk1", monitor:"1nftbue", serious:"1v4j742", pearls:"rflxc2"}
+};
+
 const FOLATE_FIX = [
   ["phrases", "p-mtxstart", "body",
    "weekly with folic acid 1 mg daily.",
@@ -4044,6 +4135,18 @@ function loadState(){
           if (cur && typeof cur[field] === "string" && cur[field].indexOf(bad) >= 0 && cur[field].indexOf("~") < 0) {
             cur[field] = cur[field].split(bad).join(good);
           }
+        });
+      }
+      // v19 -> v20: refresh drug card text the user never touched. Hash match means the
+      // stored copy is still the shipped v19 text, so take the rewritten card.
+      if ((stored.seededVersion || 1) < 20) {
+        Object.keys(V19_CARDS).forEach(id=>{
+          const cur = (DATA.drugs || []).find(x=>x.id === id);
+          const def = DEFAULT_DATA.drugs.find(x=>x.id === id);
+          if (!cur || !def) return;
+          Object.keys(V19_CARDS[id]).forEach(f=>{
+            if (typeof cur[f] === "string" && CARD_HASH(cur[f]) === V19_CARDS[id][f]) cur[f] = def[f];
+          });
         });
       }
       // v10 -> v11: the Spanish handouts gained their accent marks. If a stored copy
@@ -4408,7 +4511,7 @@ const App = {
   },
 
   search(q){
-    q = q.trim().toLowerCase();
+    q = NOACC(q.trim());
     let sec = document.getElementById("tab-search");
     if (!sec) {
       sec = document.createElement("section"); sec.className = "tab"; sec.id = "tab-search";
@@ -4420,12 +4523,12 @@ const App = {
     sec.classList.add("active");
     const grid = document.getElementById("search-grid"); grid.innerHTML = "";
     const hits = [];
-    DATA.phrases.forEach(p=>{ if ((p.name+" "+(p.dot||"")+" "+p.cat+" "+p.body).toLowerCase().includes(q)) hits.push({kind:"phrase", item:p, tag:p.dot || "phrase"}); });
-    DATA.templates.forEach(t=>{ if ((t.name+" "+t.cat+" "+t.sections.map(s=>s.title+" "+s.body).join(" ")).toLowerCase().includes(q)) hits.push({kind:"template", item:t, tag:"template"}); });
-    DATA.picklists.forEach(l=>{ if ((l.name+" "+l.options.join(" ")).toLowerCase().includes(q)) hits.push({kind:"picklist", item:l, tag:"pick list"}); });
-    DATA.instructions.forEach(i2=>{ if ((i2.name+" "+i2.body).toLowerCase().includes(q)) hits.push({kind:"instruction", item:i2, tag:"instructions"}); });
-    (DATA.drugs || []).forEach(d=>{ if ((d.name+" "+d.cls+" "+d.dosing+" "+d.monitor+" "+d.se+" "+d.serious+" "+d.pearls).toLowerCase().includes(q)) hits.push({kind:"drug", item:d, tag:"drug card"}); });
-    (DATA.codes || []).forEach(g=>g.items.forEach(it=>{ if ((it.code+" "+it.desc).toLowerCase().includes(q)) hits.push({kind:"code", item:{...it, name:it.code + ", " + it.desc, body:it.desc}, tag:"code"}); }));
+    DATA.phrases.forEach(p=>{ if (NOACC(p.name+" "+(p.dot||"")+" "+p.cat+" "+p.body).includes(q)) hits.push({kind:"phrase", item:p, tag:p.dot || "phrase"}); });
+    DATA.templates.forEach(t=>{ if (NOACC(t.name+" "+t.cat+" "+t.sections.map(s=>s.title+" "+s.body).join(" ")).includes(q)) hits.push({kind:"template", item:t, tag:"template"}); });
+    DATA.picklists.forEach(l=>{ if (NOACC(l.name+" "+l.options.join(" ")).includes(q)) hits.push({kind:"picklist", item:l, tag:"pick list"}); });
+    DATA.instructions.forEach(i2=>{ if (NOACC(i2.name+" "+i2.body+" "+(i2.bodyEs||"")).includes(q)) hits.push({kind:"instruction", item:i2, tag:"instructions"}); });
+    (DATA.drugs || []).forEach(d=>{ if (NOACC(d.name+" "+d.cls+" "+d.dosing+" "+d.monitor+" "+d.se+" "+d.serious+" "+d.pearls).includes(q)) hits.push({kind:"drug", item:d, tag:"drug card"}); });
+    (DATA.codes || []).forEach(g=>g.items.forEach(it=>{ if (NOACC(it.code+" "+it.desc).includes(q)) hits.push({kind:"code", item:{...it, name:it.code + ", " + it.desc, body:it.desc}, tag:"code"}); }));
     if (!hits.length) { grid.innerHTML = '<div class="empty">No matches. Check Settings to add your own phrases.</div>'; return; }
     hits.forEach(h=>{
       const card = document.createElement("div"); card.className = "card";
@@ -5165,7 +5268,7 @@ const Launcher = {
   close(){ document.getElementById("qwrap").classList.remove("open"); },
   isOpen(){ return document.getElementById("qwrap").classList.contains("open"); },
   filter(q){
-    q = q.trim().toLowerCase().replace(/^\./, "");
+    q = NOACC(q.trim()).replace(/^\./, "");
     const pool = [];
     DATA.phrases.forEach(p=>pool.push({kind:"phrase", tag:p.dot || "", name:p.name, item:p}));
     DATA.instructions.forEach(i2=>pool.push({kind:"instruction", tag:"handout", name:i2.name, item:i2}));
@@ -5176,7 +5279,7 @@ const Launcher = {
     if (!q) hits = pool.slice(0, 8);
     else {
       const scored = pool.map(x=>{
-        const dot = x.tag.replace(/^\./, "").toLowerCase(), nm = x.name.toLowerCase();
+        const dot = NOACC(x.tag).replace(/^\./, ""), nm = NOACC(x.name);
         let s = -1;
         if (dot && dot.startsWith(q)) s = 0;
         else if (nm.startsWith(q)) s = 1;
@@ -7315,6 +7418,20 @@ const SCREEN = {
 };
 
 const CHANGELOG = [
+  {v:"4.2", d:"August 15, 2026", items:[
+    "Two Sjogren cards in their own group: pilocarpine and cevimeline, with the dosing, the contraindications that rule them out, and the sweating rates that make patients quit.",
+    "Search now ignores accents. Typing sjogren finds Sjogren, and folico finds the Spanish handout, in the search bar and the quick launcher alike."
+  ]},
+  {v:"4.1", d:"August 15, 2026", items:[
+    "Every drug card now runs a similar length. The fibromyalgia cards came down, and the older cards gained the detail they were missing: washout rules, renal and hepatic cutoffs, interactions, and what to expect and when.",
+    "Cards you edited yourself are left alone. The update only replaces text still matching what shipped, so your own wording survives.",
+    "New detail includes the methotrexate and influenza vaccine hold, sulfasalazine and folate, the leflunomide washout levels, TPMT dose cuts, voclosporin eGFR stop rules, denosumab timing, and the teriparatide lifetime cap coming off the label."
+  ]},
+  {v:"4.0", d:"August 15, 2026", items:[
+    "Six fibromyalgia drug cards in a new group. Sublingual cyclobenzaprine (Tonmya), duloxetine, milnacipran, pregabalin, amitriptyline with nortriptyline as the swap, and oral cyclobenzaprine marked off-label.",
+    "Tonmya carries the full label detail: the 14-day run-in at 2.8 mg before 5.6 mg, the caps over age 65 and in mild liver disease, the administration steps patients get wrong, and the oral numbness and taste rates from the trials.",
+    "Pregabalin names gabapentin as the cheap off-label stand-in with its dose range. Your low-dose naltrexone card stays where it was."
+  ]},
   {v:"3.9", d:"August 6, 2026", items:[
     "The taper tab counts the pills. Pick which tablet strengths you want to prescribe, and the app builds every daily dose from the fewest tablets, multiplies by the days on that dose, and totals what to dispense per strength.",
     "A half tablet toggle, off by default. Turn it on and the counter uses half tablets where they save pills, and whole tablets still win any tie.",
