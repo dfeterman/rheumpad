@@ -300,7 +300,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v4.2</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v4.5</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -342,7 +342,7 @@
 
 <main>
   <section class="tab active" id="tab-phrases">
-    <p class="tab-intro">Your SmartPhrase library. Tap a card, fill any blanks, copy, paste into your EMR. Star a phrase to pin it to the top bar.</p>
+    <p class="tab-intro">Your phrase library. Tap a card, fill any blanks, copy, paste into your EMR. Star a phrase to pin it to the top bar.</p>
     <div class="catrow" id="phrase-cats"></div>
     <div class="cardgrid" id="phrase-grid"></div>
   </section>
@@ -410,7 +410,19 @@
   </section>
 
   <section class="tab" id="tab-taper">
-    <p class="tab-intro">Build a steroid taper. Set the numbers, then change any step by hand. The dated schedule writes itself three times: once for the note, once for the patient in English, once for the patient in Spanish.</p>
+    <p class="tab-intro">Build a steroid taper. Start from a common taper or from the numbers, then change any step by hand. The dated schedule writes itself three times: once for the note, once for the patient in English, once for the patient in Spanish.</p>
+    <div class="comp-section">
+      <h4><span>Common tapers</span></h4>
+      <p class="hint" style="margin:0 0 8px;">One tap loads the whole schedule into the step table, where every row stays editable. The GCA tapers start at 60 mg, so remove the top rows for a lower start.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn" onclick="Taper.preset('pmr')">PMR</button>
+        <button class="btn" onclick="Taper.preset('gcaTcz')">GCA on tocilizumab, 26 wk</button>
+        <button class="btn" onclick="Taper.preset('gcaLong')">GCA without tocilizumab, 52 wk</button>
+        <button class="btn" onclick="Taper.preset('gout')">Gout flare burst</button>
+        <button class="btn" onclick="Taper.preset('rabridge')">RA bridge</button>
+      </div>
+      <p class="hint" id="tp-presetnote" style="margin:8px 0 0; display:none;"></p>
+    </div>
     <div class="comp-section">
       <h4><span>Start from the numbers</span></h4>
       <div class="pc-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
@@ -450,6 +462,22 @@
       <label class="hint" style="display:inline-flex; align-items:center; gap:6px; margin:0 0 10px; cursor:pointer;">
         <input id="tp-half" type="checkbox" style="width:auto; margin:0;"> Allow half tablets, for scored tablets you are willing to split</label>
       <div id="tp-pills" class="filled" style="margin:0;"></div>
+    </div>
+    <div class="comp-section">
+      <h4><span>Steroid equivalence</span><button class="btn small primary" onclick="Taper.copy('equiv')">Copy</button></h4>
+      <p class="hint" style="margin:0 0 8px;">Approximate anti-inflammatory equivalence. Round to what the tablets allow, and remember the durations of action differ.</p>
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0 0 10px;">
+        <input id="eq-dose" type="number" min="0" step="0.25" placeholder="dose" style="width:90px;">
+        <select id="eq-from">
+          <option value="prednisone">mg prednisone</option>
+          <option value="prednisolone">mg prednisolone</option>
+          <option value="methylprednisolone">mg methylprednisolone</option>
+          <option value="hydrocortisone">mg hydrocortisone</option>
+          <option value="dexamethasone">mg dexamethasone</option>
+        </select>
+        <span class="hint" style="margin:0;">equals</span>
+      </div>
+      <div id="eq-out" class="filled" style="margin:0;"></div>
     </div>
     <div id="taper-bone" style="display:none;"></div>
     <div class="comp-section"><h4><span>For the note</span><button class="btn small primary" onclick="Taper.copy('note')">Copy</button></h4>
@@ -557,10 +585,11 @@
   </section>
 
   <section class="tab" id="tab-prechart">
-    <p class="tab-intro">Tomorrow's clinic, one card per slot. No names, no identifiers: slot numbers only, matched to your schedule order. Saved in this browser until you clear the day.</p>
+    <p class="tab-intro">Tomorrow's clinic, one card per slot. No names, no identifiers: slot numbers only, matched to your schedule order. Tick the routine care items you want to remember, then print the day and check them off on paper. Saved in this browser until you clear the day.</p>
     <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
       <button class="btn primary" onclick="PC.addSlot()">+ Add patient slot</button>
       <button class="btn" onclick="PC.copyAll()">Copy full day summary</button>
+      <button class="btn" onclick="PC.print()">Print the day</button>
       <button class="btn danger" onclick="PC.clearDay()">Clear day</button>
     </div>
     <div id="dictbar"></div>
@@ -3810,6 +3839,7 @@ Bone density: {dexa:DEXA ordered today|DEXA within the last 2 years reviewed|DEX
 Calcium and vitamin D: counseled on {ca:1000|1200} mg of elemental calcium daily from diet and supplement combined, and vitamin D {vitd:600|800|1000|2000} international units daily.
 Lifestyle: weight-bearing and resistance exercise, fall risk review, and counseling on tobacco and alcohol.
 Pharmacologic therapy: {rx:none indicated at this fracture risk|oral bisphosphonate started|intravenous bisphosphonate planned|denosumab planned|teriparatide or abaloparatide planned|romosozumab planned, high or very high fracture risk with intolerance to other agents, no myocardial infarction or stroke in the last year|deferred pending bone density}.
+Sequential therapy: {seq:not planned at this time|after the teriparatide or abaloparatide course, transition to an antiresorptive (bisphosphonate or denosumab) is planned|after the 12-month romosozumab course, transition to an antiresorptive is planned|if denosumab is discontinued, transition to a bisphosphonate is planned to prevent rebound vertebral fractures}.
 Secondary causes reviewed: {sec:none identified|vitamin D deficiency|hypogonadism|primary hyperparathyroidism|malabsorption|chronic kidney disease|thyroid disease}.
 Glucocorticoid exposure will be held to the lowest effective dose for the shortest duration required to control disease. Bone density will be reassessed every 1 to 2 years while glucocorticoid treatment continues.`},
 
@@ -4024,7 +4054,7 @@ G: {
 
 };
 
-(function(){ DEFAULT_DATA.version = 21; })();
+(function(){ DEFAULT_DATA.version = 22; })();
 // ====================== CORE ======================
 const KEY = "rheumpad_v1";
 let DATA, FAVS, PRECHART, META = {};
@@ -4123,6 +4153,16 @@ function loadState(){
         const gp2 = (DATA.phrases || []).find(x=>x.id === "p-giop-plan");
         if (gp2 && gp2.body && gp2.body.indexOf("romosozumab") < 0 && gp2.body.indexOf(oldRx) >= 0) {
           gp2.body = gp2.body.split(oldRx).join(newRx);
+        }
+      }
+      // v21 -> v22: the bone protection phrase gains a sequential therapy line with the
+      // follow-on agent as a dropdown. Insert only into a stored copy that still carries
+      // the shipped anchor and does not already mention sequential therapy.
+      if ((stored.seededVersion || 1) < 22) {
+        const anchor = "deferred pending bone density}.\nSecondary causes reviewed:";
+        const gp3 = (DATA.phrases || []).find(x=>x.id === "p-giop-plan");
+        if (gp3 && gp3.body && gp3.body.indexOf("Sequential therapy") < 0 && gp3.body.indexOf(anchor) >= 0) {
+          gp3.body = gp3.body.split(anchor).join("deferred pending bone density}.\nSequential therapy: {seq:not planned at this time|after the teriparatide or abaloparatide course, transition to an antiresorptive (bisphosphonate or denosumab) is planned|after the 12-month romosozumab course, transition to an antiresorptive is planned|if denosumab is discontinued, transition to a bisphosphonate is planned to prevent rebound vertebral fractures}.\nSecondary causes reviewed:");
         }
       }
       // v17 -> v18: the folic acid dose was hard-coded at 1 mg daily in the methotrexate
@@ -6159,8 +6199,68 @@ const Taper = {
     host.textContent = out.join("\n");
   },
 
+  // Common prednisone schedules, loaded into the editable step table. wk() and d()
+  // expand a dose list into rows so the tables below stay readable.
+  PRESETS: (function(){
+    const wk = (doses, n)=>doses.map(dose=>({dose: dose, n: n, unit: "weeks"}));
+    const d = (doses, n)=>doses.map(dose=>({dose: dose, n: n, unit: "days"}));
+    return {
+      pmr: {name: "PMR",
+        note: "20 mg daily, down 2.5 mg every 2 weeks to 10 mg, then down 1 mg every 4 weeks. About 11 months, per the 2015 ACR/EULAR PMR approach of reaching 10 mg by 4 to 8 weeks and then slowing down.",
+        rows: wk([20, 17.5, 15, 12.5], 2).concat(wk([10, 9, 8, 7, 6, 5, 4, 3, 2, 1], 4))},
+      gcaTcz: {name: "GCA on tocilizumab, 26-week",
+        note: "The GiACTA rapid taper from 60 mg: weekly steps to 20, then 15, then 12.5 for 2 weeks, then 1 mg weekly steps to 6, then 1 mg steps every 2 weeks to zero. Verify against your protocol, and remove the top rows if the start was below 60.",
+        rows: wk([60, 50, 40, 35, 30, 25, 20, 15], 1).concat(wk([12.5], 2), wk([10, 9, 8, 7, 6], 1), wk([5, 4, 3, 2, 1], 2))},
+      gcaLong: {name: "GCA without tocilizumab, 52-week",
+        note: "The GiACTA long taper from 60 mg: weekly steps to 20, then 17.5, 15, and 12.5 for 2 weeks each, then 1 mg steps every 4 weeks to zero. Runs about a year from a 60 mg start. Verify against your protocol.",
+        rows: wk([60, 50, 40, 35, 30, 25, 20], 1).concat(wk([17.5, 15, 12.5], 2), wk([10, 9, 8, 7, 6, 5, 4, 3, 2, 1], 4))},
+      gout: {name: "Gout flare burst",
+        note: "Prednisone 40 mg daily for 5 days, then stop. No taper needed at this duration. Adjust the dose row for weight or diabetes.",
+        rows: d([40], 5)},
+      rabridge: {name: "RA bridge",
+        note: "A bridging taper while the DMARD starts working: 15 mg stepping down every 2 weeks, done by 10 weeks. Edit the start row down for milder disease.",
+        rows: wk([15, 10, 7.5, 5, 2.5], 2)}
+    };
+  })(),
+  preset(key){
+    const P = this.PRESETS[key];
+    if (!P) return;
+    if (this.custom && this.rows.length && !confirm("Replace the current schedule with the " + P.name + " taper?")) return;
+    document.getElementById("tp-drug").value = "prednisone";
+    document.getElementById("tp-target").value = "0";
+    document.getElementById("tp-holdlen").value = "";
+    this.rows = P.rows.map(r=>({dose: r.dose, n: r.n, unit: r.unit}));
+    this.markCustom();
+    const pn = document.getElementById("tp-presetnote");
+    if (pn) { pn.style.display = ""; pn.textContent = P.name + ": " + P.note; }
+    this.strengthsFor("prednisone");
+    this.renderSteps();
+    this.paint();
+    toast(P.name + " taper loaded");
+  },
+
+  // Anti-inflammatory equivalence: hydrocortisone 20 = prednisone 5 = prednisolone 5
+  // = methylprednisolone 4 = dexamethasone 0.75. Approximate by design.
+  EQUIV: {prednisone: 5, prednisolone: 5, methylprednisolone: 4, hydrocortisone: 20, dexamethasone: 0.75},
+  fmtMg(v){
+    const r = v >= 10 ? Math.round(v) : Math.round(v * 100) / 100;
+    return String(r);
+  },
+  equiv(){
+    const host = document.getElementById("eq-out");
+    if (!host) return;
+    const dose = parseFloat((document.getElementById("eq-dose") || {}).value);
+    const from = (document.getElementById("eq-from") || {}).value;
+    if (!(dose > 0) || !this.EQUIV[from]) { host.textContent = ""; return; }
+    const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+    const parts = Object.keys(this.EQUIV).filter(k=>k !== from)
+      .map(k=>k + " " + this.fmtMg(dose * this.EQUIV[k] / this.EQUIV[from]) + " mg");
+    host.textContent = cap(from) + " " + this.fmtMg(dose) + " mg is approximately " + parts.join(", ") +
+      ". Anti-inflammatory equivalence only. Durations of action differ, so this is not a taper schedule.";
+  },
+
   copy(which){
-    const ids = {note: "taper-note", ptes: "taper-pt-es", pills: "tp-pills", pt: "taper-pt"};
+    const ids = {note: "taper-note", ptes: "taper-pt-es", pills: "tp-pills", pt: "taper-pt", equiv: "eq-out"};
     const el = document.getElementById(ids[which] || ids.pt);
     if (!el || !el.textContent || el.textContent.startsWith("Enter a start")) { toast("Fill the taper fields first"); return; }
     copyText(el.textContent);
@@ -6174,6 +6274,10 @@ const Taper = {
     ["tp-holdlen","tp-holdunit","tp-after","tp-half"].forEach(id=>{
       const el = document.getElementById(id);
       if (el) el.addEventListener("input", ()=>this.paint());
+    });
+    ["eq-dose","eq-from"].forEach(id=>{
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", ()=>this.equiv());
     });
     this.build();
   }
@@ -6221,11 +6325,73 @@ const Dict = {
 
 // ====================== PRE-CHART ======================
 const PC = {
+  // Health maintenance the disease visit swallows. Ticking an item files it under the
+  // slot, and the printed day sheet turns every ticked item into an empty box.
+  ROUTINE: [
+    {g:"Vaccines & drug safety", items:[
+      {id:"flu", t:"Flu vaccine", cad:"yearly"},
+      {id:"covid", t:"COVID vaccine current", cad:"per schedule"},
+      {id:"shing", t:"Shingrix, both doses", cad:"once"},
+      {id:"pneu", t:"Pneumococcal for age and immunosuppression", cad:"once"},
+      {id:"rsv", t:"RSV vaccine if eligible", cad:"once"},
+      {id:"tb", t:"TB screen before or on a biologic", cad:"baseline, then by risk"},
+      {id:"dmardlabs", t:"DMARD monitoring labs due", cad:"every visit"},
+      {id:"eye", t:"Eye exam on hydroxychloroquine", cad:"yearly after 5 years"},
+      {id:"preg", t:"Contraception and pregnancy plan on a teratogen", cad:"every visit"}
+    ]},
+    {g:"Cardiometabolic", items:[
+      {id:"bp", t:"Blood pressure", cad:"every visit"},
+      {id:"wt", t:"Weight or BMI", cad:"every visit"},
+      {id:"lipid", t:"Lipid panel", cad:"yearly"},
+      {id:"a1c", t:"A1c or glucose, higher yield on steroids", cad:"yearly"},
+      {id:"smoke", t:"Smoking status and a cessation offer", cad:"every visit"}
+    ]},
+    {g:"Bone & cancer screening", items:[
+      {id:"dexa", t:"DEXA due, interval by risk", cad:"1 to 2 years"},
+      {id:"vitd", t:"Vitamin D level and replacement", cad:"yearly"},
+      {id:"calcium", t:"Calcium intake", cad:"yearly"},
+      {id:"falls", t:"Falls and fracture history", cad:"yearly"},
+      {id:"mammo", t:"Mammogram current", cad:"per guideline"},
+      {id:"colon", t:"Colon cancer screening current", cad:"per guideline"},
+      {id:"cervix", t:"Cervical screening current", cad:"per guideline"},
+      {id:"skin", t:"Skin check on azathioprine or a TNF blocker", cad:"yearly"}
+    ]},
+    {g:"Lifestyle & mood", items:[
+      {id:"exercise", t:"Exercise, minutes a week", cad:"every visit"},
+      {id:"sleep", t:"Sleep and apnea symptoms", cad:"yearly"},
+      {id:"alcohol", t:"Alcohol intake", cad:"yearly"},
+      {id:"diet", t:"Diet pattern", cad:"yearly"},
+      {id:"mood", t:"Depression or anxiety screen", cad:"yearly"}
+    ]}
+  ],
+  _open: {},
+  routineItem(id){ for (const g of this.ROUTINE) { const it = g.items.find(x=>x.id === id); if (it) return it; } return null; },
+  // Always reads back in list order, whatever order the chips were tapped in.
+  routineText(s){
+    const on = s.routine || [];
+    const out = [];
+    this.ROUTINE.forEach(g=>g.items.forEach(it=>{ if (on.includes(it.id)) out.push(it.t); }));
+    return out;
+  },
+  toggleRoutine(i, id){
+    const s = PRECHART[i]; s.routine = s.routine || [];
+    const ix = s.routine.indexOf(id);
+    ix >= 0 ? s.routine.splice(ix, 1) : s.routine.push(id);
+    saveState(); this.render();
+  },
+  everyVisit(i){
+    const s = PRECHART[i]; s.routine = s.routine || [];
+    this.ROUTINE.forEach(g=>g.items.forEach(it=>{ if (it.cad === "every visit" && !s.routine.includes(it.id)) s.routine.push(it.id); }));
+    saveState(); this.render(); toast("Every-visit items ticked");
+  },
+  clearRoutine(i){ PRECHART[i].routine = []; saveState(); this.render(); },
+  toggleOpen(i){ this._open[i] = !this._open[i]; this.render(); },
+
   LABS: ["CBC","CMP","ESR","CRP","uric acid","dsDNA / C3 C4","UA protein","drug level","imaging result","DEXA"],
   TASKS: ["refills due","order labs","order imaging","prior auth","DEXA due","vaccines","injection likely","discuss taper","discuss escalation","PT referral"],
   VISITS: ["Follow-up","New consult","Med check","Infusion","Procedure"],
   addSlot(){
-    PRECHART.push({visit:"Follow-up", dx:"", points:"", labs:[], meds:"", questions:"", tasks:[]});
+    PRECHART.push({visit:"Follow-up", dx:"", points:"", labs:[], meds:"", questions:"", tasks:[], routine:[]});
     saveState(); this.render();
   },
   removeSlot(i){ PRECHART.splice(i,1); saveState(); this.render(); },
@@ -6240,9 +6406,42 @@ const PC = {
     if (s.meds) lines.push("Verify meds: " + s.meds);
     if (s.questions) lines.push("Ask: " + s.questions);
     if (s.tasks.length) lines.push("Tasks: " + s.tasks.join(", "));
+    const rt = this.routineText(s);
+    if (rt.length) lines.push("Routine care: " + rt.join(", "));
     return lines.join("\n");
   },
   copySlot(i){ copyText(this.slotText(PRECHART[i], i)); },
+
+  // The day, on paper, with every ticked routine item as an empty box to check off.
+  print(){
+    if (!PRECHART.length) { toast("No slots yet"); return; }
+    const lines = [];
+    PRECHART.forEach((s, i)=>{
+      lines.push("PATIENT " + (i+1) + ".   " + s.visit + (s.dx ? "   |   " + s.dx : ""));
+      if (s.points) lines.push("    Key points: " + s.points);
+      if (s.labs.length) lines.push("    Review: " + s.labs.join(", "));
+      if (s.meds) lines.push("    Meds: " + s.meds);
+      if (s.questions) lines.push("    Ask: " + s.questions);
+      if (s.tasks.length) lines.push("    Tasks: " + s.tasks.join(", "));
+      const rt = this.routineText(s);
+      if (rt.length) {
+        lines.push("    Routine care");
+        rt.forEach(t=>lines.push("      [  ]  " + t));
+      }
+      lines.push("");
+      lines.push("");
+    });
+    document.getElementById("pr-title").textContent = "Clinic checklist";
+    document.getElementById("pr-clinic").textContent =
+      (DATA.clinic ? DATA.clinic + "   |   " : "") + new Date().toLocaleDateString() +
+      "   |   slot numbers only, matched to your schedule order";
+    const pre = document.getElementById("pr-body");
+    pre.textContent = lines.join("\n");
+    pre.style.fontSize = "10.5pt"; pre.style.lineHeight = "1.45";
+    document.getElementById("pr-foot").textContent =
+      "No identifiers print from RheumPad. Once you write on this sheet it becomes a patient record, so shred it at the end of the day.";
+    window.print();
+  },
   copyAll(){
     if (!PRECHART.length) { toast("No slots yet"); return; }
     copyText(PRECHART.map((s,i)=>this.slotText(s,i)).join("\n\n"));
@@ -6314,6 +6513,57 @@ const PC = {
       meds.oninput = ()=>{ s.meds = meds.value; saveState(); };
       grid.appendChild(mkField("Meds to verify", meds, true));
       card.appendChild(grid);
+
+      // Routine care. Collapsed to the ticked items so a 12-slot day stays readable.
+      s.routine = s.routine || [];
+      const rt = document.createElement("div");
+      rt.style.cssText = "border-top:1px solid var(--line); margin-top:10px; padding-top:9px;";
+      const rhead = document.createElement("div");
+      rhead.style.cssText = "display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:7px;";
+      const rlab = document.createElement("b"); rlab.style.cssText = "font-size:13px;"; rlab.textContent = "Routine care";
+      const rcount = document.createElement("span"); rcount.className = "hint"; rcount.style.margin = "0";
+      rcount.textContent = s.routine.length ? s.routine.length + " to check" : "nothing flagged";
+      const open = !!this._open[i];
+      const rtog = document.createElement("button"); rtog.className = "btn small"; rtog.textContent = open ? "Hide the list" : "Show the list";
+      rtog.onclick = ()=>this.toggleOpen(i);
+      rhead.appendChild(rlab); rhead.appendChild(rcount); rhead.appendChild(rtog);
+      if (open) {
+        const ev = document.createElement("button"); ev.className = "btn small"; ev.textContent = "Tick every-visit items";
+        ev.onclick = ()=>this.everyVisit(i);
+        rhead.appendChild(ev);
+      }
+      if (s.routine.length) {
+        const cl = document.createElement("button"); cl.className = "btn small"; cl.textContent = "Clear";
+        cl.onclick = ()=>this.clearRoutine(i);
+        rhead.appendChild(cl);
+      }
+      rt.appendChild(rhead);
+      if (open) {
+        this.ROUTINE.forEach(g=>{
+          const gl = document.createElement("div"); gl.className = "hint";
+          gl.style.cssText = "margin:6px 0 4px; font-weight:600;"; gl.textContent = g.g;
+          rt.appendChild(gl);
+          const row = document.createElement("div"); row.className = "pc-chips";
+          g.items.forEach(it=>{
+            const c = document.createElement("button");
+            c.className = "chip" + (s.routine.includes(it.id) ? " on" : "");
+            c.textContent = it.t; c.title = it.cad;
+            c.onclick = ()=>this.toggleRoutine(i, it.id);
+            row.appendChild(c);
+          });
+          rt.appendChild(row);
+        });
+      } else if (s.routine.length) {
+        const row = document.createElement("div"); row.className = "pc-chips";
+        this.routineText(s).forEach(t=>{
+          const c = document.createElement("button"); c.className = "chip on"; c.textContent = t;
+          c.onclick = ()=>this.toggleOpen(i);
+          row.appendChild(c);
+        });
+        rt.appendChild(row);
+      }
+      card.appendChild(rt);
+
       const acts = document.createElement("div"); acts.className = "pc-actions";
       const cp = document.createElement("button"); cp.className = "btn small primary"; cp.textContent = "Copy prep summary";
       cp.onclick = ()=>this.copySlot(i);
@@ -7418,6 +7668,21 @@ const SCREEN = {
 };
 
 const CHANGELOG = [
+  {v:"4.5", d:"August 22, 2026", items:[
+    "Common tapers load in one tap: PMR (20 mg down 2.5 every 2 weeks to 10, then 1 mg monthly), the GiACTA 26-week taper for GCA on tocilizumab, the 52-week taper without tocilizumab, a 5-day gout flare burst, and an RA bridging taper.",
+    "Each preset fills the step table, so every row stays editable and the pill count, the note, and both patient instructions follow. A note under the buttons states the source and what to verify.",
+    "Loading a preset over a hand-built schedule asks first."
+  ]},
+  {v:"4.4", d:"August 22, 2026", items:[
+    "The bone protection phrase gains a sequential therapy line. Pick the transition in one dropdown: antiresorptive after teriparatide or abaloparatide, antiresorptive after the romosozumab year, or bisphosphonate after denosumab to prevent rebound fractures.",
+    "A steroid equivalence converter on the taper tab. Type a dose, pick the drug, and read the approximate equivalent in the other four. Numbers only, and the output says plainly this is not a taper schedule.",
+    "The phrases tab intro now says phrase library instead of SmartPhrase, which was Epic branding."
+  ]},
+  {v:"4.3", d:"August 15, 2026", items:[
+    "Pre-chart slots carry a routine care checklist: vaccines and drug safety, cardiometabolic, bone and cancer screening, lifestyle and mood. Tick what each slot needs and the count shows on the card.",
+    "Print the day. Every slot prints with its prep summary and every ticked routine item as an empty box to check off during the visit. Slot numbers only, no identifiers.",
+    "Tick every-visit items fills in the standing set in one tap. The routine list also rides along in the copied prep summary."
+  ]},
   {v:"4.2", d:"August 15, 2026", items:[
     "Two Sjogren cards in their own group: pilocarpine and cevimeline, with the dosing, the contraindications that rule them out, and the sweating rates that make patients quit.",
     "Search now ignores accents. Typing sjogren finds Sjogren, and folico finds the Spanish handout, in the search bar and the quick launcher alike."
