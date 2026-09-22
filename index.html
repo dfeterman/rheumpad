@@ -300,7 +300,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v4.5</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v4.8</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -688,10 +688,16 @@
     <div class="set-block">
       <h3>Your library <span id="storagebadge"></span></h3>
       <p class="hint">Everything you edit here saves in this browser automatically. Use <b>Export</b> (top right) to back your library up to a file, and <b>Import</b> to load it on another computer. Do this whenever you make big edits: clinic workstations sometimes wipe browser data.</p>
-      <p class="hint">Blank syntax for phrase and template bodies: <code class="syn">{dose}</code> makes a fill-in box, <code class="syn">{severity:mild|moderate|severe}</code> makes a dropdown, <code class="syn">***</code> makes a generic blank, same as Epic. Put a <code class="syn">~</code> in front of the first option, as in <code class="syn">{dose:~1 mg daily|2 mg daily}</code>, and the list becomes a typable box that suggests those values and accepts anything else.</p>
+      <p class="hint">Blank syntax for phrase and template bodies: <code class="syn">{dose}</code> makes a fill-in box, <code class="syn">{severity:mild|moderate|severe}</code> makes a dropdown, <code class="syn">***</code> makes a generic blank, which copies as [brackets] or *** depending on the marker you choose below. Put a <code class="syn">~</code> in front of the first option, as in <code class="syn">{dose:~1 mg daily|2 mg daily}</code>, and the list becomes a typable box that suggests those values and accepts anything else.</p>
       <div class="ed-form" style="max-width:420px; margin-top:6px;">
         <div><label>Clinic name printed on patient handouts</label>
         <input type="text" id="set-clinic" placeholder="e.g. Valley Rheumatology Clinic"></div>
+        <div style="margin-top:10px;"><label>Blank marker in copied text</label>
+        <select id="set-blank">
+          <option value="brackets">[brackets], for Meditech</option>
+          <option value="stars">***, for Epic</option>
+        </select>
+        <p class="hint" style="margin:6px 0 0;">Every empty box and every generic blank copies as this marker. Meditech tabs through [bracketed] fields, Epic through ***. Printed handouts use blank lines either way.</p></div>
       </div>
     </div>
     <div class="set-block">
@@ -4054,7 +4060,859 @@ G: {
 
 };
 
-(function(){ DEFAULT_DATA.version = 22; })();
+
+// ====================== WORK ACCOMMODATION AND EXCUSE LETTERS ======================
+// Letters carry no name field anywhere. The patient is "this patient" throughout,
+// and the name attaches inside the EMR after pasting, where it belongs.
+(function(){
+DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
+
+{id:"p-let-gen", name:"Work accommodations letter, general", dot:".letgen", cat:"Letters", body:
+`To whom it may concern:
+
+I am the treating rheumatologist for this patient, who is under my care for {diagnosis}. Active rheumatologic disease meaningfully impairs work capacity. Higher disease activity and reduced physical function are independently associated with difficulty fulfilling working hours, reduced on-the-job productivity, increased sick leave, and work disability. A temporary adjustment allows the patient to remain employed and productive while disease activity is brought under control, and is consistent with the treatment goal of preserving the ability to work.
+
+For a period of approximately {duration:~6 months|1 month|2 months|3 months|4 months|9 months|12 months}, with reassessment thereafter, I recommend the following:
+- Reduced schedule: part-time hours of up to {hours:~30|16|20|24|25|32|36|40} hours weekly, with flexibility in start and end times to accommodate {symptom:morning stiffness|fatigue|morning stiffness and fatigue}.
+- Rest and movement breaks: the ability to change position and take short breaks to avoid prolonged sitting or standing.
+- Ergonomic workstation: a supportive chair and appropriately positioned equipment.
+- Flexibility for medical appointments: time to attend rheumatology visits, physical therapy, and treatment monitoring.
+- Limitation of heavy manual tasks: avoidance of heavy lifting and repetitive strenuous physical activity.
+
+These measures are medically necessary at this time. The need for accommodation is expected to lessen as disease control improves, and work capacity will be re-evaluated at follow-up. Remove any line above that does not apply to this patient's role.
+
+Please contact my office if additional information is required.
+
+Sincerely,`},
+
+{id:"p-let-axspa", name:"Work accommodations letter, axial spondyloarthritis", dot:".letaxspa", cat:"Letters", body:
+`To whom it may concern:
+
+I am the treating rheumatologist for this patient, who is under my care for active axial spondyloarthritis. Active spondyloarthritis meaningfully impairs work capacity. Higher disease activity and reduced physical function are independently associated with difficulty fulfilling working hours, reduced on-the-job productivity, increased sick leave, and work disability. A temporary reduction in hours allows the patient to remain employed and productive while disease activity is being controlled, and is consistent with the treatment goal of preserving the ability to work.
+
+For a period of approximately {duration:~6 months|1 month|2 months|3 months|4 months|9 months|12 months}, with reassessment thereafter, I recommend the following:
+- Reduced schedule: part-time hours of up to {hours:~30|16|20|24|25|32|36|40} hours weekly, with flexibility in start and end times to accommodate morning stiffness.
+- Rest and movement breaks: the ability to change position and take short breaks to avoid prolonged sitting or standing.
+- Ergonomic workstation: a supportive chair and appropriately positioned equipment to reduce sustained spinal loading.
+- Flexibility for medical appointments: time to attend rheumatology visits, physiotherapy, and treatment monitoring.
+- Limitation of heavy manual tasks: avoidance of heavy lifting and repetitive strenuous physical activity.
+
+These measures are medically necessary at this time. The need for accommodation is expected to lessen as disease control improves, and work capacity will be re-evaluated at follow-up.
+
+Please contact my office if additional information is required.
+
+Sincerely,`},
+
+{id:"p-let-ra", name:"Work accommodations letter, rheumatoid arthritis", dot:".letra", cat:"Letters", body:
+`To whom it may concern:
+
+I am the treating rheumatologist for this patient, who is under my care for active rheumatoid arthritis. Active rheumatoid arthritis meaningfully impairs work capacity, particularly for tasks requiring sustained or forceful use of the hands and wrists. Higher disease activity is independently associated with reduced productivity, increased sick leave, and permanent work disability, and disease flares are unpredictable. Early workplace accommodation is associated with staying employed, which is a goal of treatment.
+
+For a period of approximately {duration:~6 months|1 month|2 months|3 months|4 months|9 months|12 months}, with reassessment thereafter, I recommend the following:
+- Reduced schedule: part-time hours of up to {hours:~30|16|20|24|25|32|36|40} hours weekly, with a later start time to accommodate morning stiffness.
+- Limitation of repetitive gripping, pinching, and forceful hand tasks, with task rotation where possible.
+- Ergonomic aids: keyboard and mouse alternatives, voice recognition software, or padded grips as the role allows.
+- Rest breaks to change position and offload inflamed joints.
+- Flexibility for medical appointments: time to attend rheumatology visits, laboratory monitoring, and infusions where applicable.
+- Limitation of heavy manual tasks: avoidance of heavy lifting and repetitive strenuous physical activity.
+
+These measures are medically necessary at this time. The need for accommodation is expected to lessen as disease control improves, and work capacity will be re-evaluated at follow-up.
+
+Please contact my office if additional information is required.
+
+Sincerely,`},
+
+{id:"p-let-sle", name:"Work accommodations letter, lupus", dot:".letsle", cat:"Letters", body:
+`To whom it may concern:
+
+I am the treating rheumatologist for this patient, who is under my care for systemic lupus erythematosus. Active lupus meaningfully impairs work capacity through fatigue, musculoskeletal symptoms, and unpredictable flares, and ultraviolet light exposure is an established flare trigger. Accommodation allows the patient to remain employed and productive while disease activity is brought under control, which is a goal of treatment.
+
+For a period of approximately {duration:~6 months|1 month|2 months|3 months|4 months|9 months|12 months}, with reassessment thereafter, I recommend the following:
+- Reduced schedule: part-time hours of up to {hours:~30|16|20|24|25|32|36|40} hours weekly, with flexibility to pace tasks around fatigue.
+- Limitation of direct sun and ultraviolet exposure: indoor duties where possible, and shade, protective clothing, and sunscreen breaks for any outdoor work.
+- Rest breaks: short scheduled breaks rather than a single long one, which manages fatigue better.
+- Flexibility during flares: temporary remote work or schedule adjustment when symptoms escalate.
+- Flexibility for medical appointments: time to attend rheumatology visits and laboratory monitoring.
+- Infection precautions: this patient takes immunosuppressive medication, so reasonable distancing from actively ill coworkers is appropriate.
+
+These measures are medically necessary at this time. The need for accommodation is expected to lessen as disease control improves, and work capacity will be re-evaluated at follow-up.
+
+Please contact my office if additional information is required.
+
+Sincerely,`},
+
+{id:"p-let-excuse", name:"Work or school excuse note", dot:".letexcuse", cat:"Letters", body:
+`To whom it may concern:
+
+This letter confirms that this patient was evaluated in my rheumatology clinic on {visit date}. Due to {reason:an active flare of their rheumatologic condition|a medical appointment and treatment|a treatment side effect requiring recovery time}, I recommend {rec:excusal from work|excusal from work or school|modified duties} for {time:~2 days|1 day|3 days|5 days|1 week|2 weeks}, with return {return:without restriction|with previously outlined accommodations|after reassessment in clinic}.
+
+Please contact my office if additional information is required.
+
+Sincerely,`}
+
+]);
+})();
+
+
+// ====================== ABNORMAL MSK EXAM + IN-DEPTH START SHEETS ======================
+(function(){
+DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
+{id:"p-mskabn", name:"Abnormal MSK exam", dot:".mskabn", cat:"Exam & ROS", body:
+`MSK: Hands and wrists: {hands:no synovitis, full range of motion|synovitis of the MCPs bilaterally|synovitis of the MCPs and PIPs bilaterally|synovitis of the right MCPs|synovitis of the left MCPs|synovitis of the wrists bilaterally|synovitis of the right wrist|synovitis of the left wrist|tenderness without synovitis|Heberden and Bouchard nodes with bony enlargement, no synovitis|ulnar deviation and swan neck deformities|reduced grip strength bilaterally}. Elbows: {elbows:normal|synovitis of the right elbow|synovitis of the left elbow|synovitis bilaterally|lateral epicondyle tenderness|loss of full extension}. Shoulders: {shoulders:normal|painful limited range of motion bilaterally|painful limited range of motion on the right|painful limited range of motion on the left|subacromial tenderness}. Hips: {hips:normal|painful internal rotation on the right|painful internal rotation on the left|painful internal rotation bilaterally|trochanteric tenderness}. Knees: {knees:normal|effusion of the right knee|effusion of the left knee|effusions bilaterally|synovitis without effusion|crepitus with bony enlargement|flexion contracture}. Ankles and feet: {feet:normal|synovitis of the ankles bilaterally|synovitis of the right ankle|synovitis of the left ankle|MTP synovitis bilaterally|MTP squeeze tenderness|first MTP erythema and tenderness consistent with gout}. Spine: {spine:normal range of motion, nontender|reduced lumbar flexion, Schober under 4 cm|reduced cervical rotation|paraspinal tenderness|sacroiliac joint tenderness|kyphosis with reduced chest expansion}. Enthesitis: {enth:none|Achilles insertion tenderness|plantar fascia tenderness|Achilles and plantar fascia tenderness|lateral epicondyle enthesitis}. Dactylitis: {dact:none|one finger|one toe|more than one digit}. Strength: {strength:5/5 proximally and distally|4/5 proximal weakness, symmetric|4/5 hip flexor weakness|unable to rise from a chair without using the arms|3/5 proximal weakness}. Gait: {gait:normal|antalgic|antalgic, favoring the right|antalgic, favoring the left|uses a cane|waddling}. Tender joint count {tjc}, swollen joint count {sjc}. {additional findings}`}
+]);
+
+DEFAULT_DATA.instructions = DEFAULT_DATA.instructions.concat([
+{id:"i6-mtx", name:"Starting methotrexate: full guide", body:
+`STARTING METHOTREXATE: FULL GUIDE
+
+WHAT IT DOES
+Methotrexate calms an overactive immune system. It reduces pain and swelling and slows joint damage. The dose used for arthritis is far lower than the dose used for cancer. It works slowly. Expect 6 to 12 weeks before you notice a difference.
+
+HOW TO TAKE IT
+- Take {dose} ONCE A WEEK, on the same day every week. Never take it daily.
+- Take folic acid {folic acid:~1 mg every day|2 mg every day|5 mg once a week|1 mg every day except the methotrexate day} to reduce side effects.
+- If pills upset your stomach, tell us. The injection form causes less nausea.
+
+BEFORE YOU START
+- Your blood work, hepatitis tests, and chest imaging must be done first.
+- Tell us about liver disease, kidney disease, lung disease, or plans for pregnancy.
+
+WHAT TO EXPECT
+- Tiredness or nausea the day after your dose is common and usually fades over 1 to 2 months.
+- Mild hair thinning and mouth sores can happen. Folic acid helps.
+
+ALCOHOL AND PREGNANCY
+- Keep alcohol to a minimum. More than 1 to 2 drinks a week raises the chance of liver harm.
+- Do not become pregnant or father a child on this medication. Stop it 3 months before trying. Use reliable birth control.
+
+LABS AND VACCINES
+- Blood tests every 4 to 8 weeks for the first 3 months, then every 3 months.
+- Ask before any vaccine. Get the flu shot yearly.
+- Do not take trimethoprim-sulfamethoxazole (Bactrim) with methotrexate. Tell every clinician and pharmacist you take methotrexate.
+
+CALL THE OFFICE FOR
+- Fever, chills, or an infection that will not clear.
+- New cough or shortness of breath.
+- Yellow skin or eyes, dark urine, easy bruising, or severe mouth sores.`,
+bodyEs:
+`COMENZANDO METOTREXATO: GUÍA COMPLETA
+
+QUÉ HACE
+El metotrexato calma un sistema inmunitario demasiado activo. Reduce el dolor y la hinchazón y frena el daño en las articulaciones. La dosis para la artritis es mucho menor que la dosis para el cáncer. Actúa despacio. Espere de 6 a 12 semanas para notar una diferencia.
+
+CÓMO TOMARLO
+- Tome {dosis} UNA VEZ POR SEMANA, el mismo día cada semana. Nunca lo tome a diario.
+- Tome ácido fólico {ácido fólico:~1 mg todos los días|2 mg todos los días|5 mg una vez por semana|1 mg todos los días excepto el día del metotrexato} para reducir los efectos secundarios.
+- Si las pastillas le caen mal al estómago, avísenos. La inyección causa menos náuseas.
+
+ANTES DE EMPEZAR
+- Sus análisis de sangre, pruebas de hepatitis e imagen del pecho deben estar hechos primero.
+- Cuéntenos si tiene enfermedad del hígado, de los riñones o de los pulmones, o planes de embarazo.
+
+QUÉ ESPERAR
+- Cansancio o náuseas el día después de la dosis es común y suele pasar en 1 a 2 meses.
+- Puede haber leve caída de cabello y llagas en la boca. El ácido fólico ayuda.
+
+ALCOHOL Y EMBARAZO
+- Tome muy poco alcohol. Más de 1 o 2 bebidas por semana aumenta el riesgo de daño al hígado.
+- No se embarace ni engendre un hijo con este medicamento. Suspéndalo 3 meses antes de intentarlo. Use un método anticonceptivo confiable.
+
+ANÁLISIS Y VACUNAS
+- Análisis de sangre cada 4 a 8 semanas los primeros 3 meses, y luego cada 3 meses.
+- Pregunte antes de cualquier vacuna. Póngase la vacuna de la gripe cada año.
+- No tome trimetoprim-sulfametoxazol (Bactrim) con metotrexato. Diga a cada médico y farmacéutico que toma metotrexato.
+
+LLAME AL CONSULTORIO SI TIENE
+- Fiebre, escalofríos o una infección que no mejora.
+- Tos nueva o falta de aire.
+- Piel u ojos amarillos, orina oscura, moretones fáciles o llagas graves en la boca.`},
+
+{id:"i6-lef", name:"Starting leflunomide: full guide", body:
+`STARTING LEFLUNOMIDE (ARAVA): FULL GUIDE
+
+WHAT IT DOES
+Leflunomide calms the immune system and slows joint damage in rheumatoid and psoriatic arthritis. It works about as well as methotrexate. Expect 6 to 12 weeks for the full effect.
+
+HOW TO TAKE IT
+- Take {dose} once a day, with or without food.
+- Take it at the same time each day.
+
+WHAT TO EXPECT
+- Loose stools or diarrhea in the first weeks. This often settles. Tell us if it does not.
+- Mild hair thinning and a small rise in blood pressure can happen.
+
+PREGNANCY, A MUST-READ
+- This medicine stays in the body for up to 2 years after stopping.
+- Do not become pregnant while taking it. Use reliable birth control.
+- If you plan a pregnancy, we can wash the drug out in 11 days with a medicine called cholestyramine, then check two blood levels. Ask us before trying.
+
+LABS
+- Blood tests every 4 weeks for the first 6 months, then every 2 to 3 months.
+- We check your blood pressure at each visit.
+
+ALCOHOL
+- Keep alcohol to a minimum to protect your liver.
+
+CALL THE OFFICE FOR
+- Fever or an infection that will not clear.
+- Yellow skin or eyes, dark urine, or pain under the right ribs.
+- New numbness or tingling in the feet or hands.
+- New cough or shortness of breath.`,
+bodyEs:
+`COMENZANDO LEFLUNOMIDA (ARAVA): GUÍA COMPLETA
+
+QUÉ HACE
+La leflunomida calma el sistema inmunitario y frena el daño en las articulaciones en la artritis reumatoide y psoriásica. Funciona casi igual que el metotrexato. Espere de 6 a 12 semanas para el efecto completo.
+
+CÓMO TOMARLA
+- Tome {dosis} una vez al día, con o sin comida.
+- Tómela a la misma hora cada día.
+
+QUÉ ESPERAR
+- Heces sueltas o diarrea en las primeras semanas. Esto suele mejorar. Avísenos si no mejora.
+- Puede haber leve caída de cabello y una pequeña subida de la presión arterial.
+
+EMBARAZO, LEA ESTO
+- Este medicamento se queda en el cuerpo hasta 2 años después de suspenderlo.
+- No se embarace mientras lo toma. Use un método anticonceptivo confiable.
+- Si planea un embarazo, podemos eliminar el medicamento en 11 días con una medicina llamada colestiramina, y luego revisar dos niveles en sangre. Pregúntenos antes de intentarlo.
+
+ANÁLISIS
+- Análisis de sangre cada 4 semanas los primeros 6 meses, y luego cada 2 a 3 meses.
+- Revisamos su presión arterial en cada visita.
+
+ALCOHOL
+- Tome muy poco alcohol para proteger su hígado.
+
+LLAME AL CONSULTORIO SI TIENE
+- Fiebre o una infección que no mejora.
+- Piel u ojos amarillos, orina oscura o dolor debajo de las costillas derechas.
+- Nuevo adormecimiento u hormigueo en los pies o las manos.
+- Tos nueva o falta de aire.`},
+
+{id:"i6-ssz", name:"Starting sulfasalazine: full guide", body:
+`STARTING SULFASALAZINE (AZULFIDINE): FULL GUIDE
+
+WHAT IT DOES
+Sulfasalazine calms joint inflammation in rheumatoid arthritis and spondyloarthritis. It does not raise your infection risk the way many arthritis drugs do, and it is safe in pregnancy. Expect 8 to 12 weeks for the full effect.
+
+HOW TO TAKE IT
+- Start with {dose} and increase every week as instructed until you reach your full dose. Going up slowly is what keeps your stomach settled.
+- Take it with food and a full glass of water.
+- Take folic acid 1 mg daily. Sulfasalazine blocks how your body absorbs folate.
+
+WHAT TO EXPECT
+- Orange or yellow urine and sweat. This is harmless and can stain contact lenses.
+- Nausea or headache in the first weeks, which usually settles.
+- In men, a temporary drop in sperm count. It returns to normal within 3 months of stopping.
+
+ALLERGIES
+- Tell us if you have ever reacted to sulfa antibiotics or aspirin.
+
+LABS
+- Blood tests every 2 to 4 weeks for the first 3 months, then every 3 months.
+
+CALL THE OFFICE FOR
+- Fever, sore throat, or mouth sores, especially in the first 3 months.
+- A new rash, particularly with fever.
+- Yellow skin or eyes.`,
+bodyEs:
+`COMENZANDO SULFASALAZINA (AZULFIDINE): GUÍA COMPLETA
+
+QUÉ HACE
+La sulfasalazina calma la inflamación de las articulaciones en la artritis reumatoide y la espondiloartritis. No aumenta el riesgo de infección como muchos medicamentos para la artritis, y es segura en el embarazo. Espere de 8 a 12 semanas para el efecto completo.
+
+CÓMO TOMARLA
+- Empiece con {dosis} y aumente cada semana según las indicaciones hasta llegar a su dosis completa. Subir despacio es lo que mantiene su estómago tranquilo.
+- Tómela con comida y un vaso lleno de agua.
+- Tome ácido fólico 1 mg al día. La sulfasalazina bloquea cómo su cuerpo absorbe el folato.
+
+QUÉ ESPERAR
+- Orina y sudor de color naranja o amarillo. Esto no hace daño y puede manchar los lentes de contacto.
+- Náuseas o dolor de cabeza en las primeras semanas, que suelen pasar.
+- En los hombres, una baja temporal del conteo de espermatozoides. Vuelve a lo normal dentro de 3 meses después de suspenderla.
+
+ALERGIAS
+- Díganos si alguna vez ha tenido reacción a antibióticos con sulfa o a la aspirina.
+
+ANÁLISIS
+- Análisis de sangre cada 2 a 4 semanas los primeros 3 meses, y luego cada 3 meses.
+
+LLAME AL CONSULTORIO SI TIENE
+- Fiebre, dolor de garganta o llagas en la boca, sobre todo en los primeros 3 meses.
+- Un sarpullido nuevo, sobre todo con fiebre.
+- Piel u ojos amarillos.`},
+
+{id:"i6-aza", name:"Starting azathioprine: full guide", body:
+`STARTING AZATHIOPRINE (IMURAN): FULL GUIDE
+
+WHAT IT DOES
+Azathioprine calms the immune system in lupus, vasculitis, and muscle inflammation, and lets us lower your steroid dose. It is one of the few medicines in this group that is safe during pregnancy. Expect 8 to 12 weeks for the full effect.
+
+BEFORE YOU START
+- We check a blood test called TPMT, which tells us how your body breaks down this drug. Your dose depends on the result.
+- Tell us if you take allopurinol or febuxostat for gout. The combination is dangerous unless the dose is changed.
+
+HOW TO TAKE IT
+- Take {dose} daily, with food. Splitting the dose into morning and evening helps nausea.
+
+WHAT TO EXPECT
+- Nausea and tiredness in the first weeks, which usually settle.
+- If you get a flu-like illness with fever and rash in the first 2 weeks, stop the medicine and call us. This is a reaction and the drug should not be restarted.
+
+SKIN AND SUN
+- This medicine raises the risk of skin cancer over time. Use sunscreen, wear a hat, and have a yearly skin check.
+
+LABS
+- Blood tests every 2 weeks when the dose changes, then every 3 months.
+
+CALL THE OFFICE FOR
+- Fever, chills, or an infection that will not clear.
+- Severe stomach pain, which can be the pancreas.
+- Yellow skin or eyes, easy bruising, or unusual bleeding.
+- A new or changing skin spot.`,
+bodyEs:
+`COMENZANDO AZATIOPRINA (IMURAN): GUÍA COMPLETA
+
+QUÉ HACE
+La azatioprina calma el sistema inmunitario en el lupus, la vasculitis y la inflamación de los músculos, y nos permite bajar su dosis de esteroides. Es uno de los pocos medicamentos de este grupo que es seguro durante el embarazo. Espere de 8 a 12 semanas para el efecto completo.
+
+ANTES DE EMPEZAR
+- Hacemos un análisis de sangre llamado TPMT, que nos dice cómo su cuerpo procesa este medicamento. Su dosis depende del resultado.
+- Díganos si toma alopurinol o febuxostat para la gota. La combinación es peligrosa a menos que se cambie la dosis.
+
+CÓMO TOMARLA
+- Tome {dosis} al día, con comida. Dividir la dosis entre mañana y noche ayuda con las náuseas.
+
+QUÉ ESPERAR
+- Náuseas y cansancio en las primeras semanas, que suelen pasar.
+- Si le da un cuadro parecido a la gripe con fiebre y sarpullido en las primeras 2 semanas, suspenda el medicamento y llámenos. Es una reacción y no se debe volver a tomar.
+
+PIEL Y SOL
+- Este medicamento aumenta el riesgo de cáncer de piel con el tiempo. Use protector solar, use sombrero y hágase una revisión de la piel cada año.
+
+ANÁLISIS
+- Análisis de sangre cada 2 semanas cuando cambia la dosis, y luego cada 3 meses.
+
+LLAME AL CONSULTORIO SI TIENE
+- Fiebre, escalofríos o una infección que no mejora.
+- Dolor fuerte de estómago, que puede ser el páncreas.
+- Piel u ojos amarillos, moretones fáciles o sangrado inusual.
+- Una mancha nueva en la piel o una que cambia.`},
+
+{id:"i6-mmf", name:"Starting mycophenolate: full guide", body:
+`STARTING MYCOPHENOLATE (CELLCEPT, MYFORTIC): FULL GUIDE
+
+WHAT IT DOES
+Mycophenolate calms the immune system. It is the main treatment for lupus kidney disease and for lung involvement in scleroderma, and it lets us lower your steroid dose. Expect 2 to 3 months for the full effect.
+
+HOW TO TAKE IT
+- Take {dose} twice a day, morning and evening, about 12 hours apart.
+- Take it 2 hours apart from antacids and iron, which block absorption.
+- If it upsets your stomach, tell us. Splitting the daily total into 3 or 4 smaller doses, or switching to the coated form, usually fixes it.
+
+PREGNANCY, A MUST-READ
+- This medicine causes birth defects and miscarriage. Do not become pregnant while taking it.
+- Use two forms of birth control. A pregnancy test is required before starting and repeated during treatment.
+- If you plan a pregnancy, we switch you to a safer medicine 6 weeks before you try.
+
+WHAT TO EXPECT
+- Diarrhea, nausea, or stomach upset in the first weeks.
+- You will catch infections more easily. Wash hands often and avoid people who are sick.
+
+LABS
+- Blood tests every 1 to 2 weeks at first, then monthly for 3 months, then every 3 months.
+
+VACCINES
+- Get the flu shot yearly. Ask before any other vaccine. No live vaccines.
+
+CALL THE OFFICE FOR
+- Fever, chills, or an infection that will not clear.
+- Diarrhea that does not settle or blood in the stool.
+- Easy bruising or unusual bleeding.`,
+bodyEs:
+`COMENZANDO MICOFENOLATO (CELLCEPT, MYFORTIC): GUÍA COMPLETA
+
+QUÉ HACE
+El micofenolato calma el sistema inmunitario. Es el tratamiento principal para la enfermedad de los riñones por lupus y para la afectación de los pulmones en la esclerodermia, y nos permite bajar su dosis de esteroides. Espere de 2 a 3 meses para el efecto completo.
+
+CÓMO TOMARLO
+- Tome {dosis} dos veces al día, mañana y noche, con unas 12 horas de diferencia.
+- Tómelo 2 horas separado de los antiácidos y el hierro, que bloquean la absorción.
+- Si le cae mal al estómago, avísenos. Dividir el total del día en 3 o 4 dosis más pequeñas, o cambiar a la forma con cubierta, suele resolverlo.
+
+EMBARAZO, LEA ESTO
+- Este medicamento causa defectos de nacimiento y abortos espontáneos. No se embarace mientras lo toma.
+- Use dos métodos anticonceptivos. Se requiere una prueba de embarazo antes de empezar y se repite durante el tratamiento.
+- Si planea un embarazo, le cambiamos a un medicamento más seguro 6 semanas antes de intentarlo.
+
+QUÉ ESPERAR
+- Diarrea, náuseas o malestar de estómago en las primeras semanas.
+- Le darán infecciones con más facilidad. Lávese las manos con frecuencia y evite a las personas enfermas.
+
+ANÁLISIS
+- Análisis de sangre cada 1 a 2 semanas al principio, luego cada mes por 3 meses, y luego cada 3 meses.
+
+VACUNAS
+- Póngase la vacuna de la gripe cada año. Pregunte antes de cualquier otra vacuna. Nada de vacunas vivas.
+
+LLAME AL CONSULTORIO SI TIENE
+- Fiebre, escalofríos o una infección que no mejora.
+- Diarrea que no mejora o sangre en las heces.
+- Moretones fáciles o sangrado inusual.`},
+
+{id:"i6-bio", name:"Starting a biologic injection: full guide", body:
+`STARTING A BIOLOGIC INJECTION: FULL GUIDE
+
+WHAT IT DOES
+Your medicine, {medication}, blocks one specific signal that drives inflammation. It controls the disease and protects your joints. Many people improve within 2 to 6 weeks, with the full effect by 3 months.
+
+BEFORE YOU START
+- Your tuberculosis test and hepatitis tests must be done and reviewed first.
+- Tell us about any infection, cancer history, heart failure, or nerve disease.
+- Get vaccines up to date before the first dose: flu, COVID, pneumonia, and shingles (Shingrix). No live vaccines once you start.
+
+HOW TO TAKE IT
+- Inject {dose} under the skin {schedule:every 2 weeks|every week|every 4 weeks|every 8 weeks|every 12 weeks}.
+- Keep it in the refrigerator. Take it out 30 minutes before injecting so it stings less. Do not freeze it.
+- Rotate sites: thigh, belly, or upper arm. Stay 2 inches from the navel.
+- If you miss a dose, take it as soon as you remember, then return to your usual schedule. Do not double up.
+
+INFECTIONS, THE MAIN RISK
+- This medicine lowers your defenses. Hold your dose and call us if you have a fever, an infection needing antibiotics, or a wound that is not healing.
+- Restart once the infection has cleared. Ask us if unsure.
+
+SURGERY AND DENTAL WORK
+- Tell us about any planned surgery. We usually skip one dose before major surgery and restart once the wound heals.
+
+WHAT TO EXPECT
+- Redness or a small bump at the injection site for a few days. This is common and fades.
+- More colds than usual.
+
+CALL THE OFFICE FOR
+- Fever, chills, night sweats, or unexplained weight loss.
+- New cough, shortness of breath, or coughing blood.
+- Numbness, weakness, or vision changes.
+- A rash that spreads or a reaction with lip or throat swelling. Call 911 for trouble breathing.`,
+bodyEs:
+`COMENZANDO UNA INYECCIÓN BIOLÓGICA: GUÍA COMPLETA
+
+QUÉ HACE
+Su medicamento, {medicamento}, bloquea una señal específica que causa la inflamación. Controla la enfermedad y protege sus articulaciones. Muchas personas mejoran en 2 a 6 semanas, con el efecto completo a los 3 meses.
+
+ANTES DE EMPEZAR
+- Su prueba de tuberculosis y las pruebas de hepatitis deben estar hechas y revisadas primero.
+- Cuéntenos sobre cualquier infección, antecedente de cáncer, insuficiencia cardíaca o enfermedad de los nervios.
+- Póngase las vacunas al día antes de la primera dosis: gripe, COVID, neumonía y culebrilla (Shingrix). Nada de vacunas vivas una vez que empiece.
+
+CÓMO USARLO
+- Inyecte {dosis} debajo de la piel {frecuencia:cada 2 semanas|cada semana|cada 4 semanas|cada 8 semanas|cada 12 semanas}.
+- Guárdelo en el refrigerador. Sáquelo 30 minutos antes de inyectar para que arda menos. No lo congele.
+- Cambie el sitio: muslo, abdomen o parte superior del brazo. Manténgase a 5 centímetros del ombligo.
+- Si olvida una dosis, póngala en cuanto se acuerde y luego vuelva a su horario normal. No ponga doble dosis.
+
+INFECCIONES, EL RIESGO PRINCIPAL
+- Este medicamento baja sus defensas. No se ponga la dosis y llámenos si tiene fiebre, una infección que necesita antibióticos o una herida que no sana.
+- Vuelva a empezar cuando la infección haya pasado. Pregúntenos si tiene dudas.
+
+CIRUGÍA Y TRABAJO DENTAL
+- Cuéntenos sobre cualquier cirugía planeada. Por lo general saltamos una dosis antes de una cirugía mayor y volvemos a empezar cuando la herida sana.
+
+QUÉ ESPERAR
+- Enrojecimiento o un pequeño bulto en el sitio de la inyección por unos días. Es común y desaparece.
+- Más resfriados de lo habitual.
+
+LLAME AL CONSULTORIO SI TIENE
+- Fiebre, escalofríos, sudores nocturnos o pérdida de peso sin explicación.
+- Tos nueva, falta de aire o tos con sangre.
+- Adormecimiento, debilidad o cambios en la vista.
+- Un sarpullido que se extiende o una reacción con hinchazón de labios o garganta. Llame al 911 si tiene dificultad para respirar.`},
+
+{id:"i6-inf", name:"Before your infusion: full guide", body:
+`BEFORE YOUR INFUSION: FULL GUIDE
+
+WHAT IT DOES
+Your medicine, {medication}, is given through a vein at the infusion center. It calms the immune system and controls your disease. The first infusion is the longest. Later visits are usually shorter.
+
+BEFORE YOUR FIRST INFUSION
+- Your tuberculosis and hepatitis tests must be done and reviewed first.
+- Get vaccines up to date at least 2 weeks before the first dose: flu, COVID, pneumonia, and shingles (Shingrix). No live vaccines once you start.
+- Tell us about any infection, cancer history, or heart problems.
+
+THE DAY OF YOUR INFUSION
+- Eat a normal meal and drink water before you come. Take your usual morning medicines unless we told you otherwise.
+- Bring something to do. Plan for {duration:2 to 3 hours|4 to 6 hours|1 hour} including check-in and observation.
+- You may receive medicines before the infusion to prevent a reaction. Some cause drowsiness, so arrange a ride home if we tell you to.
+
+WHEN TO CANCEL AND CALL US
+- Fever, chills, or any infection needing antibiotics.
+- A wound that is not healing or a planned surgery within the next month.
+- Do not skip your infusion for a cold without calling. We will decide together.
+
+WHAT TO EXPECT
+- Tiredness or a mild headache for a day or two afterward.
+- Some people feel flushed, itchy, or short of breath during the infusion. Tell the nurse right away. Slowing the infusion usually fixes it.
+
+CALL THE OFFICE FOR
+- Fever, chills, or an infection that will not clear, at any time between infusions.
+- New cough, shortness of breath, or chest pain.
+- A rash or swelling that appears in the days after the infusion.`,
+bodyEs:
+`ANTES DE SU INFUSIÓN: GUÍA COMPLETA
+
+QUÉ HACE
+Su medicamento, {medicamento}, se administra por una vena en el centro de infusión. Calma el sistema inmunitario y controla su enfermedad. La primera infusión es la más larga. Las visitas siguientes suelen ser más cortas.
+
+ANTES DE SU PRIMERA INFUSIÓN
+- Sus pruebas de tuberculosis y hepatitis deben estar hechas y revisadas primero.
+- Póngase las vacunas al día por lo menos 2 semanas antes de la primera dosis: gripe, COVID, neumonía y culebrilla (Shingrix). Nada de vacunas vivas una vez que empiece.
+- Cuéntenos sobre cualquier infección, antecedente de cáncer o problemas del corazón.
+
+EL DÍA DE SU INFUSIÓN
+- Coma normalmente y tome agua antes de venir. Tome sus medicamentos habituales de la mañana a menos que le hayamos dicho lo contrario.
+- Traiga algo para entretenerse. Calcule {duración:2 a 3 horas|4 a 6 horas|1 hora} incluyendo el registro y la observación.
+- Puede recibir medicamentos antes de la infusión para prevenir una reacción. Algunos dan sueño, así que consiga quien lo lleve a casa si se lo indicamos.
+
+CUÁNDO CANCELAR Y LLAMARNOS
+- Fiebre, escalofríos o cualquier infección que necesite antibióticos.
+- Una herida que no sana o una cirugía planeada dentro del próximo mes.
+- No falte a su infusión por un resfriado sin llamar. Lo decidiremos juntos.
+
+QUÉ ESPERAR
+- Cansancio o un leve dolor de cabeza por uno o dos días después.
+- Algunas personas sienten calor en la cara, picazón o falta de aire durante la infusión. Avise a la enfermera de inmediato. Bajar la velocidad de la infusión suele resolverlo.
+
+LLAME AL CONSULTORIO SI TIENE
+- Fiebre, escalofríos o una infección que no mejora, en cualquier momento entre infusiones.
+- Tos nueva, falta de aire o dolor en el pecho.
+- Un sarpullido o hinchazón que aparece en los días después de la infusión.`},
+
+{id:"i6-jak", name:"Starting a JAK inhibitor: full guide", body:
+`STARTING A JAK INHIBITOR: FULL GUIDE
+
+WHAT IT DOES
+Your medicine, {medication}, is a pill that blocks signals inside immune cells. It works as well as injectable biologics for rheumatoid and psoriatic arthritis and for spine arthritis, and many people feel a difference within 2 weeks.
+
+BEFORE YOU START
+- Your tuberculosis and hepatitis tests must be done first.
+- Get the shingles vaccine (Shingrix, 2 doses) before or soon after starting. Shingles is the most common infection on this medicine.
+- Tell us about any history of blood clots, heart disease, stroke, cancer, or smoking. These affect whether this medicine is the right choice.
+
+HOW TO TAKE IT
+- Take {dose} {schedule:once a day|twice a day}, with or without food, at the same time each day.
+- Do not crush or split extended-release tablets.
+- Grapefruit and some antifungal or antibiotic medicines raise the level in your blood. Tell every clinician and pharmacist you take it.
+
+WHAT TO EXPECT
+- More colds and sinus infections than usual.
+- Acne, nausea, or headache in the first weeks, which usually settle.
+
+LABS
+- Blood tests at 4 to 8 weeks, then every 3 months. Cholesterol at 8 to 12 weeks.
+
+INFECTIONS
+- Hold the medicine and call us if you have a fever, an infection needing antibiotics, or a painful blistering rash on one side of the body, which can be shingles.
+
+CALL THE OFFICE FOR
+- Fever, chills, or an infection that will not clear.
+- A blistering rash.
+- Swelling or pain in one leg, sudden shortness of breath, or chest pain. These can be a blood clot. Call 911 for chest pain or trouble breathing.
+- Severe stomach pain.`,
+bodyEs:
+`COMENZANDO UN INHIBIDOR DE JAK: GUÍA COMPLETA
+
+QUÉ HACE
+Su medicamento, {medicamento}, es una pastilla que bloquea señales dentro de las células inmunitarias. Funciona tan bien como los biológicos inyectables para la artritis reumatoide y psoriásica y para la artritis de la columna, y muchas personas notan una diferencia en 2 semanas.
+
+ANTES DE EMPEZAR
+- Sus pruebas de tuberculosis y hepatitis deben estar hechas primero.
+- Póngase la vacuna contra la culebrilla (Shingrix, 2 dosis) antes o poco después de empezar. La culebrilla es la infección más común con este medicamento.
+- Cuéntenos si tiene antecedentes de coágulos de sangre, enfermedad del corazón, derrame cerebral, cáncer o si fuma. Esto afecta si este medicamento es la mejor opción.
+
+CÓMO TOMARLO
+- Tome {dosis} {frecuencia:una vez al día|dos veces al día}, con o sin comida, a la misma hora cada día.
+- No triture ni parta las tabletas de liberación prolongada.
+- La toronja y algunos antimicóticos o antibióticos suben el nivel en su sangre. Diga a cada médico y farmacéutico que lo toma.
+
+QUÉ ESPERAR
+- Más resfriados e infecciones de los senos nasales de lo habitual.
+- Acné, náuseas o dolor de cabeza en las primeras semanas, que suelen pasar.
+
+ANÁLISIS
+- Análisis de sangre a las 4 a 8 semanas, y luego cada 3 meses. Colesterol a las 8 a 12 semanas.
+
+INFECCIONES
+- Suspenda el medicamento y llámenos si tiene fiebre, una infección que necesita antibióticos o un sarpullido doloroso con ampollas en un lado del cuerpo, que puede ser culebrilla.
+
+LLAME AL CONSULTORIO SI TIENE
+- Fiebre, escalofríos o una infección que no mejora.
+- Un sarpullido con ampollas.
+- Hinchazón o dolor en una pierna, falta de aire repentina o dolor en el pecho. Pueden ser un coágulo. Llame al 911 si tiene dolor en el pecho o dificultad para respirar.
+- Dolor fuerte de estómago.`}
+]);
+})();
+
+
+// ====================== GOUT, OSTEOARTHRITIS, AND BONE: FULL GUIDES ======================
+(function(){
+DEFAULT_DATA.instructions = DEFAULT_DATA.instructions.concat([
+{id:"i6-ult", name:"Starting allopurinol or febuxostat: full guide", body:
+`STARTING A URIC ACID MEDICINE: FULL GUIDE
+
+WHAT IT DOES
+Gout comes from uric acid crystals building up in joints. {medication:Allopurinol|Febuxostat} lowers uric acid so the crystals slowly dissolve. Once your level stays below target, flares stop and lumps called tophi shrink. This takes months, not days.
+
+HOW TO TAKE IT
+- Start with {dose} once a day.
+- We raise the dose every 2 to 4 weeks until your uric acid reaches the target, usually below 6.0 (below 5.0 if you have tophi). Most people need several increases.
+- Take it every day, forever. Stopping brings the crystals back.
+
+THE FIRST FEW MONTHS
+- Flares can increase at first as crystals break up. This means the medicine is working.
+- We give you {prophylaxis:colchicine|a low dose of a steroid|an anti-inflammatory} to prevent flares for the first 3 to 6 months.
+- If a flare happens, keep taking your uric acid medicine. Treat the flare on top of it.
+
+RASH, A MUST-READ
+- A rash in the first weeks can be the start of a serious reaction. Stop the medicine and call us the same day for any new rash, fever, sore throat, or mouth sores.
+
+LABS
+- Uric acid every 2 to 4 weeks while we adjust the dose, then every 6 to 12 months.
+- Kidney and liver tests along the way.
+
+OTHER MEDICINES
+- Tell us if you take azathioprine, warfarin, or a water pill. Some combinations need dose changes.
+
+DIET AND DRINK
+- Water helps. Beer, liquor, sugary drinks, and organ meats push uric acid up. Coffee, cherries, and low-fat dairy help a little.
+
+CALL THE OFFICE FOR
+- Any new rash, fever, or mouth sores.
+- A flare that does not settle in a week.
+- Yellow skin or eyes.`,
+bodyEs:
+`COMENZANDO UN MEDICAMENTO PARA EL ÁCIDO ÚRICO: GUÍA COMPLETA
+
+QUÉ HACE
+La gota viene de cristales de ácido úrico que se acumulan en las articulaciones. {medicamento:El alopurinol|El febuxostat} baja el ácido úrico para que los cristales se disuelvan poco a poco. Cuando su nivel se mantiene por debajo de la meta, los ataques paran y los bultos llamados tofos se encogen. Esto toma meses, no días.
+
+CÓMO TOMARLO
+- Empiece con {dosis} una vez al día.
+- Subimos la dosis cada 2 a 4 semanas hasta que su ácido úrico llegue a la meta, por lo general menos de 6.0 (menos de 5.0 si tiene tofos). La mayoría necesita varios aumentos.
+- Tómelo todos los días, para siempre. Si lo deja, los cristales regresan.
+
+LOS PRIMEROS MESES
+- Los ataques pueden aumentar al principio mientras los cristales se rompen. Esto significa que el medicamento está funcionando.
+- Le damos {prevención:colchicina|una dosis baja de esteroide|un antiinflamatorio} para prevenir ataques durante los primeros 3 a 6 meses.
+- Si le da un ataque, siga tomando su medicamento para el ácido úrico. Trate el ataque además de eso.
+
+SARPULLIDO, LEA ESTO
+- Un sarpullido en las primeras semanas puede ser el inicio de una reacción grave. Suspenda el medicamento y llámenos el mismo día si tiene un sarpullido nuevo, fiebre, dolor de garganta o llagas en la boca.
+
+ANÁLISIS
+- Ácido úrico cada 2 a 4 semanas mientras ajustamos la dosis, y luego cada 6 a 12 meses.
+- Pruebas de riñón e hígado en el camino.
+
+OTROS MEDICAMENTOS
+- Díganos si toma azatioprina, warfarina o un diurético. Algunas combinaciones necesitan cambios de dosis.
+
+DIETA Y BEBIDAS
+- El agua ayuda. La cerveza, el licor, las bebidas azucaradas y las vísceras suben el ácido úrico. El café, las cerezas y los lácteos bajos en grasa ayudan un poco.
+
+LLAME AL CONSULTORIO SI TIENE
+- Cualquier sarpullido nuevo, fiebre o llagas en la boca.
+- Un ataque que no mejora en una semana.
+- Piel u ojos amarillos.`},
+
+{id:"i6-bisp", name:"Starting a bisphosphonate: full guide", body:
+`STARTING A BISPHOSPHONATE: FULL GUIDE
+
+WHAT IT DOES
+{medication:Alendronate (Fosamax)|Risedronate (Actonel)|Zoledronic acid (Reclast)} slows the cells that break down bone. Bone density rises, and the risk of a spine fracture drops by about half and a hip fracture by about 40 percent. It protects you for years after you stop.
+
+HOW TO TAKE THE PILL
+- Take {dose} {schedule:once a week|once a month}, first thing in the morning, on an empty stomach.
+- Swallow it with a full glass of plain water. Not coffee, juice, or mineral water.
+- Stay upright, sitting or standing, for 30 minutes. Do not lie down. Then eat breakfast.
+- Take it 30 minutes before any other medicine, calcium, or food. Food blocks it completely.
+- If you forget, take it the next morning and return to your usual day. Never take two on one day.
+
+THE YEARLY INFUSION
+- If you receive zoledronic acid instead, it is given through a vein once a year over about 15 minutes.
+- Drink plenty of water the day before and the day of. Take acetaminophen before and after the first dose. Flu-like aches for a day or two are common after the first infusion and rare after that.
+
+CALCIUM AND VITAMIN D
+- Take calcium {calcium:1000|1200} mg a day from food and supplements combined, and vitamin D {vitd:800|1000|2000} units a day. The medicine cannot build bone without them.
+
+YOUR TEETH
+- See your dentist before starting if you need extractions or implants. Tell your dentist you take this medicine. Jaw bone problems are rare and mostly happen with poor dental health.
+
+HOW LONG
+- Usually 5 years of pills or 3 years of infusions, then we reassess. Many people take a break after that.
+
+CALL THE OFFICE FOR
+- Heartburn, chest pain, or trouble swallowing after a pill. Stop the pill and call.
+- New thigh or groin pain that does not go away. This needs an x-ray.
+- Jaw pain, loose teeth, or a sore in the mouth that does not heal.`,
+bodyEs:
+`COMENZANDO UN BIFOSFONATO: GUÍA COMPLETA
+
+QUÉ HACE
+{medicamento:El alendronato (Fosamax)|El risedronato (Actonel)|El ácido zoledrónico (Reclast)} frena las células que desgastan el hueso. La densidad ósea sube, y el riesgo de fractura de columna baja como a la mitad y el de cadera como un 40 por ciento. Lo protege por años después de suspenderlo.
+
+CÓMO TOMAR LA PASTILLA
+- Tome {dosis} {frecuencia:una vez por semana|una vez al mes}, a primera hora de la mañana, con el estómago vacío.
+- Tráguela con un vaso lleno de agua simple. No café, jugo ni agua mineral.
+- Manténgase erguido, sentado o de pie, por 30 minutos. No se acueste. Después desayune.
+- Tómela 30 minutos antes de cualquier otro medicamento, calcio o comida. La comida la bloquea por completo.
+- Si se le olvida, tómela a la mañana siguiente y vuelva a su día habitual. Nunca tome dos en un mismo día.
+
+LA INFUSIÓN ANUAL
+- Si en lugar de eso recibe ácido zoledrónico, se da por una vena una vez al año en unos 15 minutos.
+- Tome bastante agua el día anterior y el día de la infusión. Tome acetaminofén antes y después de la primera dosis. Dolores como de gripe por uno o dos días son comunes después de la primera infusión y raros después.
+
+CALCIO Y VITAMINA D
+- Tome calcio {calcio:1000|1200} mg al día entre comida y suplementos, y vitamina D {vitd:800|1000|2000} unidades al día. El medicamento no puede formar hueso sin ellos.
+
+SUS DIENTES
+- Vea a su dentista antes de empezar si necesita extracciones o implantes. Dígale a su dentista que toma este medicamento. Los problemas del hueso de la mandíbula son raros y ocurren sobre todo con mala salud dental.
+
+POR CUÁNTO TIEMPO
+- Por lo general 5 años de pastillas o 3 años de infusiones, y luego reevaluamos. Muchas personas toman un descanso después.
+
+LLAME AL CONSULTORIO SI TIENE
+- Acidez, dolor en el pecho o dificultad para tragar después de una pastilla. Suspenda la pastilla y llame.
+- Dolor nuevo en el muslo o la ingle que no se quita. Esto necesita una radiografía.
+- Dolor en la mandíbula, dientes flojos o una llaga en la boca que no sana.`},
+
+{id:"i6-dmab", name:"Starting denosumab: full guide", body:
+`STARTING DENOSUMAB (PROLIA): FULL GUIDE
+
+WHAT IT DOES
+Denosumab is an injection under the skin every 6 months that blocks the cells that break down bone. Bone density rises steadily for as long as you take it, and the risk of a spine fracture drops by about two thirds.
+
+THE ONE RULE THAT MATTERS
+- Every dose must be on time, every 6 months. Do not let it slip more than a month.
+- When this medicine stops, bone loss speeds up and spine fractures can happen within a year. Never stop it on your own. If you want to stop, we switch you to a different medicine first.
+- Put the next dose on your calendar the day you get this one.
+
+BEFORE EACH DOSE
+- Your calcium and vitamin D must be normal. We check blood work before the injection.
+- Tell us about kidney disease. Low calcium after the dose is the main risk, and kidney disease makes it more likely.
+
+CALCIUM AND VITAMIN D
+- Take calcium {calcium:1000|1200} mg a day from food and supplements combined, and vitamin D {vitd:800|1000|2000} units a day, every day.
+
+YOUR TEETH
+- See your dentist before starting if you need extractions or implants. Tell your dentist you take this medicine. Jaw bone problems are rare.
+
+WHAT TO EXPECT
+- Muscle or joint aches for a few days after a dose.
+- Skin infections a little more often. Keep cuts clean.
+
+CALL THE OFFICE FOR
+- Tingling around the mouth or in the fingers, or muscle cramps, in the weeks after a dose. This can be low calcium.
+- New thigh or groin pain that does not go away.
+- Jaw pain or a mouth sore that does not heal.
+- A missed dose. Call as soon as you notice.`,
+bodyEs:
+`COMENZANDO DENOSUMAB (PROLIA): GUÍA COMPLETA
+
+QUÉ HACE
+El denosumab es una inyección debajo de la piel cada 6 meses que bloquea las células que desgastan el hueso. La densidad ósea sube de forma constante mientras lo reciba, y el riesgo de fractura de columna baja como dos tercios.
+
+LA REGLA QUE MÁS IMPORTA
+- Cada dosis debe ser a tiempo, cada 6 meses. No deje que se atrase más de un mes.
+- Cuando este medicamento se suspende, la pérdida de hueso se acelera y pueden ocurrir fracturas de columna en menos de un año. Nunca lo deje por su cuenta. Si quiere dejarlo, primero le cambiamos a otro medicamento.
+- Anote la próxima dosis en su calendario el mismo día que reciba esta.
+
+ANTES DE CADA DOSIS
+- Su calcio y vitamina D deben estar normales. Revisamos análisis de sangre antes de la inyección.
+- Cuéntenos si tiene enfermedad de los riñones. El calcio bajo después de la dosis es el riesgo principal, y la enfermedad de los riñones lo hace más probable.
+
+CALCIO Y VITAMINA D
+- Tome calcio {calcio:1000|1200} mg al día entre comida y suplementos, y vitamina D {vitd:800|1000|2000} unidades al día, todos los días.
+
+SUS DIENTES
+- Vea a su dentista antes de empezar si necesita extracciones o implantes. Dígale a su dentista que recibe este medicamento. Los problemas del hueso de la mandíbula son raros.
+
+QUÉ ESPERAR
+- Dolores musculares o de articulaciones por unos días después de una dosis.
+- Infecciones de la piel un poco más seguido. Mantenga las heridas limpias.
+
+LLAME AL CONSULTORIO SI TIENE
+- Hormigueo alrededor de la boca o en los dedos, o calambres, en las semanas después de una dosis. Puede ser calcio bajo.
+- Dolor nuevo en el muslo o la ingle que no se quita.
+- Dolor en la mandíbula o una llaga en la boca que no sana.
+- Una dosis atrasada. Llame en cuanto se dé cuenta.`},
+
+{id:"i6-oa", name:"Osteoarthritis: what it is and how to manage it", body:
+`OSTEOARTHRITIS: WHAT IT IS AND HOW TO MANAGE IT
+
+WHAT IT IS
+Osteoarthritis is wear and repair in a joint that has fallen out of balance. Cartilage thins, the bone underneath reacts, and the joint gets stiff and sore. It is the most common form of arthritis. It is not the same as rheumatoid arthritis and does not spread through the body.
+
+WHAT HELPS MOST
+- Movement. Joints with arthritis need to move. Walking, cycling, swimming, and strength exercises reduce pain over time. Start with 10 minutes and build up. Some soreness after exercise is normal. Sharp pain is not.
+- Strong muscles. Strong thigh muscles protect the knee. A physical therapist can show you the right exercises.
+- Weight. Every pound lost takes 4 pounds of pressure off the knees with each step. Even 5 to 10 percent of body weight makes a difference.
+
+MEDICINES THAT HELP
+- Topical anti-inflammatory gel {topical:~diclofenac gel|other} on the painful joint, up to 4 times a day. The first choice for knees and hands, with little risk.
+- Acetaminophen up to {apap:3000|2000} mg a day for milder pain.
+- Anti-inflammatory pills such as naproxen or ibuprofen for short stretches. Take with food. Ask us first if you have kidney disease, stomach ulcers, heart disease, or take blood thinners.
+- Duloxetine, a daily pill, helps some people with long-standing pain.
+- A steroid injection into the joint can calm a bad stretch for a few weeks to months.
+
+WHAT DOES NOT HELP MUCH
+- Glucosamine and chondroitin. Safe, but studies show little benefit.
+- Opioids. They do not work well for arthritis pain and carry real risks.
+
+FLARES
+- Rest the joint for a day or two, use ice or heat, whichever feels better, and then return to gentle movement.
+
+WHEN SURGERY MAKES SENSE
+- When pain limits daily life despite the steps above, joint replacement works well for hips and knees. We refer you when the time is right.
+
+CALL THE OFFICE FOR
+- A hot, red, swollen joint, especially with fever.
+- Sudden inability to bear weight.
+- Pain that wakes you at night and keeps getting worse.`,
+bodyEs:
+`OSTEOARTRITIS: QUÉ ES Y CÓMO MANEJARLA
+
+QUÉ ES
+La osteoartritis es desgaste y reparación en una articulación que ha perdido el equilibrio. El cartílago se adelgaza, el hueso de abajo reacciona, y la articulación se pone rígida y adolorida. Es la forma más común de artritis. No es lo mismo que la artritis reumatoide y no se extiende por el cuerpo.
+
+QUÉ AYUDA MÁS
+- El movimiento. Las articulaciones con artritis necesitan moverse. Caminar, andar en bicicleta, nadar y los ejercicios de fuerza reducen el dolor con el tiempo. Empiece con 10 minutos y aumente poco a poco. Algo de molestia después del ejercicio es normal. El dolor agudo no lo es.
+- Músculos fuertes. Los músculos fuertes del muslo protegen la rodilla. Un fisioterapeuta puede enseñarle los ejercicios correctos.
+- El peso. Cada libra que baja quita 4 libras de presión a las rodillas en cada paso. Incluso bajar del 5 al 10 por ciento del peso hace una diferencia.
+
+MEDICAMENTOS QUE AYUDAN
+- Gel antiinflamatorio {tópico:~gel de diclofenaco|otro} en la articulación adolorida, hasta 4 veces al día. La primera opción para rodillas y manos, con poco riesgo.
+- Acetaminofén hasta {apap:3000|2000} mg al día para dolor más leve.
+- Pastillas antiinflamatorias como naproxeno o ibuprofeno por periodos cortos. Tómelas con comida. Pregúntenos primero si tiene enfermedad de los riñones, úlceras de estómago, enfermedad del corazón o toma anticoagulantes.
+- La duloxetina, una pastilla diaria, ayuda a algunas personas con dolor de largo tiempo.
+- Una inyección de esteroide en la articulación puede calmar una mala racha por unas semanas o meses.
+
+QUÉ NO AYUDA MUCHO
+- La glucosamina y la condroitina. Son seguras, pero los estudios muestran poco beneficio.
+- Los opioides. No funcionan bien para el dolor de artritis y tienen riesgos reales.
+
+BROTES
+- Descanse la articulación uno o dos días, use hielo o calor, lo que se sienta mejor, y luego vuelva al movimiento suave.
+
+CUÁNDO TIENE SENTIDO LA CIRUGÍA
+- Cuando el dolor limita la vida diaria a pesar de los pasos de arriba, el reemplazo de articulación funciona bien para caderas y rodillas. Lo referimos cuando sea el momento.
+
+LLAME AL CONSULTORIO SI TIENE
+- Una articulación caliente, roja e hinchada, sobre todo con fiebre.
+- De repente no puede apoyar el peso.
+- Dolor que lo despierta de noche y sigue empeorando.`}
+]);
+})();
+
+(function(){ DEFAULT_DATA.version = 25; })();
 // ====================== CORE ======================
 const KEY = "rheumpad_v1";
 let DATA, FAVS, PRECHART, META = {};
@@ -4165,6 +5023,21 @@ function loadState(){
           gp3.body = gp3.body.split(anchor).join("deferred pending bone density}.\nSequential therapy: {seq:not planned at this time|after the teriparatide or abaloparatide course, transition to an antiresorptive (bisphosphonate or denosumab) is planned|after the 12-month romosozumab course, transition to an antiresorptive is planned|if denosumab is discontinued, transition to a bisphosphonate is planned to prevent rebound vertebral fractures}.\nSecondary causes reviewed:");
         }
       }
+      // v23 -> v24: the letters' duration and hours lists widened. Swap only in a stored
+      // copy still carrying the shipped placeholder, so an edited letter keeps its own.
+      if ((stored.seededVersion || 1) < 24) {
+        const swaps = [
+          ["{duration:~6 months|3 months|4 months|12 months}", "{duration:~6 months|1 month|2 months|3 months|4 months|9 months|12 months}"],
+          ["{hours:~30|20|25|32}", "{hours:~30|16|20|24|25|32|36|40}"]
+        ];
+        ["p-let-gen","p-let-axspa","p-let-ra","p-let-sle"].forEach(id=>{
+          const cur = (DATA.phrases || []).find(x=>x.id === id);
+          if (!cur || !cur.body) return;
+          swaps.forEach(([bad, good])=>{
+            if (cur.body.indexOf(bad) >= 0) cur.body = cur.body.split(bad).join(good);
+          });
+        });
+      }
       // v17 -> v18: the folic acid dose was hard-coded at 1 mg daily in the methotrexate
       // counseling phrase and in the patient handout. Both become an editable list so the
       // dose follows the prescriber. Repair only a stored copy that still carries the old
@@ -4246,6 +5119,7 @@ function toast(msg){
   t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 1400);
 }
 function copyText(text){
+  if (blankStyle() !== "stars") text = String(text).replace(/\*\*\*/g, blankMark("fill in"));
   const done = ()=>toast("Copied to clipboard");
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
@@ -4326,7 +5200,8 @@ function renderFillable(body, container){
       if (m[2].charAt(0) === "~") {     // editable: suggestions offered, any value accepted
         const opts = m[2].slice(1).split("|");
         const inp = document.createElement("input");
-        inp.type = "text"; inp.value = opts[0]; inp.title = label; inp.placeholder = label;
+        inp.type = "text"; inp.value = opts[0]; inp.placeholder = label;
+        inp.title = label + ": pick from the list or type any value";
         const dl = document.createElement("datalist");
         dl.id = "dl" + (++DL_N);
         opts.forEach(opt=>{ const o = document.createElement("option"); o.value = opt; dl.appendChild(o); });
@@ -4356,15 +5231,23 @@ function renderFillable(body, container){
   }
   if (last < body.length) container.appendChild(document.createTextNode(body.slice(last)));
 }
-function collectText(node){
+// Blank markers. Meditech users tab through [bracketed] fields, Epic users through ***.
+// The choice lives in Settings and applies to every copy in the app.
+function blankStyle(){ return (typeof META !== "undefined" && META && META.blank) || "brackets"; }
+function blankMark(label){
+  if (blankStyle() === "stars") return "***";
+  const l = (label || "").trim();
+  return "[" + (l && l !== "***" ? l : "fill in") + "]";
+}
+function collectText(node, forPrint){
   let out = "";
   node.childNodes.forEach(ch=>{
     if (ch.nodeType === 3) out += ch.data;
-    else if (ch.tagName === "INPUT") out += (ch.value.trim() || "***");
+    else if (ch.tagName === "INPUT") out += (ch.value.trim() || (forPrint ? "________" : blankMark(ch.placeholder)));
     else if (ch.tagName === "SELECT") out += ch.value;
     else if (ch.tagName === "BR") out += "\n";
     else if (ch.tagName === "DATALIST") { /* suggestions only, never part of the text */ }
-    else out += collectText(ch);
+    else out += collectText(ch, forPrint);
   });
   return out;
 }
@@ -4410,8 +5293,8 @@ const App = {
     renderFillable(item.body, fill); modal.appendChild(fill);
     const acts = document.createElement("div"); acts.className = "modal-actions";
     const mk = (label, cls, fn)=>{ const b=document.createElement("button"); b.className="btn "+cls; b.textContent=label; b.onclick=fn; acts.appendChild(b); };
-    if (kind !== "phrase") mk("Print", "", ()=>App.printSheet(item.name, collectText(fill), lang));
-    mk("Copy with blanks (***)", "", ()=>{ copyText(Tok.apply(curBody()).replace(PH_RE, "***")); });
+    if (kind !== "phrase") mk("Print", "", ()=>App.printSheet(item.name, collectText(fill, true), lang));
+    mk("Copy with blanks", "", ()=>{ copyText(Tok.apply(curBody()).replace(PH_RE, (mm, a, b, c)=>blankMark(a !== undefined ? a : (c !== undefined ? c : "fill in")))); });
     mk("Copy", "primary", ()=>{ copyText(collectText(fill)); App.closeModal(); });
     mk("Close", "", ()=>App.closeModal());
     modal.appendChild(acts);
@@ -4517,7 +5400,7 @@ const App = {
     const h = document.createElement("h3"); h.textContent = "How RheumPad works"; modal.appendChild(h);
     const blocks = [
       ["Quick launcher", "Press . (period) or Ctrl+K anywhere. Type a shortcut like .mtxstart or any name, hit Enter. Phrases without blanks copy instantly; everything else opens ready to fill. Arrow keys move through matches."],
-      ["Blanks", "In any phrase or template body: {dose} makes a fill-in box, {severity:mild|moderate|severe} makes a dropdown, *** makes a generic blank. Empty boxes copy as *** so you catch them in the note."],
+      ["Blanks", "In any phrase or template body: {dose} makes a fill-in box, {severity:mild|moderate|severe} makes a dropdown, *** makes a generic blank. Empty boxes copy as [label] for Meditech or *** for Epic, chosen in Settings, so you catch them in the note."],
       ["Where your work saves", "Everything you edit saves in this browser only, on this computer. Export (top right) writes your whole library to a file; Import loads it anywhere. Moving between computers or backing up = Export here, Import there."],
       ["Handouts", "Patient instruction sheets fill like phrases, toggle to Spanish where available, and Print gives a clean one-page sheet with your clinic name (set it in Settings)."],
       ["No patient information", "The app stores no names, dates of birth, or identifiers by design. Pre-chart uses slot numbers matched to your schedule order. Keep it that way."],
@@ -5064,6 +5947,103 @@ const Drugs = {
       wrap.appendChild(grid);
     });
   },
+  // What the patient gains. One line per card, the part the card fields never carried.
+  BENEFIT: {
+    "d-mtx": "Anchor drug for RA and PsA. Reduces pain and swelling, slows joint damage on x-ray, and about half of patients reach low disease activity on it alone.",
+    "d-hcq": "Cuts lupus flares by about half, lowers clot and organ damage risk, and treats mild joint and skin disease with very low infection risk.",
+    "d-ssz": "Controls RA and peripheral spondyloarthritis with little infection risk, and is safe in pregnancy.",
+    "d-lef": "Comparable to methotrexate for RA symptoms and joint damage, an option when methotrexate fails or is not tolerated.",
+    "d-aza": "Steroid-sparing control of lupus, vasculitis, and myositis, and safe to continue in pregnancy.",
+    "d-mmf": "First-line for lupus nephritis induction and maintenance, and slows lung decline in scleroderma.",
+    "d-pred": "Fast control of inflammation, often within days, used as a bridge while slower drugs take effect.",
+    "d-colch": "Stops a gout flare when started early and prevents flares while urate-lowering therapy begins.",
+    "d-allo": "Lowers uric acid to target, which dissolves crystals over time and ends flares and tophi.",
+    "d-febux": "Lowers uric acid when allopurinol fails or is not tolerated, with no dose change in moderate kidney disease.",
+    "d-voclo": "Roughly doubles complete renal response in lupus nephritis when added to mycophenolate and steroids.",
+    "d-peglo": "Dissolves tophi and clears urate within weeks in gout that nothing else controls.",
+    "d-tnf": "Rapid control of RA, PsA, axSpA, and IBD-associated arthritis, halts joint damage, with over two decades of safety data.",
+    "d-il6": "Controls RA and GCA, and in GCA cuts relapse and total steroid exposure.",
+    "d-jak": "An oral option with biologic-level efficacy in RA, PsA, and axSpA, often working within 2 weeks.",
+    "d-abat": "Controls RA with the lowest serious infection signal among the biologics.",
+    "d-rtx": "Deep, durable control of RA and ANCA vasculitis with dosing only every 6 months.",
+    "d-il17": "Clears psoriasis and controls PsA and axSpA, joints and spine, with skin clearing in weeks.",
+    "d-bime": "Deepest psoriasis clearance in the IL-17 class, with PsA and axSpA control.",
+    "d-beli": "Reduces lupus flares and steroid need, and improves kidney outcomes in lupus nephritis.",
+    "d-anif": "Reduces lupus activity, particularly skin and joints, and spares steroids.",
+    "d-il23": "Clears psoriasis and controls PsA with quarterly dosing and the mildest infection profile.",
+    "d-dmab": "Raises bone density and cuts spine fracture risk by about two thirds and hip fracture risk by about 40 percent.",
+    "d-bis": "Cuts spine fracture risk by half or more and hip fracture risk by about 40 percent, at generic cost.",
+    "d-romo": "Builds bone faster than any other agent in its first year, cutting spine fractures by about 70 percent.",
+    "d-terip": "Builds new bone rather than slowing loss, cutting spine fractures by about 65 percent.",
+    "d-ldn": "Possible modest pain relief in fibromyalgia at low cost with few side effects, though trial evidence is mixed.",
+    "d-slcyclo": "Improves pain, sleep, and fatigue in fibromyalgia, the first approved option in over 15 years.",
+    "d-dulox": "Reduces fibromyalgia pain by about 30 percent in responders and treats depression and anxiety in the same pill.",
+    "d-miln": "Reduces fibromyalgia pain and fatigue, with a noradrenergic edge for energy.",
+    "d-preg": "Reduces fibromyalgia pain and improves sleep, with effect within 1 to 2 weeks.",
+    "d-amit": "Improves sleep and pain in fibromyalgia at very low cost.",
+    "d-cyclo": "Improves sleep and pain modestly in fibromyalgia at low cost.",
+    "d-pilo": "Increases saliva within weeks in Sjogren dry mouth where gland function remains.",
+    "d-cevi": "Increases saliva in Sjogren dry mouth with longer action and less sweating than pilocarpine."
+  },
+  // Which patient sheet matches which card. Anything unmapped offers the lab schedule.
+  SHEET: {
+    "d-mtx": "i6-mtx", "d-hcq": "i-hcq", "d-ssz": "i6-ssz", "d-lef": "i6-lef", "d-aza": "i6-aza", "d-mmf": "i6-mmf",
+    "d-pred": "i-taper", "d-colch": "i-goutflare", "d-allo": "i6-ult", "d-febux": "i6-ult", "d-peglo": "i6-inf",
+    "d-tnf": "i6-bio", "d-il6": "i6-bio", "d-jak": "i6-jak", "d-abat": "i6-bio", "d-rtx": "i6-inf", "d-il17": "i6-bio",
+    "d-bime": "i6-bio", "d-beli": "i6-bio", "d-anif": "i6-inf", "d-il23": "i6-bio",
+    "d-dmab": "i6-dmab", "d-bis": "i6-bisp", "d-romo": "i-bone", "d-terip": "i-bone",
+    "d-slcyclo": "i2-fibro", "d-dulox": "i2-fibro", "d-miln": "i2-fibro", "d-preg": "i2-fibro", "d-amit": "i2-fibro", "d-cyclo": "i2-fibro", "d-ldn": "i2-fibro",
+    "d-pilo": "i2-drymouth", "d-cevi": "i2-drymouth"
+  },
+  counselText(d, decision, sheetName){
+    const lines = ["Shared decision-making discussion regarding starting " + d.name + "."];
+    const benefit = this.BENEFIT[d.id];
+    if (benefit) lines.push("Benefits reviewed: " + benefit);
+    if (d.serious) lines.push("Risks reviewed: " + d.serious);
+    if (d.se) lines.push("Common side effects reviewed: " + d.se);
+    if (d.dosing) lines.push("Dosing: " + d.dosing);
+    if (d.monitor) lines.push("Monitoring plan: " + d.monitor);
+    lines.push("Alternatives, including no treatment, were discussed. Questions were answered. " + decision);
+    if (sheetName) lines.push("Written instructions provided: " + sheetName + ".");
+    return lines.join("\n");
+  },
+  counsel(d, modal){
+    const box = document.createElement("div"); box.className = "drugblock";
+    box.style.cssText = "border-left:3px solid var(--accent);";
+    const t = document.createElement("b"); t.textContent = "Start counseling";
+    box.appendChild(t);
+    const hint = document.createElement("p"); hint.className = "hint"; hint.style.margin = "4px 0 8px";
+    hint.textContent = "Benefits, risks, side effects, dosing, and monitoring from this card, written as the discussion you had. Pick the decision and the sheet to hand over.";
+    box.appendChild(hint);
+    const row = document.createElement("div"); row.style.cssText = "display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px;";
+    const dec = document.createElement("select"); dec.title = "decision";
+    ["The patient verbalized understanding and agreed to proceed.",
+     "The patient wishes to consider the options and will decide at follow-up.",
+     "The patient declined this therapy at this time.",
+     "The patient agreed to proceed pending prior authorization."].forEach(o=>{ const op = document.createElement("option"); op.value = o; op.textContent = o; dec.appendChild(op); });
+    const sh = document.createElement("select"); sh.title = "patient instructions";
+    const none = document.createElement("option"); none.value = ""; none.textContent = "No handout"; sh.appendChild(none);
+    (DATA.instructions || []).forEach(i2=>{ const op = document.createElement("option"); op.value = i2.id; op.textContent = i2.name; sh.appendChild(op); });
+    const want = this.SHEET[d.id];
+    if (want && (DATA.instructions || []).some(i2=>i2.id === want)) sh.value = want;
+    row.appendChild(dec); row.appendChild(sh);
+    box.appendChild(row);
+    const out = document.createElement("div"); out.className = "filled"; out.style.margin = "0 0 8px";
+    const paint = ()=>{
+      const name = sh.value ? ((DATA.instructions || []).find(i2=>i2.id === sh.value) || {}).name : "";
+      out.textContent = this.counselText(d, dec.value, name);
+    };
+    dec.onchange = paint; sh.onchange = paint; paint();
+    box.appendChild(out);
+    const acts = document.createElement("div"); acts.className = "pc-actions";
+    const cp = document.createElement("button"); cp.className = "btn small primary"; cp.textContent = "Copy counseling note";
+    cp.onclick = ()=>copyText(out.textContent);
+    const op = document.createElement("button"); op.className = "btn small"; op.textContent = "Open the handout";
+    op.onclick = ()=>{ if (!sh.value) { toast("Pick a handout first"); return; } App.showTab("instructions"); App.openFill("instruction", sh.value); };
+    acts.appendChild(cp); acts.appendChild(op); box.appendChild(acts);
+    box.dataset.counsel = "1";
+    return box;
+  },
   openCard(id){
     const d = (DATA.drugs || []).find(x=>x.id===id); if (!d) return;
     const modal = document.getElementById("modal"); modal.innerHTML = "";
@@ -5079,11 +6059,19 @@ const Drugs = {
       b.appendChild(t); b.appendChild(p); modal.appendChild(b);
     });
     const acts = document.createElement("div"); acts.className = "modal-actions";
+    const sc = document.createElement("button"); sc.className = "btn primary"; sc.textContent = "Start counseling";
+    sc.onclick = ()=>{
+      const have = modal.querySelector("[data-counsel]");
+      if (have) { have.scrollIntoView({behavior: "smooth", block: "nearest"}); return; }
+      const box = this.counsel(d, modal);
+      modal.insertBefore(box, acts);
+      box.scrollIntoView({behavior: "smooth", block: "nearest"});
+    };
     const cp = document.createElement("button"); cp.className = "btn"; cp.textContent = "Copy card";
     cp.onclick = ()=>copyText(d.name + "\n" + blocks.filter(b=>b[1]).map(b=>b[0].toUpperCase() + ": " + b[1]).join("\n"));
-    const cl = document.createElement("button"); cl.className = "btn primary"; cl.textContent = "Close";
+    const cl = document.createElement("button"); cl.className = "btn"; cl.textContent = "Close";
     cl.onclick = ()=>App.closeModal();
-    acts.appendChild(cp); acts.appendChild(cl); modal.appendChild(acts);
+    acts.appendChild(sc); acts.appendChild(cp); acts.appendChild(cl); modal.appendChild(acts);
     document.getElementById("overlay").classList.add("open");
   }
 };
@@ -7668,6 +8656,21 @@ const SCREEN = {
 };
 
 const CHANGELOG = [
+  {v:"4.8", d:"September 22, 2026", items:[
+    "Abnormal MSK exam phrase (.mskabn): one dropdown per region, each starting at normal, so you change only what was abnormal. Hands, elbows, shoulders, hips, knees, feet, spine, enthesitis, dactylitis, strength, gait, plus joint counts.",
+    "Start counseling on every drug card. One button writes the shared decision-making note from the card itself: benefits, risks, side effects, dosing, monitoring, and the decision. A dropdown picks the patient sheet to hand over and opens it.",
+    "Twelve in-depth patient guides, in English and Spanish: methotrexate, leflunomide, sulfasalazine, azathioprine, mycophenolate, biologic injections, infusions, JAK inhibitors, allopurinol or febuxostat, bisphosphonates, denosumab, and osteoarthritis. Each covers what it does, how to take it, what to expect, labs, and when to call.",
+    "Blanks copy as [brackets] for Meditech. Every empty box and every generic blank now copies as [label], the way Meditech tabs through fields. Epic users switch back to *** in Settings."
+  ]},
+  {v:"4.7", d:"August 29, 2026", items:[
+    "The letters' period and hours boxes read as what they are: type any value, or pick one. The suggestion lists widened to 1 through 12 months and 16 through 40 hours, and hovering any such box says pick from the list or type any value.",
+    "This was always a type-anything box, and now the app says so instead of hoping you guess."
+  ]},
+  {v:"4.6", d:"August 27, 2026", items:[
+    "A Letters category in the phrase library: work accommodation letters, general and for axial spondyloarthritis, rheumatoid arthritis, and lupus, plus a short work or school excuse note.",
+    "Duration and weekly hours are typable dropdowns, so 6 months and 30 hours are one tap and any other number types right in. Each disease letter carries its own accommodations, spinal loading for axSpA, hand tasks for RA, ultraviolet exposure and pacing for lupus.",
+    "No letter contains a name field. Letters refer to this patient throughout, and the name attaches in the EMR after pasting, where it belongs."
+  ]},
   {v:"4.5", d:"August 22, 2026", items:[
     "Common tapers load in one tap: PMR (20 mg down 2.5 every 2 weeks to 10, then 1 mg monthly), the GiACTA 26-week taper for GCA on tocilizumab, the 52-week taper without tocilizumab, a 5-day gout flare burst, and an RA bridging taper.",
     "Each preset fills the step table, so every row stays editable and the pill count, the note, and both patient instructions follow. A note under the buttons states the source and what to verify.",
@@ -7927,6 +8930,8 @@ function renderAll(){
   renderFavbar(); ED.renderLists(); PC.render();
   const ci = document.getElementById("set-clinic");
   if (ci && document.activeElement !== ci) ci.value = DATA.clinic || "";
+  const bi = document.getElementById("set-blank");
+  if (bi) bi.value = blankStyle();
   const si = document.getElementById("set-sig");
   if (si && document.activeElement !== si) si.value = DATA.sig || "";
   renderSigPreview();
@@ -7960,6 +8965,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
     }
   });
   document.getElementById("set-clinic").addEventListener("input", (e)=>{ DATA.clinic = e.target.value; saveState(); });
+  const bsel = document.getElementById("set-blank");
+  if (bsel) bsel.addEventListener("change", (e)=>{ META.blank = e.target.value; saveState(); toast(e.target.value === "stars" ? "Blanks copy as ***" : "Blanks copy as [brackets]"); });
   const sigBox = document.getElementById("set-sig");
   if (sigBox) sigBox.addEventListener("input", (e)=>{
     DATA.sig = e.target.value; saveState(); renderSigPreview();
