@@ -91,7 +91,7 @@
     font-size:.92rem; white-space:pre-wrap; margin:10px 0; line-height:1.9;}
   .filled input[type=text]{border:none; border-bottom:1.5px solid var(--accent); background:var(--accent-soft);
     border-radius:4px 4px 0 0; padding:2px 7px; min-width:70px; outline:none;}
-  .filled select{border:1.5px solid var(--accent); background:var(--accent-soft); border-radius:6px; padding:2px 6px; outline:none;}
+  .filled select{border:1.5px solid var(--accent); background:var(--accent-soft); border-radius:6px; padding:2px 6px; outline:none; max-width:100%; text-overflow:ellipsis;}
   .modal-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap;}
 
   #toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
@@ -107,7 +107,7 @@
   .comp-body{font-size:.92rem; white-space:pre-wrap; line-height:2;}
   .comp-body input[type=text]{border:none; border-bottom:1.5px solid var(--accent); background:var(--accent-soft);
     border-radius:4px 4px 0 0; padding:2px 7px; min-width:70px; outline:none;}
-  .comp-body select{border:1.5px solid var(--accent); background:var(--accent-soft); border-radius:6px; padding:2px 6px; outline:none;}
+  .comp-body select{border:1.5px solid var(--accent); background:var(--accent-soft); border-radius:6px; padding:2px 6px; outline:none; max-width:100%; text-overflow:ellipsis;}
   .comp-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
   .comp-top h2{font-size:1.1rem;}
   /* Modular notes: disease picker + section chips */
@@ -300,7 +300,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v4.8</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v5.2</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -844,8 +844,7 @@ const DEFAULT_DATA = {
 `Discussed hydroxychloroquine {dose:200 mg daily|200 mg BID|300 mg daily|400 mg daily} (dosed at or below 5 mg/kg/day actual body weight). Reviewed expected 8-12 week onset, GI upset, rare skin pigmentation, and the small risk of retinal toxicity with long-term use. Baseline ophthalmologic exam within the first year, then annual screening after 5 years of use (sooner if risk factors). Patient verbalized understanding.`},
     {id:"p-biopre", name:"Biologic pre-treatment screening", dot:".biopre", cat:"Plans", body:
 `Prior to initiating {agent}, completed pre-treatment screening: TB testing ({tb:QuantiFERON negative|QuantiFERON positive - see plan|PPD negative}), hepatitis B and C serologies {hep:negative|reviewed - see plan}, CBC and CMP reviewed. Counseled on infection risk, need to hold dosing during active infection or before surgery, and avoidance of live vaccines while on therapy. Age-appropriate vaccinations reviewed and updated where indicated, including recombinant zoster and pneumococcal vaccination.`},
-    {id:"p-predtaper", name:"Prednisone taper", dot:".predtaper", cat:"Plans", body:
-`Prednisone taper: {start:5 mg|10 mg|15 mg|20 mg|30 mg|40 mg} daily, decreasing by {step} every {interval:3 days|1 week|2 weeks|1 month} as tolerated, target {target:off|5 mg daily|lowest effective dose}. Counseled not to stop abruptly, to take with food in the morning, and to call if symptoms flare during the taper. Reviewed steroid side effects including hyperglycemia, mood and sleep changes, weight gain, and bone loss; calcium and vitamin D advised while on therapy.`},
+    
     {id:"p-dmardlabs", name:"DMARD monitoring labs", dot:".dmardlabs", cat:"Monitoring", body:
 `Safety labs reviewed today: CBC, CMP{extra:, ESR, CRP|, ESR, CRP, uric acid|}. No significant cytopenias, transaminase elevation, or renal dysfunction{caveat: |; see plan for abnormalities}. Continue monitoring every {interval:4 weeks|8 weeks|12 weeks|6 months} while on current therapy.`},
     {id:"p-rosneg", name:"Negative rheum ROS", dot:".rosneg", cat:"Exam & ROS", body:
@@ -860,8 +859,16 @@ const DEFAULT_DATA = {
 `Lifestyle counseling provided this visit: reviewed an anti-inflammatory, predominantly whole-food plant-forward eating pattern; regular physical activity as tolerated with a goal of 150 minutes weekly plus resistance training twice weekly; sleep hygiene with a 7-9 hour target; stress management strategies; and tobacco and alcohol reduction where applicable. Discussed the evidence linking these habits to disease activity, cardiovascular risk, and overall outcomes in rheumatic disease. Patient identified the following initial goal: {goal}.`},
     {id:"p-terato", name:"Teratogen / contraception counseling", dot:".terato", cat:"Counseling", body:
 `Counseled regarding the teratogenic potential of {drug:methotrexate|leflunomide|mycophenolate|cyclophosphamide}. Reviewed the need for reliable contraception while on therapy and the required washout before conception. Advised to notify the office promptly if pregnancy is being planned or suspected so therapy can be adjusted to a pregnancy-compatible regimen.`},
-    {id:"p-vax", name:"Vaccines on immunosuppression", dot:".vax", cat:"Counseling", body:
-`Reviewed vaccination status. Recommended: annual influenza, COVID-19 per current schedule, recombinant zoster series (age 18+ on immunosuppression), and pneumococcal vaccination per ACIP. Counseled to avoid live vaccines while on {tx:biologic therapy|JAK inhibitor|high-dose steroids|current immunosuppression}. Primary care to coordinate administration.`},
+    {id:"p-vax", name:"Recommended vaccines on immunosuppression", dot:".vax", cat:"Counseling", body:
+`Vaccination review. Immunosuppression status: {status:on a biologic|on a JAK inhibitor|on methotrexate|on mycophenolate, azathioprine, or leflunomide|on rituximab|on prednisone 20 mg daily or more|not immunosuppressed}.
+Recommended per ACIP and the 2022 ACR vaccination guideline:
+- Influenza yearly, {flu:standard dose|high-dose or adjuvanted, age 65 and older}. Methotrexate {mtx:held for 1 week after the influenza vaccine|continued, disease activity does not permit a hold|not applicable}.
+- COVID-19 per the current schedule for immunocompromised adults.
+- Pneumococcal, indicated at any age on immunosuppression: {pneumo:PCV20 or PCV21 once, recommended today|PCV15 today with PPSV23 in 8 weeks or more|previously completed|declined}.
+- Recombinant zoster (Shingrix), 2 doses 2 to 6 months apart, age 18 and older on immunosuppression: {rzv:series complete|dose 1 given, dose 2 due|recommended today|declined}.
+- RSV, one dose at age 75 and older, or 50 to 74 with a risk condition including immunosuppression: {rsv:not yet eligible|recommended today|complete|declined}.
+- Tdap every 10 years, hepatitis B series if not immune, HPV through age 26 with shared decision-making to 45: {routine:up to date|gaps addressed, see plan|deferred to primary care}.
+Live vaccines (MMR, varicella, live zoster, yellow fever, oral typhoid, intranasal influenza) are deferred while immunosuppressed. Non-live vaccines are given without holding therapy, except methotrexate as above and rituximab, where non-live vaccines are timed before the next dose and the dose is delayed 2 weeks. Non-influenza vaccines are deferred while prednisone is 20 mg daily or more. Administration coordinated with {who:primary care|the pharmacy|our clinic}.`},
     {id:"p-timebill", name:"Time-based billing", dot:".timebill", cat:"Attestation", body:
 `Total time on the date of this encounter: {min} minutes, greater than 50% spent in counseling and care coordination, including review of records and results, medication counseling, shared decision-making, and documentation.`},
     {id:"p-sdm", name:"Shared decision-making", dot:".sdm", cat:"Attestation", body:
@@ -1102,7 +1109,7 @@ Los mensajes por el portal se responden en {response} días hábiles. En una eme
       monitor:"CBC, CMP (LFTs, creatinine) every 2-4 wk for the first 3 months, then every 8-12 wk. Baseline hepatitis B and C, chest imaging. Judge response at 3 months and expect full effect by 6.",
       se:"Nausea, fatigue the day after the dose, oral ulcers, hair thinning, mild transaminitis.",
       serious:"Cytopenias, hepatotoxicity, pneumonitis (new dyspnea or cough means hold and evaluate). Teratogen.",
-      pearls:"Hold during active infection. Limit alcohol. Split the dose or move to SC for nausea. Stop 3 months before conception, either partner. Avoid trimethoprim-sulfamethoxazole, which stacks the antifolate effect. Holding methotrexate for 2 weeks after an influenza vaccine improves the antibody response, an ACR conditional recommendation."},
+      pearls:"Hold during active infection. Limit alcohol. Split the dose or move to SC for nausea. Stop 3 months before conception, either partner. Avoid trimethoprim-sulfamethoxazole, which stacks the antifolate effect. Hold methotrexate for 1 week after the influenza vaccine: a randomized noninferiority trial found a 1-week hold matched the 2-week hold in the 2022 ACR guideline for antibody response, 68.9 versus 75.0 percent (Park, Arthritis Rheumatol 2023)."},
     {id:"d-hcq", name:"Hydroxychloroquine", cls:"Conventional DMARDs",
       dosing:"200-400 mg daily, kept at or below 5 mg/kg/day of actual body weight.",
       monitor:"No routine labs. Baseline eye exam within the first year, then annual screening after 5 years of use, sooner with renal disease, tamoxifen, or dosing above 5 mg/kg. Screening means OCT plus automated visual fields, not a fundus look.",
@@ -1270,7 +1277,7 @@ Los mensajes por el portal se responden en {response} días hábiles. En una eme
       monitor:"Blood pressure at follow-up. Ask about mood and suicidal thinking in the first month, especially under age 25.",
       se:"Nausea early, usually gone in 1-2 weeks when taken with food. Dry mouth, constipation, sweating, appetite loss, sexual dysfunction.",
       serious:"Boxed warning for suicidal thinking in young adults. Serotonin syndrome. Hepatotoxicity, so avoid in cirrhosis and with heavy alcohol use. Not recommended below CrCl 30. Abrupt stopping brings dizziness and electric shock sensations.",
-      pearls:"First pick when depression, anxiety, or osteoarthritis pain sits alongside fibromyalgia, since one drug covers both. Generic and cheap. Try evening dosing when it sedates and morning when it activates, then let the patient choose."},
+      pearls:"First pick when depression, anxiety, or osteoarthritis pain sits alongside fibromyalgia, since one drug covers both, and conditionally recommended for knee, hip, and hand osteoarthritis in the 2026 ACR guideline. Generic and cheap. Try evening dosing when it sedates and morning when it activates, then let the patient choose."},
     {id:"d-miln", name:"Milnacipran (Savella)", cls:"Fibromyalgia & central pain",
       dosing:"12.5 mg once on day 1, 12.5 mg BID days 2-3, 25 mg BID days 4-7, then 50 mg BID as the usual target. Maximum 100 mg BID. Halve the maintenance dose at CrCl 5-29, and skip it in end-stage renal disease.",
       monitor:"Blood pressure and pulse at baseline and every visit. Treatment-emergent hypertension hit 20 percent against 7 percent on placebo, and heart rate rose about 13 beats per minute.",
@@ -2000,14 +2007,9 @@ Live vaccines include MMR, varicella, oral typhoid, yellow fever, oral polio, an
 `We discussed the risk of malignancy associated with {antibody} antibodies in the setting of {dxmyo:dermatomyositis|polymyositis|immune-mediated necrotizing myopathy}. The patient will undergo {screening} cancer screening per current recommendations.
 Reference: Oldroyd AGS, Callen JP, Chinoy H, et al; International Myositis Assessment and Clinical Studies Group Cancer Screening Expert Group; Aggarwal R. International Guideline for Idiopathic Inflammatory Myopathy-Associated Cancer Screening: an International Myositis Assessment and Clinical Studies Group (IMACS) initiative. Nat Rev Rheumatol. 2023 Dec;19(12):805-817. doi: 10.1038/s41584-023-01045-w. PMID: 37945774; PMCID: PMC10834225.`},
 
-  {id:"p2-ana80", name:"ANA 1:80 referral denial", dot:".ana80", cat:"Reference", body:
-`Denied. The referral for rheumatology evaluation based solely on a positive antinuclear antibody (ANA) titer of 1:80, in the absence of disease-specific autoantibodies and with only nonspecific clinical findings, is not supported by current evidence.`},
+  
 
-  {id:"p2-longitudinal", name:"Longitudinal specialty care attestation", dot:".longitudinal", cat:"Reference", body:
-`This visit represents ongoing and longitudinal specialty care provided to this patient.`},
-
-  {id:"p2-recordsrev", name:"Records reviewed attestation", dot:".recordsrev", cat:"Reference", body:
-`I personally reviewed and interpreted the history, physical exams, lab testing, and imaging results in the patient's EMR as discussed in the HPI above. Outside records reviewed: {records:none available|prior rheumatology notes|primary care notes|outside labs|outside imaging|hospital records}.`},
+  
 
   {id:"p2-drymouth", name:"Dry mouth and caries counseling", dot:".drymouth", cat:"Counseling", body:
 `Dry mouth management strategies were reviewed:
@@ -2033,12 +2035,12 @@ Caries prevention strategies were reviewed:
 
   {id:"i2-punctual", name:"Appointment length and punctuality", body:
 `APPOINTMENT LENGTH AND ARRIVAL TIME
-Follow-up visits are 30 minutes long. That time includes history taking, physical exam, chart review, and post-visit documentation.
-Please arrive 15 minutes before your appointment time so the front desk can check you in and you can be roomed on time.
+Follow-up visits are {visit length:~20|15|30|40} minutes long. That time includes history taking, physical exam, chart review, and post-visit documentation.
+Please arrive {arrive:~15|10|20|30} minutes before your appointment time so the front desk can check you in and you can be roomed on time.
 We try our best to remain punctual and we appreciate your cooperation.`, bodyEs:
 `DURACIÓN DE LA CITA Y HORA DE LLEGADA
-Las citas de seguimiento duran 30 minutos. Ese tiempo incluye la historia clínica, el examen físico, la revisión del expediente y la documentación posterior a la visita.
-Por favor llegue 15 minutos antes de la hora de su cita para que la recepción pueda registrarlo y pasarlo al consultorio a tiempo.
+Las citas de seguimiento duran {duración:~20|15|30|40} minutos. Ese tiempo incluye la historia clínica, el examen físico, la revisión del expediente y la documentación posterior a la visita.
+Por favor llegue {llegada:~15|10|20|30} minutos antes de la hora de su cita para que la recepción pueda registrarlo y pasarlo al consultorio a tiempo.
 Hacemos todo lo posible por mantener la puntualidad y agradecemos su cooperación.`},
 
   {id:"i2-urinecalcium", name:"24-hour urine calcium collection", body:
@@ -2195,17 +2197,17 @@ Inscríbase en fullplateliving.org.`},
 `WELCOME TO RHEUMATOLOGY
 It was a pleasure meeting you and seeing you in clinic.
 APPOINTMENTS
-Initial visits give us 60 minutes to understand your health concerns thoroughly. Follow-ups are 30 minutes to monitor your progress. To make the most of our time together:
-- Please arrive 15 minutes early.
+Initial visits give us {new visit:~40|30|45|60} minutes to understand your health concerns thoroughly. Follow-ups are {follow-up:~20|15|30|40} minutes to monitor your progress. To make the most of our time together:
+- Please arrive {arrive:~15|10|20|30} minutes early.
 - Let us discuss your concerns at the start of each visit so we can address them fully.
 - If additional concerns arise at the end of our visit, we may need to schedule a follow-up to give them proper attention.
-- If you are running more than 15 minutes late, we may need to reschedule so you receive the time you need.
+- If you are running more than {late:~15|10|20} minutes late, we may need to reschedule so you receive the time you need.
 COMMUNICATION
 To provide thoughtful care for all patients:
-- I review portal messages within 3 business days.
-- Medication refills are typically processed within 3 business days. Plan accordingly if you are traveling or running out of medication.
+- I review portal messages within {messages:~3|2|5} business days.
+- Medication refills are typically processed within {refills:~3|2|5} business days. Plan accordingly if you are traveling or running out of medication.
 - If your results are normal or stable, I may not reach out directly. I review all test results carefully, and if anything concerning comes up I will contact you promptly. If you would like to review normal results or have questions, message me.
-- Forms and paperwork typically take 3 to 7 business days, as I set aside dedicated time each week to review them carefully.
+- Forms and paperwork typically take {forms:~3 to 7|5 to 10|7 to 14} business days, as I set aside dedicated time each week to review them carefully.
 - For any urgent health concern, reach out to your primary care doctor or seek emergency care.
 MEDICATIONS AND INSURANCE
 - Some medications need insurance approval before we can start them.
@@ -2225,17 +2227,17 @@ I look forward to working together to manage your rheumatologic conditions.`, bo
 `BIENVENIDO A REUMATOLOGÍA
 Fue un placer conocerlo y atenderlo en la clínica.
 CITAS
-Las visitas iniciales nos dan 60 minutos para comprender a fondo sus problemas de salud. Las visitas de seguimiento son de 30 minutos para vigilar su progreso. Para aprovechar al máximo nuestro tiempo juntos:
-- Por favor llegue 15 minutos antes.
+Las visitas iniciales nos dan {visita nueva:~40|30|45|60} minutos para comprender a fondo sus problemas de salud. Las visitas de seguimiento son de {seguimiento:~20|15|30|40} minutos para vigilar su progreso. Para aprovechar al máximo nuestro tiempo juntos:
+- Por favor llegue {llegada:~15|10|20|30} minutos antes.
 - Hablemos de sus inquietudes al inicio de cada visita para poder atenderlas por completo.
 - Si surgen inquietudes adicionales al final de la visita, es posible que necesitemos programar un seguimiento para darles la atención adecuada.
-- Si llega con más de 15 minutos de retraso, es posible que debamos reprogramar para que reciba el tiempo que necesita.
+- Si llega con más de {retraso:~15|10|20} minutos de retraso, es posible que debamos reprogramar para que reciba el tiempo que necesita.
 COMUNICACIÓN
 Para brindar atención cuidadosa a todos los pacientes:
-- Reviso los mensajes del portal dentro de 3 días hábiles.
-- Las renovaciones de medicamentos se procesan normalmente dentro de 3 días hábiles. Planifique con tiempo si va a viajar o si se le está acabando el medicamento.
+- Reviso los mensajes del portal dentro de {mensajes:~3|2|5} días hábiles.
+- Las renovaciones de medicamentos se procesan normalmente dentro de {renovaciones:~3|2|5} días hábiles. Planifique con tiempo si va a viajar o si se le está acabando el medicamento.
 - Si sus resultados son normales o estables, es posible que no me comunique directamente. Reviso todos los resultados con cuidado y, si aparece algo preocupante, lo contactaré de inmediato. Si desea revisar resultados normales o tiene preguntas, envíeme un mensaje.
-- Los formularios y el papeleo suelen tomar de 3 a 7 días hábiles, ya que reservo tiempo cada semana para revisarlos con cuidado.
+- Los formularios y el papeleo suelen tomar de {formularios:~3 a 7|5 a 10|7 a 14} días hábiles, ya que reservo tiempo cada semana para revisarlos con cuidado.
 - Para cualquier problema de salud urgente, comuníquese con su médico de cabecera o busque atención de emergencia.
 MEDICAMENTOS Y SEGURO
 - Algunos medicamentos necesitan aprobación del seguro antes de comenzar.
@@ -2243,7 +2245,7 @@ MEDICAMENTOS Y SEGURO
 - Le informaremos sobre cualquier retraso o requisito.
 - Avísenos si tiene dificultad para obtener sus medicamentos.
 VISITAS POR VIDEO
-- Busque un espacio tranquilo y bien iluminado donde se sienta comodo.
+- Busque un espacio tranquilo y bien iluminado donde se sienta cómodo.
 - Conéctese de 5 a 15 minutos antes para probar su conexión.
 - Tenga anotados sus síntomas actuales.
 - Mantenga actualizada la información de su farmacia.
@@ -3333,10 +3335,11 @@ In knee and hip osteoarthritis, structured exercise lowers pain about as much as
 - Strength work for the thigh muscles is the highest-yield piece for knees. Sit-to-stand from a chair, 10 times, twice a day, is a legitimate starting program.
 - Walking, swimming, water aerobics, or cycling for 150 minutes a week.
 - Tai chi has good evidence for knee osteoarthritis and helps balance at the same time.
+- Massage and acupuncture help some people, and the 2026 ACR guideline lists both as options.
 - Expect 6 to 12 weeks before you feel the difference. Most people who quit, quit at week 3.
 
 WEIGHT
-Every pound of body weight puts about 4 pounds of force through the knee with each step. Losing 10 pounds takes 40 pounds off the joint per step. A 10 percent loss produces meaningful pain relief in trials, and the effect is larger when it is paired with exercise than either one alone.
+Every pound of body weight puts about 4 pounds of force through the knee with each step. Losing 10 pounds takes 40 pounds off the joint per step. A 10 percent loss produces meaningful pain relief in trials, and the effect is larger when it is paired with exercise than either one alone. If you have knee osteoarthritis and obesity, the 2026 guideline also supports a GLP-1 weight-loss medicine alongside diet and exercise.
 
 WHAT HELPS AND WHAT DOES NOT
 - Topical anti-inflammatory gel works for knees and hands with far less stomach and kidney risk than pills.
@@ -3360,10 +3363,11 @@ En la artrosis de rodilla y cadera, el ejercicio estructurado baja el dolor casi
 - El trabajo de fuerza para los músculos del muslo es lo que más rinde para las rodillas. Pararse y sentarse de una silla, 10 veces, dos veces al día, ya es un programa válido para empezar.
 - Caminar, nadar, hacer aeróbicos en el agua o andar en bicicleta, 150 minutos por semana.
 - El tai chi tiene buena evidencia en artrosis de rodilla y mejora el equilibrio al mismo tiempo.
+- El masaje y la acupuntura ayudan a algunas personas, y la guía 2026 del ACR incluye ambos como opciones.
 - Espere entre 6 y 12 semanas antes de sentir la diferencia. La mayoría de quienes abandonan lo hacen en la semana 3.
 
 PESO
-Cada libra de peso corporal pasa cerca de 4 libras de fuerza por la rodilla en cada paso. Bajar 10 libras quita 40 libras de carga por paso. Una pérdida del 10 por ciento produce alivio real del dolor en los estudios, y el efecto es mayor cuando se combina con ejercicio que con cualquiera de los dos por separado.
+Cada libra de peso corporal pasa cerca de 4 libras de fuerza por la rodilla en cada paso. Bajar 10 libras quita 40 libras de carga por paso. Una pérdida del 10 por ciento produce alivio real del dolor en los estudios, y el efecto es mayor cuando se combina con ejercicio que con cualquiera de los dos por separado. Si tiene artrosis de rodilla y obesidad, la guía 2026 también respalda un medicamento GLP-1 para bajar de peso junto con la dieta y el ejercicio.
 
 LO QUE AYUDA Y LO QUE NO
 - El gel antiinflamatorio sobre la piel funciona para rodillas y manos, con mucho menos riesgo para el estómago y los riñones que las pastillas.
@@ -4187,7 +4191,7 @@ ALCOHOL AND PREGNANCY
 
 LABS AND VACCINES
 - Blood tests every 4 to 8 weeks for the first 3 months, then every 3 months.
-- Ask before any vaccine. Get the flu shot yearly.
+- Ask before any vaccine. Get the flu shot yearly, and skip the one methotrexate dose that falls in the week after it if your arthritis is calm.
 - Do not take trimethoprim-sulfamethoxazole (Bactrim) with methotrexate. Tell every clinician and pharmacist you take methotrexate.
 
 CALL THE OFFICE FOR
@@ -4219,7 +4223,7 @@ ALCOHOL Y EMBARAZO
 
 ANÁLISIS Y VACUNAS
 - Análisis de sangre cada 4 a 8 semanas los primeros 3 meses, y luego cada 3 meses.
-- Pregunte antes de cualquier vacuna. Póngase la vacuna de la gripe cada año.
+- Pregunte antes de cualquier vacuna. Póngase la vacuna de la gripe cada año, y sáltese la única dosis de metotrexato que cae en la semana después si su artritis está tranquila.
 - No tome trimetoprim-sulfametoxazol (Bactrim) con metotrexato. Diga a cada médico y farmacéutico que toma metotrexato.
 
 LLAME AL CONSULTORIO SI TIENE
@@ -4852,20 +4856,35 @@ WHAT IT IS
 Osteoarthritis is wear and repair in a joint that has fallen out of balance. Cartilage thins, the bone underneath reacts, and the joint gets stiff and sore. It is the most common form of arthritis. It is not the same as rheumatoid arthritis and does not spread through the body.
 
 WHAT HELPS MOST
+The 2026 American College of Rheumatology guideline puts these first, with the strongest evidence behind them.
 - Movement. Joints with arthritis need to move. Walking, cycling, swimming, and strength exercises reduce pain over time. Start with 10 minutes and build up. Some soreness after exercise is normal. Sharp pain is not.
-- Strong muscles. Strong thigh muscles protect the knee. A physical therapist can show you the right exercises.
-- Weight. Every pound lost takes 4 pounds of pressure off the knees with each step. Even 5 to 10 percent of body weight makes a difference.
+- Strong muscles. Strong thigh muscles protect the knee. A physical therapist can show you the right exercises. An occupational therapist helps when hand arthritis limits daily tasks.
+- Weight. Every pound lost takes 4 pounds of pressure off the knees with each step. Losing 5 to 10 percent of body weight reduces pain. If you have knee arthritis and obesity, a weight-loss medicine (a GLP-1 medicine such as semaglutide) is an option alongside diet and exercise. Ask us.
+- A cane or walking aid when walking is hard. Hold it on the side opposite the painful hip or knee.
 
-MEDICINES THAT HELP
-- Topical anti-inflammatory gel {topical:~diclofenac gel|other} on the painful joint, up to 4 times a day. The first choice for knees and hands, with little risk.
+OTHER THINGS THAT HELP SOME PEOPLE
+- Knee braces, a splint for the base of the thumb, and taping.
+- Tai chi, yoga, and hand exercises.
+- Heat or cold on the joint, a paraffin wax bath for the hands, and arthritis gloves.
+- Massage, acupuncture, and cognitive behavioral therapy for coping with long-standing pain.
+
+MEDICINES AND PROCEDURES THAT HELP
+- Anti-inflammatory gel {topical:~diclofenac gel|other} on the painful joint, up to 4 times a day. The first choice for knees and hands, with little risk. For knees and hands the guideline prefers the gel over pills.
+- Anti-inflammatory pills such as naproxen or ibuprofen, at the lowest dose that works, for short stretches. Take with food. Ask us first if you have kidney disease, stomach ulcers, heart disease, or take blood thinners.
+- A steroid injection into the knee or hip can calm a bad stretch for weeks to months. Hip injections are done with ultrasound guidance.
 - Acetaminophen up to {apap:3000|2000} mg a day for milder pain.
-- Anti-inflammatory pills such as naproxen or ibuprofen for short stretches. Take with food. Ask us first if you have kidney disease, stomach ulcers, heart disease, or take blood thinners.
+- Capsaicin cream for the knee.
 - Duloxetine, a daily pill, helps some people with long-standing pain.
-- A steroid injection into the joint can calm a bad stretch for a few weeks to months.
+- For the erosive type of hand arthritis, we sometimes use methotrexate.
+- Radiofrequency ablation, a procedure that quiets the nerves around the knee, for some people whose knee pain persists.
 
-WHAT DOES NOT HELP MUCH
-- Glucosamine and chondroitin. Safe, but studies show little benefit.
-- Opioids. They do not work well for arthritis pain and carry real risks.
+WHAT WE DO NOT RECOMMEND
+- Glucosamine and chondroitin, alone or combined. Studies show no benefit.
+- Platelet-rich plasma (PRP) and stem cell injections. Costly, and the studies do not support them.
+- Hyaluronic acid (gel) injections, botulinum toxin injections, and prolotherapy.
+- Opioids, including tramadol. They do not work well for arthritis pain and carry real risks.
+- Vitamin D, fish oil, colchicine, hydroxychloroquine, bisphosphonates, and the biologic medicines used for rheumatoid arthritis. None of these help osteoarthritis.
+- TENS units and wedged shoe insoles.
 
 FLARES
 - Rest the joint for a day or two, use ice or heat, whichever feels better, and then return to gentle movement.
@@ -4884,20 +4903,35 @@ QUÉ ES
 La osteoartritis es desgaste y reparación en una articulación que ha perdido el equilibrio. El cartílago se adelgaza, el hueso de abajo reacciona, y la articulación se pone rígida y adolorida. Es la forma más común de artritis. No es lo mismo que la artritis reumatoide y no se extiende por el cuerpo.
 
 QUÉ AYUDA MÁS
+La guía 2026 del Colegio Americano de Reumatología pone esto primero, con la evidencia más fuerte detrás.
 - El movimiento. Las articulaciones con artritis necesitan moverse. Caminar, andar en bicicleta, nadar y los ejercicios de fuerza reducen el dolor con el tiempo. Empiece con 10 minutos y aumente poco a poco. Algo de molestia después del ejercicio es normal. El dolor agudo no lo es.
-- Músculos fuertes. Los músculos fuertes del muslo protegen la rodilla. Un fisioterapeuta puede enseñarle los ejercicios correctos.
-- El peso. Cada libra que baja quita 4 libras de presión a las rodillas en cada paso. Incluso bajar del 5 al 10 por ciento del peso hace una diferencia.
+- Músculos fuertes. Los músculos fuertes del muslo protegen la rodilla. Un fisioterapeuta puede enseñarle los ejercicios correctos. Un terapeuta ocupacional ayuda cuando la artritis de las manos limita las tareas diarias.
+- El peso. Cada libra que baja quita 4 libras de presión a las rodillas en cada paso. Bajar del 5 al 10 por ciento del peso reduce el dolor. Si tiene artritis de rodilla y obesidad, un medicamento para bajar de peso (un medicamento GLP-1 como la semaglutida) es una opción junto con la dieta y el ejercicio. Pregúntenos.
+- Un bastón o ayuda para caminar cuando caminar cuesta. Llévelo del lado opuesto a la cadera o rodilla adolorida.
 
-MEDICAMENTOS QUE AYUDAN
-- Gel antiinflamatorio {tópico:~gel de diclofenaco|otro} en la articulación adolorida, hasta 4 veces al día. La primera opción para rodillas y manos, con poco riesgo.
+OTRAS COSAS QUE AYUDAN A ALGUNAS PERSONAS
+- Rodilleras, una férula para la base del pulgar y el vendaje con cinta.
+- Tai chi, yoga y ejercicios para las manos.
+- Calor o frío en la articulación, un baño de parafina para las manos y guantes para artritis.
+- Masaje, acupuntura y terapia cognitivo-conductual para sobrellevar el dolor de largo tiempo.
+
+MEDICAMENTOS Y PROCEDIMIENTOS QUE AYUDAN
+- Gel antiinflamatorio {tópico:~gel de diclofenaco|otro} en la articulación adolorida, hasta 4 veces al día. La primera opción para rodillas y manos, con poco riesgo. Para rodillas y manos la guía prefiere el gel sobre las pastillas.
+- Pastillas antiinflamatorias como naproxeno o ibuprofeno, en la dosis más baja que funcione, por periodos cortos. Tómelas con comida. Pregúntenos primero si tiene enfermedad de los riñones, úlceras de estómago, enfermedad del corazón o toma anticoagulantes.
+- Una inyección de esteroide en la rodilla o la cadera puede calmar una mala racha por semanas o meses. Las inyecciones de cadera se hacen con guía de ultrasonido.
 - Acetaminofén hasta {apap:3000|2000} mg al día para dolor más leve.
-- Pastillas antiinflamatorias como naproxeno o ibuprofeno por periodos cortos. Tómelas con comida. Pregúntenos primero si tiene enfermedad de los riñones, úlceras de estómago, enfermedad del corazón o toma anticoagulantes.
+- Crema de capsaicina para la rodilla.
 - La duloxetina, una pastilla diaria, ayuda a algunas personas con dolor de largo tiempo.
-- Una inyección de esteroide en la articulación puede calmar una mala racha por unas semanas o meses.
+- Para el tipo erosivo de artritis de las manos, a veces usamos metotrexato.
+- La ablación por radiofrecuencia, un procedimiento que calma los nervios alrededor de la rodilla, para algunas personas cuyo dolor de rodilla persiste.
 
-QUÉ NO AYUDA MUCHO
-- La glucosamina y la condroitina. Son seguras, pero los estudios muestran poco beneficio.
-- Los opioides. No funcionan bien para el dolor de artritis y tienen riesgos reales.
+LO QUE NO RECOMENDAMOS
+- Glucosamina y condroitina, solas o combinadas. Los estudios no muestran beneficio.
+- Inyecciones de plasma rico en plaquetas (PRP) y de células madre. Costosas, y los estudios no las respaldan.
+- Inyecciones de ácido hialurónico (gel), inyecciones de toxina botulínica y proloterapia.
+- Opioides, incluido el tramadol. No funcionan bien para el dolor de artritis y tienen riesgos reales.
+- Vitamina D, aceite de pescado, colchicina, hidroxicloroquina, bisfosfonatos y los medicamentos biológicos que se usan para la artritis reumatoide. Ninguno de estos ayuda en la osteoartritis.
+- Aparatos TENS y plantillas en cuña.
 
 BROTES
 - Descanse la articulación uno o dos días, use hielo o calor, lo que se sienta mejor, y luego vuelva al movimiento suave.
@@ -4912,7 +4946,332 @@ LLAME AL CONSULTORIO SI TIENE
 ]);
 })();
 
-(function(){ DEFAULT_DATA.version = 25; })();
+
+// ====================== VACCINES: PATIENT SHEET ======================
+(function(){
+DEFAULT_DATA.instructions = DEFAULT_DATA.instructions.concat([
+{id:"i6-vax", name:"Vaccines when your immune system is lowered", body:
+`VACCINES WHEN YOUR IMMUNE SYSTEM IS LOWERED
+
+WHY THIS MATTERS
+Your arthritis or autoimmune medicine calms your immune system. That is how it protects your joints and organs, and it also makes infections more likely and more serious. Vaccines are the best protection you have. They do not make your disease worse.
+
+VACCINES WE RECOMMEND
+- Flu shot every fall. Age 65 and older: ask for the high-dose or adjuvanted version.
+- COVID-19 vaccine on the current schedule for people with a lowered immune system.
+- Pneumonia vaccine, one dose at any age once you start an immune-lowering medicine. Ask for PCV20 or PCV21. If you receive PCV15 instead, a second vaccine (PPSV23) follows 8 weeks or more later.
+- Shingles vaccine (Shingrix), 2 doses 2 to 6 months apart, for anyone 18 and older on these medicines. Shingles is common and painful on immune-lowering medicines, and this vaccine is not live, so it is safe for you.
+- RSV vaccine, one dose, at age 75 and older, or from age 50 if you have a risk condition, which includes a lowered immune system.
+- Tetanus booster (Tdap) every 10 years. Hepatitis B if you are not already protected. HPV through age 26, and up to 45 if you and your doctor agree.
+
+VACCINES TO AVOID
+Live vaccines can cause illness when the immune system is lowered. Do not receive these without asking us first: MMR (measles, mumps, rubella), chickenpox, the old shingles vaccine (Zostavax), yellow fever, oral typhoid, and the nasal spray flu vaccine. Ask before any travel vaccine.
+
+TIMING WITH YOUR MEDICINES
+- Most vaccines are given without stopping your medicine.
+- If you take methotrexate, skip the one dose that falls in the week after your flu shot if your disease is calm. Ask us if you are not sure.
+- If you receive rituximab, get vaccines in the weeks before your next infusion, not right after it. Tell us so we can time the infusion.
+- If you take prednisone 20 mg a day or more, we may wait until the dose is lower for everything except the flu shot.
+
+WHERE TO GET THEM
+Your primary care office or a pharmacy gives all of these. Bring your vaccine record or ask them to send it to us. Tell them which medicines you take.
+
+CALL THE OFFICE FOR
+- A question about whether a vaccine is safe for you.
+- A live vaccine you were given by mistake.
+- Fever or feeling unwell for more than 2 days after a vaccine.`,
+bodyEs:
+`VACUNAS CUANDO SU SISTEMA INMUNITARIO ESTÁ DEBILITADO
+
+POR QUÉ IMPORTA
+Su medicamento para la artritis o la enfermedad autoinmune calma su sistema inmunitario. Así protege sus articulaciones y órganos, y también hace que las infecciones sean más probables y más graves. Las vacunas son la mejor protección que tiene. No empeoran su enfermedad.
+
+VACUNAS QUE RECOMENDAMOS
+- Vacuna de la gripe cada otoño. A partir de los 65 años, pida la versión de dosis alta o con adyuvante.
+- Vacuna de COVID-19 según el calendario actual para personas con el sistema inmunitario debilitado.
+- Vacuna de la neumonía, una dosis a cualquier edad una vez que empiece un medicamento que baja las defensas. Pida PCV20 o PCV21. Si recibe PCV15, una segunda vacuna (PPSV23) sigue 8 semanas o más después.
+- Vacuna de la culebrilla (Shingrix), 2 dosis con 2 a 6 meses de diferencia, para cualquier persona de 18 años o más con estos medicamentos. La culebrilla es común y dolorosa con medicamentos que bajan las defensas, y esta vacuna no es viva, así que es segura para usted.
+- Vacuna de VRS, una dosis, a partir de los 75 años, o desde los 50 si tiene una condición de riesgo, lo que incluye el sistema inmunitario debilitado.
+- Refuerzo de tétanos (Tdap) cada 10 años. Hepatitis B si aún no está protegido. VPH hasta los 26 años, y hasta los 45 si usted y su médico están de acuerdo.
+
+VACUNAS QUE DEBE EVITAR
+Las vacunas vivas pueden causar enfermedad cuando el sistema inmunitario está debilitado. No reciba estas sin preguntarnos primero: MMR (sarampión, paperas, rubéola), varicela, la vacuna antigua de la culebrilla (Zostavax), fiebre amarilla, tifoidea oral y la vacuna de la gripe en aerosol nasal. Pregunte antes de cualquier vacuna de viaje.
+
+EL MOMENTO CON SUS MEDICAMENTOS
+- La mayoría de las vacunas se dan sin suspender su medicamento.
+- Si toma metotrexato, sáltese la única dosis que cae en la semana después de la vacuna de la gripe si su enfermedad está tranquila. Pregúntenos si no está seguro.
+- Si recibe rituximab, póngase las vacunas en las semanas antes de su próxima infusión, no justo después. Avísenos para programar la infusión.
+- Si toma prednisona 20 mg al día o más, podemos esperar a que la dosis baje para todo excepto la vacuna de la gripe.
+
+DÓNDE PONÉRSELAS
+Su médico de cabecera o una farmacia pone todas estas vacunas. Traiga su registro de vacunas o pida que nos lo envíen. Dígales qué medicamentos toma.
+
+LLAME AL CONSULTORIO SI TIENE
+- Una pregunta sobre si una vacuna es segura para usted.
+- Una vacuna viva que le pusieron por error.
+- Fiebre o malestar por más de 2 días después de una vacuna.`}
+]);
+})();
+
+// ====================== v5.0: OSTEOARTHRITIS 2026, NSAIDs, DISEASE PLANS ======================
+(function(){
+DEFAULT_DATA.drugs = DEFAULT_DATA.drugs.concat([
+    {id:"d-nsaid", name:"NSAIDs, oral and topical (naproxen, ibuprofen, meloxicam, celecoxib, diclofenac gel)", cls:"Analgesics & anti-inflammatories",
+      dosing:"Naproxen 250-500 mg BID, ibuprofen 400-800 mg TID, meloxicam 7.5-15 mg daily, celecoxib 200 mg daily or BID, lowest effective dose for the shortest time. Diclofenac 1 percent gel, 2-4 g to the joint QID, first choice for knee and hand OA.",
+      monitor:"Creatinine and CBC at baseline and every 6-12 months on continuous use, sooner in CKD or with an ACE inhibitor, ARB, or diuretic. Blood pressure at each visit.",
+      se:"Dyspepsia, fluid retention, blood pressure rise, bruising. Topical: local rash and dry skin.",
+      serious:"GI bleeding and ulcer, risk higher over age 65, with a prior ulcer, anticoagulants, or glucocorticoids, so add a PPI. Acute kidney injury with dehydration, CKD, or an ACE inhibitor or ARB plus a diuretic. Myocardial infarction and stroke, lowest with naproxen. Avoid past 20 weeks of pregnancy.",
+      pearls:"Topical diclofenac delivers about 6 percent of the oral systemic exposure, so try the gel before any pill in osteoarthritis. Celecoxib, or an NSAID plus a PPI, when GI risk is high. Avoid in decompensated heart failure and eGFR under 30. First line in axial spondyloarthritis, continuous while symptoms persist. Naproxen 500 mg BID for 5-7 days treats a gout flare."}
+]);
+DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
+  {id:"p2-oa2026", name:"2026 ACR osteoarthritis guideline", dot:".oa2026", cat:"Reference", body:
+`2026 ACR guideline for the management of osteoarthritis of the knee, hip, and hand, an update of the 2019 ACR/AF guideline.
+Good practice statements: education and self-management programs; physical therapy for functional limitation and occupational therapy for upper-extremity limitation; canes and mobility aids for knee and hip OA with walking limitation.
+Strongly recommended: exercise (knee, hip); weight loss when overweight or obese (knee, hip); topical NSAIDs (knee, hand); oral NSAIDs (knee, hip, hand); intra-articular glucocorticoid injection (knee, hip), with ultrasound guidance for the hip.
+Conditionally recommended: hand exercise; tibiofemoral and patellofemoral knee braces; hand orthoses for first CMC and finger joints; therapeutic taping (knee, first CMC); arthritis gloves; CBT; tai chi (knee, hip); yoga (knee); local heat or cold; paraffin wax bath (hand); massage (knee, hip; reversed from 2019); acupuncture; radiofrequency ablation (knee); GLP-1 receptor agonist for knee OA with obesity, with diet and exercise (new); intra-articular glucocorticoid (hand); topical over oral NSAIDs (knee, hand); topical capsaicin (knee); acetaminophen; duloxetine; methotrexate for erosive hand OA (reversed from 2019).
+Strongly recommended against: PRP and stem cell injections (knee, hip); hydroxychloroquine; bisphosphonates; glucosamine, chondroitin, and their combination (combination reversed from 2019); TNF inhibitors; IL-1 inhibition (hand).
+Conditionally recommended against: lateral and medial wedged insoles; TENS; IL-1 inhibition (knee, hip); topical capsaicin (hand); other SNRIs, TCAs, pregabalin, and gabapentin; opioids; intra-articular hyaluronic acid; intra-articular botulinum toxin (knee, hip); dextrose prolotherapy (knee, hip); methotrexate (knee, hip); colchicine; vitamin D; fish oil.
+Summary approved by the ACR Board of Directors on September 8, 2026. Full manuscript pending in Arthritis & Rheumatology and Arthritis Care & Research.`},
+
+  {id:"p-plan-ra", name:"Plan: rheumatoid arthritis", dot:".planra", cat:"Plans", body:
+`Rheumatoid arthritis, {sero:seropositive|seronegative}, {status:established|early, under 6 months of symptoms}.
+Disease activity: {activity:remission|low|moderate|high} by {measure:CDAI|DAS28-CRP|SDAI|RAPID3}. Target: {target:sustained remission|low disease activity}.
+Current therapy: {current therapy}.
+Plan: {plan:continue current therapy, at target|continue current therapy, reassess at 3 months|optimize methotrexate, subcutaneous above 15 mg weekly|add a TNF inhibitor, methotrexate continued|add a non-TNF biologic (abatacept, IL-6 inhibitor, or rituximab)|switch to a JAK inhibitor, cardiovascular and malignancy risk reviewed|switch mechanism after inadequate response|taper therapy slowly, remission sustained over 6 months|omit this line}.
+Glucocorticoids: {steroid:none|short bridge at the lowest effective dose, taper written today|ongoing at the lowest effective dose, taper planned|omit this line}.
+Monitoring: CBC and CMP {labs:every 8 to 12 weeks|every 4 weeks after a dose change|every 2 to 4 weeks for the first 3 months of a new DMARD}. {screen:hepatitis B, hepatitis C, and TB screening complete|hepatitis B, hepatitis C, and TB screening ordered before the biologic start|lipids at 8 to 12 weeks on the JAK inhibitor|omit this line}.
+Vaccines: {vax:up to date|reviewed today, see the vaccine note|deferred to primary care|omit this line}.
+Bone health: {bone:no glucocorticoid exposure, routine screening|on glucocorticoids, calcium and vitamin D advised, FRAX and DXA per the GIOP plan|DXA ordered|omit this line}.
+Cardiovascular risk: {cv:reviewed, rheumatoid arthritis raises risk independent of traditional factors, lipids and blood pressure with primary care|lipid panel ordered|omit this line}.
+Reproductive health: {repro:not applicable|contraception confirmed on methotrexate or leflunomide|planning pregnancy, transition to a pregnancy-compatible regimen|omit this line}.
+Lifestyle: {life:exercise and smoking cessation discussed, smoking worsens disease and blunts TNF inhibitor response|exercise, sleep, and an anti-inflammatory dietary pattern discussed|omit this line}.
+Follow-up: {fu:3 months|6 to 8 weeks after the therapy change|6 months, stable at target|omit this line}.`},
+
+  {id:"p-plan-psa", name:"Plan: psoriatic arthritis", dot:".planpsa", cat:"Plans", body:
+`Psoriatic arthritis, active domains: {domains:peripheral arthritis|peripheral arthritis and skin|axial disease|enthesitis|dactylitis|peripheral arthritis, enthesitis, and skin|nail disease and skin}.
+Disease activity: {activity:minimal disease activity|low|moderate|high} by {measure:DAPSA|cDAPSA|clinical assessment}. Target: {target:minimal disease activity|remission or low disease activity}.
+Current therapy: {current therapy}.
+Plan: {plan:continue current therapy, at target|start methotrexate, peripheral disease without axial involvement|start a TNF inhibitor|start an IL-17 inhibitor, given significant skin or axial disease|start an IL-23 inhibitor, given skin predominance|start bimekizumab|start apremilast, mild disease|switch to a JAK inhibitor after biologic failure, risk reviewed|switch mechanism after inadequate response|omit this line}.
+Glucocorticoids: {steroid:avoided, systemic glucocorticoids risk psoriasis rebound|intra-articular injection today|short course at the lowest effective dose|omit this line}.
+Monitoring: {labs:CBC and CMP every 8 to 12 weeks|CBC and CMP every 2 to 4 weeks for the first 3 months of methotrexate|hepatitis B, hepatitis C, and TB screening before the biologic start|no routine labs on this regimen}. {steer:no inflammatory bowel disease, IL-17 inhibitor acceptable|inflammatory bowel disease present, IL-17 inhibitor avoided|uveitis history, monoclonal TNF inhibitor preferred|omit this line}.
+Vaccines: {vax:up to date|reviewed today, see the vaccine note|deferred to primary care|omit this line}.
+Cardiometabolic risk: {cv:reviewed, psoriatic disease raises cardiovascular and metabolic risk, weight, lipids, and glucose addressed with primary care|weight loss counseled, 5 to 10 percent improves the chance of minimal disease activity and biologic response|omit this line}.
+Skin: {skin:comanaged with dermatology|mild, topical therapy|controlled on current systemic therapy|omit this line}.
+Reproductive health: {repro:not applicable|contraception confirmed on methotrexate or leflunomide|planning pregnancy, certolizumab preferred among TNF inhibitors|omit this line}.
+Lifestyle: {life:exercise, weight, and smoking cessation discussed|exercise and sleep discussed|omit this line}.
+Follow-up: {fu:3 months|6 to 8 weeks after the therapy change|6 months, stable at target|omit this line}.`},
+
+  {id:"p-plan-axspa", name:"Plan: axial spondyloarthritis", dot:".planaxspa", cat:"Plans", body:
+`Axial spondyloarthritis, {type:radiographic (ankylosing spondylitis)|non-radiographic}, HLA-B27 {b27:positive|negative|not tested}, {extra:no extra-articular features|with uveitis|with inflammatory bowel disease|with psoriasis|with peripheral arthritis or enthesitis}.
+Disease activity: {activity:inactive|low|high|very high} by {measure:ASDAS-CRP|BASDAI}. Target: {target:inactive disease or low disease activity|BASDAI under 4}.
+Current therapy: {current therapy}.
+Plan: {plan:continue current therapy, at target|continuous NSAID at full dose, first line, with a 2 to 4 week trial of a second NSAID if needed|start a TNF inhibitor after NSAID failure|start an IL-17 inhibitor after NSAID failure|switch to a second TNF inhibitor after secondary failure|switch mechanism after primary failure|start a JAK inhibitor after biologic failure, risk reviewed|omit this line}.
+Steer: {steer:no factor steers the biologic choice|recurrent uveitis, monoclonal TNF inhibitor preferred|inflammatory bowel disease, monoclonal TNF inhibitor preferred and IL-17 inhibitor avoided|significant psoriasis, IL-17 inhibitor preferred|omit this line}.
+Glucocorticoids: {steroid:systemic glucocorticoids avoided for axial disease|local injection for a peripheral joint or enthesis today|omit this line}.
+Monitoring: {labs:CRP and ESR at each visit|CBC, CMP, and CRP every 8 to 12 weeks on the biologic|creatinine and CBC every 6 to 12 months on continuous NSAID|hepatitis B, hepatitis C, and TB screening before the biologic start}. {img:no imaging due|pelvic radiograph no more often than every 2 years|MRI of the sacroiliac joints ordered|omit this line}.
+Vaccines: {vax:up to date|reviewed today, see the vaccine note|deferred to primary care|omit this line}.
+Bone health: {bone:DXA ordered, vertebral fracture risk rises with disease duration|calcium and vitamin D advised|omit this line}.
+Cardiovascular risk: {cv:reviewed, lipids and blood pressure with primary care, NSAID cardiovascular risk discussed|omit this line}.
+Physical therapy and exercise: {pt:referred to physical therapy for a spinal mobility and posture program|home exercise program reviewed, daily stretching and aerobic activity|omit this line}.
+Lifestyle: {life:smoking cessation counseled, smoking accelerates radiographic progression|sleep and activity discussed|omit this line}.
+Follow-up: {fu:3 months|12 weeks after the biologic start|6 months, stable at target|omit this line}.`},
+
+  {id:"p-plan-sle", name:"Plan: systemic lupus erythematosus", dot:".plansle", cat:"Plans", body:
+`Systemic lupus erythematosus, involvement: {organs:mucocutaneous and musculoskeletal|hematologic|lupus nephritis|serositis|neuropsychiatric|multisystem}. Antiphospholipid antibodies {apl:negative|positive, no thrombosis|positive with antiphospholipid syndrome|pending}.
+Disease activity: {activity:remission|low disease activity|moderate|high} by {measure:SLEDAI-2K|SLE-DAS|clinical assessment}. Target: {target:remission or low disease activity with prednisone at or below 5 mg daily}.
+Current therapy: {current therapy}.
+Hydroxychloroquine: {hcq:continued at or below 5 mg/kg/day, retinal screening current|continued, baseline eye exam ordered, annual screening from year 5|started today at or below 5 mg/kg/day|not tolerated, reason documented|omit this line}.
+Plan: {plan:continue current therapy, at target|add methotrexate for arthritis or skin|add mycophenolate for organ involvement|add azathioprine, pregnancy-compatible option|add belimumab for persistent activity or to spare glucocorticoids|add anifrolumab for skin or joint activity|lupus nephritis induction with mycophenolate plus belimumab or voclosporin per the ACR lupus nephritis guideline|switch after inadequate response|omit this line}.
+Glucocorticoids: {steroid:none|prednisone at or below 5 mg daily, taper to off planned|taper in progress, target 5 mg or less|pulse then taper for organ-threatening disease|omit this line}.
+Monitoring: CBC, CMP, urinalysis, urine protein-to-creatinine ratio, C3, C4, and anti-dsDNA {labs:every 3 months|every 4 to 6 weeks during active disease|every 6 months, stable}. {extra:antiphospholipid panel and hepatitis screening complete|lipids and glucose annually|omit this line}.
+Vaccines: {vax:up to date, including pneumococcal, Shingrix, and HPV where indicated|reviewed today, see the vaccine note|omit this line}.
+Bone health: {bone:calcium and vitamin D advised, FRAX and DXA per the GIOP plan|DXA ordered|no glucocorticoid exposure, routine screening|omit this line}.
+Cardiovascular risk: {cv:reviewed, lupus raises cardiovascular risk, blood pressure, lipids, and glucose addressed|lipid panel ordered|omit this line}.
+Sun protection: {sun:broad-spectrum SPF 50 or higher, protective clothing, and UV avoidance counseled|omit this line}.
+Reproductive health: {repro:not applicable|contraception confirmed, estrogen avoided with positive antiphospholipid antibodies|planning pregnancy, disease quiet for 6 months, hydroxychloroquine continued, pregnancy-compatible regimen confirmed, low-dose aspirin from 12 weeks|pregnant, comanaged with maternal-fetal medicine|omit this line}.
+Lifestyle: {life:smoking cessation, exercise, and sleep discussed|omit this line}.
+Follow-up: {fu:3 months|4 to 6 weeks, active disease|6 months, stable|omit this line}.`},
+
+  {id:"p-plan-gout", name:"Plan: gout", dot:".plangout", cat:"Plans", body:
+`Gout, {stage:recurrent flares, 2 or more per year|first flare|tophaceous|with urate nephrolithiasis|with CKD stage 3 or higher}. Diagnosis {dx:confirmed by crystal analysis|clinical, ACR/EULAR criteria met|dual-energy CT positive}.
+Serum urate {urate} mg/dL. Target: {target:under 6 mg/dL|under 5 mg/dL, tophaceous or severe disease}.
+Urate-lowering therapy: {ult:allopurinol started at 100 mg daily (50 mg with CKD stage 4 or higher), titrated every 2 to 5 weeks to target|allopurinol dose increased to reach target|allopurinol continued, at target|febuxostat 40 mg daily, allopurinol not tolerated or ineffective, cardiovascular history reviewed|pegloticase referral for refractory tophaceous gout, with methotrexate co-therapy|not indicated after a single flare without risk factors|omit this line}.
+HLA-B*5801: {hla:not indicated|tested before allopurinol, Southeast Asian or African American ancestry|positive, allopurinol avoided|omit this line}.
+Flare prophylaxis: {proph:colchicine 0.6 mg daily for 3 to 6 months after starting or adjusting urate-lowering therapy|naproxen 250 mg BID with a PPI|low-dose prednisone, colchicine and NSAID contraindicated|not needed|omit this line}.
+Flare plan: {flare:colchicine 1.2 mg then 0.6 mg one hour later at first symptoms, urate-lowering therapy continued through flares|NSAID at full dose for 5 to 7 days|prednisone 30 to 40 mg daily for 5 days|intra-articular glucocorticoid for a single joint|omit this line}.
+Monitoring: serum urate {labs:every 2 to 5 weeks during titration, then every 6 months|every 6 months, at target}, with creatinine and CBC. {lft:LFTs at baseline and during febuxostat|omit this line}.
+Comorbidities: {comorb:blood pressure, lipids, glucose, and kidney function reviewed with primary care|losartan preferred for hypertension, uricosuric|thiazide reviewed, switched where feasible|omit this line}.
+Lifestyle: {life:limit alcohol, especially beer and spirits, limit sugary drinks and high-fructose corn syrup, limit organ meats and shellfish, weight loss if overweight|DASH-pattern diet and weight loss discussed|omit this line}.
+Vaccines: {vax:up to date|reviewed today|omit this line}.
+Follow-up: {fu:4 weeks, titration|3 months|6 months, at target|omit this line}.`},
+
+  {id:"p-plan-pmr", name:"Plan: PMR and GCA", dot:".planpmr", cat:"Plans", body:
+`{dx:Polymyalgia rheumatica|Giant cell arteritis|Giant cell arteritis with polymyalgia rheumatica}, {status:new diagnosis|in remission on taper|relapse during taper|off glucocorticoids, in remission}.
+Inflammatory markers: ESR {esr} and CRP {crp}. {sx:symptoms controlled|shoulder and hip girdle stiffness recurred|cranial symptoms present, urgent evaluation|omit this line}.
+Glucocorticoids: {steroid:prednisone 15 mg daily, PMR starting dose, taper per the taper tab|prednisone 40 to 60 mg daily for GCA, taper per the GiACTA schedule|dose raised to the last effective dose for relapse, then the taper resumed|taper continued as written|prednisone stopped|omit this line}.
+Steroid-sparing: {sparing:not needed|tocilizumab started for GCA with the 26-week taper|tocilizumab for relapsing or glucocorticoid-dependent disease|methotrexate for relapsing PMR|sarilumab for relapsing PMR|omit this line}.
+GCA surveillance: {gca:no cranial or ischemic symptoms, counseled to call for headache, jaw claudication, or visual change|temporal artery ultrasound or biopsy obtained|large-vessel imaging with CTA or PET-CT obtained|aortic imaging every 1 to 2 years for large-vessel disease|omit this line}.
+Monitoring: ESR and CRP {labs:at each visit|every 4 to 8 weeks during the taper|every 3 months}, with glucose and blood pressure on glucocorticoids. {tcz:CBC, LFTs, and lipids every 4 to 8 weeks on tocilizumab|omit this line}.
+Bone health: calcium and vitamin D advised, {bone:FRAX and DXA per the GIOP plan, bisphosphonate started for moderate or high risk|DXA ordered|bisphosphonate continued|omit this line}.
+Vaccines: {vax:up to date, Shingrix and pneumococcal given on glucocorticoids|reviewed today, see the vaccine note|omit this line}.
+Steroid toxicity: {tox:glucose, blood pressure, weight, mood, and sleep reviewed|PJP prophylaxis considered at 20 mg or more with tocilizumab or other immunosuppression|omit this line}.
+Lifestyle: {life:exercise for muscle mass and bone on glucocorticoids, protein intake discussed|omit this line}.
+Follow-up: {fu:4 weeks|2 weeks after a relapse|8 weeks|3 months, stable|omit this line}.`},
+
+  {id:"p-plan-oa", name:"Plan: osteoarthritis (2026 ACR)", dot:".planoa", cat:"Plans", body:
+`Osteoarthritis of the {site:knee|hip|hand|first CMC joint|knee and hand|erosive hand}, {sev:mild|moderate|severe} symptoms, {img:radiographs consistent with the diagnosis|no imaging needed|radiographs ordered}. Plan per the 2026 ACR osteoarthritis guideline.
+Core: {core:education and self-management resources provided|physical therapy referral for function|occupational therapy referral for hand function|cane or mobility aid advised|omit this line}.
+Exercise: {ex:structured exercise program, strength and aerobic, strongly recommended|tai chi or yoga|hand exercise program|omit this line}.
+Weight: {wt:not overweight|weight loss counseled, strongly recommended, target 5 to 10 percent|GLP-1 receptor agonist discussed for knee OA with obesity, with diet and exercise|omit this line}.
+Devices: {dev:none needed|knee brace|thumb base orthosis|therapeutic taping|arthritis gloves|omit this line}.
+Adjuncts: {adj:local heat or cold|paraffin wax bath for the hands|massage|acupuncture|cognitive behavioral therapy|omit this line}.
+Topical: {top:diclofenac gel to the joint up to four times daily, preferred over oral NSAIDs for knee and hand|topical capsaicin for the knee|not applicable|omit this line}.
+Oral: {oral:NSAID at the lowest effective dose with food, renal, GI, and cardiovascular risk reviewed|acetaminophen up to 3 g daily|duloxetine 30 mg then 60 mg daily|methotrexate for erosive hand OA|no oral agent|omit this line}.
+Injection: {inj:intra-articular glucocorticoid today|intra-articular glucocorticoid to the hip under ultrasound guidance|deferred|radiofrequency ablation referral for the knee|omit this line}.
+Not recommended and counseled against: {against:glucosamine, chondroitin, PRP, stem cells, hyaluronic acid, opioids, vitamin D, and fish oil|hyaluronic acid and PRP, requested by the patient|omit this line}.
+Surgical referral: {surg:not indicated|orthopedic referral for arthroplasty evaluation, pain limits daily function despite the above|omit this line}.
+Follow-up: {fu:3 months|6 months|as needed|omit this line}.`}
+]);
+DEFAULT_DATA.instructions = DEFAULT_DATA.instructions.concat([
+{id:"i6-nsaid", name:"Anti-inflammatory medicines (NSAIDs): how to use them safely", body:
+`ANTI-INFLAMMATORY MEDICINES (NSAIDs): HOW TO USE THEM SAFELY
+
+WHAT THEY DO
+Anti-inflammatory medicines such as naproxen, ibuprofen, meloxicam, celecoxib, and diclofenac reduce pain, swelling, and stiffness. They work within hours to days. They treat symptoms and do not change the course of arthritis.
+
+HOW TO TAKE THEM
+- Take {medicine} {dose:~as directed|500 mg twice a day|400 mg three times a day|15 mg once a day|200 mg once a day} with food.
+- Use the lowest dose that works, for the shortest time you need it.
+- Take only one anti-inflammatory at a time. Over-the-counter Advil, Motrin, Aleve, and aspirin for pain count.
+- For knees and hands, diclofenac gel on the skin, up to 4 times a day, gives relief with far less risk than pills. Try the gel first.
+
+PROTECT YOUR STOMACH, KIDNEYS, AND HEART
+- Stomach: tell us if you are over 65, had an ulcer or bleeding, or take a blood thinner or prednisone. We may add a stomach-protecting pill.
+- Kidneys: drink fluids. Skip your anti-inflammatory on days you are vomiting, have diarrhea, or cannot drink. Tell us if you take a blood pressure pill or a water pill.
+- Heart: these medicines raise blood pressure a little and raise the risk of heart attack with long use. Naproxen carries the lowest heart risk.
+- Do not use after 20 weeks of pregnancy.
+
+LABS
+- If you take these daily, a kidney and blood count check every 6 to 12 months.
+
+CALL THE OFFICE FOR
+- Black or bloody stools, vomiting blood, or stomach pain that does not settle.
+- Swelling of the legs, sudden weight gain, or much less urine.
+- Chest pain, weakness on one side, or trouble speaking: call 911.`,
+bodyEs:
+`MEDICAMENTOS ANTIINFLAMATORIOS (AINE): CÓMO USARLOS CON SEGURIDAD
+
+QUÉ HACEN
+Los antiinflamatorios como el naproxeno, el ibuprofeno, el meloxicam, el celecoxib y el diclofenaco reducen el dolor, la hinchazón y la rigidez. Actúan en horas o días. Tratan los síntomas y no cambian el curso de la artritis.
+
+CÓMO TOMARLOS
+- Tome {medicamento} {dosis:~según las indicaciones|500 mg dos veces al día|400 mg tres veces al día|15 mg una vez al día|200 mg una vez al día} con comida.
+- Use la dosis más baja que funcione, por el menor tiempo que necesite.
+- Tome solo un antiinflamatorio a la vez. Advil, Motrin, Aleve y la aspirina para el dolor que se compran sin receta cuentan.
+- Para rodillas y manos, el gel de diclofenaco en la piel, hasta 4 veces al día, alivia con mucho menos riesgo que las pastillas. Pruebe el gel primero.
+
+PROTEJA SU ESTÓMAGO, SUS RIÑONES Y SU CORAZÓN
+- Estómago: díganos si tiene más de 65 años, tuvo una úlcera o un sangrado, o toma un anticoagulante o prednisona. Podemos agregar una pastilla que proteja el estómago.
+- Riñones: tome líquidos. No tome su antiinflamatorio los días que tenga vómitos, diarrea o no pueda beber. Díganos si toma una pastilla para la presión o un diurético.
+- Corazón: estos medicamentos suben un poco la presión y aumentan el riesgo de infarto con el uso prolongado. El naproxeno tiene el menor riesgo para el corazón.
+- No los use después de las 20 semanas de embarazo.
+
+ANÁLISIS
+- Si los toma a diario, un control de riñón y de conteo de sangre cada 6 a 12 meses.
+
+LLAME AL CONSULTORIO SI TIENE
+- Heces negras o con sangre, vómito con sangre o dolor de estómago que no se calma.
+- Hinchazón de las piernas, aumento repentino de peso o mucha menos orina.
+- Dolor de pecho, debilidad de un lado o dificultad para hablar: llame al 911.`}
+]);
+})();
+// ====================== v5.1: POSITIVE ANA ======================
+(function(){
+DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
+  {id:"p2-anapos", name:"Positive ANA: interpretation and counseling", dot:".anapos", cat:"Counseling", body:
+`Positive ANA reviewed. Titer {titer:~1:80|1:40|1:160|1:320|1:640|1:1280 or higher}, pattern {pattern:homogeneous|speckled|nucleolar|centromere|dense fine speckled (DFS70)|cytoplasmic|not reported}.
+A positive ANA is common in people without autoimmune disease. Healthy adults test positive in 31.7 percent at a 1:40 dilution, 13.3 percent at 1:80, 5.0 percent at 1:160, and 3.3 percent at 1:320 (Tan 1997). In the US population 13.8 percent are ANA positive at 1:80 (Satoh 2012), and the prevalence rose to 15.9 percent by 2011 to 2012 (Dinse 2020).
+Because the prevalence of ANA-associated diseases in the general population is only approximately 1 percent, four out of five individuals with a positive test will have false-positive results. Due to the sensitivity of the ANA test for the detection of autoantibodies, the test cannot be used to screen a healthy population for the presence of autoimmune diseases. Of note, the prevalence of ANAs in the healthy adult population increases with age, and ANAs are twice as likely to be detected in healthy women compared with men (17.8 versus 9.6 percent, Satoh 2012).
+Among 232 patients referred to rheumatology for a positive ANA, the positive predictive value was 2.1 percent for lupus and 9.1 percent for any ANA-associated rheumatic disease, and no ANA-associated disease was found at a titer below 1:160 (Abeles 2013).
+Assessment: {assessment:positive ANA without disease-specific autoantibodies and without clinical features of an ANA-associated disease, so no further rheumatologic evaluation is indicated at this time|positive ANA with symptoms or findings that warrant evaluation, extractable nuclear antigen panel, anti-dsDNA, complements, urinalysis, and CBC ordered|positive ANA at 1:160 or higher, disease-specific serologies and clinical evaluation completed today|positive ANA attributed to another cause (medication, infection, thyroid disease, or malignancy), documented separately}.
+Plan: {plan:counseled on the meaning of the result and the patient sheet provided, return for photosensitive rash, oral ulcers, inflammatory joint pain or swelling, pleuritic chest pain, Raynaud phenomenon, or unexplained cytopenias|counseled on the meaning of the result, return for photosensitive rash, oral ulcers, inflammatory joint pain or swelling, pleuritic chest pain, Raynaud phenomenon, or unexplained cytopenias|repeat serologies not indicated, the ANA does not need rechecking|follow-up in 3 to 6 months to reassess symptoms|omit this line}.
+References: Tan EM et al. Arthritis Rheum 1997;40:1601-11. Satoh M et al. Arthritis Rheum 2012;64:2319-27. Dinse GE et al. Arthritis Rheumatol 2020;72:1026-35. Abeles AM, Abeles M. Am J Med 2013;126:342-8.`}
+]);
+})();
+// ====================== v5.2: POSITIVE ANA PATIENT SHEET ======================
+(function(){
+DEFAULT_DATA.instructions = DEFAULT_DATA.instructions.concat([
+{id:"i6-anapos", name:"Your ANA test came back positive: what it means", body:
+`YOUR ANA TEST CAME BACK POSITIVE: WHAT IT MEANS
+
+WHAT THE TEST LOOKS FOR
+ANA stands for antinuclear antibody. Antibodies are proteins your immune system makes. An ANA is one that reacts with the center of your own cells. The lab reports it as a titer, such as 1:40 or 1:160. A higher second number means the antibody was still found after the blood was diluted more times.
+
+A POSITIVE ANA IS COMMON IN HEALTHY PEOPLE
+- About 1 in 3 healthy adults test positive at the lowest dilution the lab uses (1:40). About 1 in 8 test positive at 1:80, and about 1 in 20 at 1:160.
+- In the United States, about 14 out of every 100 people have a positive ANA, and the number has been rising over the last 25 years.
+- The test is more often positive in women, about twice as often as in men, and it becomes more common with age.
+- Some infections, medicines, and thyroid conditions turn it positive too.
+
+WHY A POSITIVE TEST USUALLY DOES NOT MEAN DISEASE
+Diseases linked to the ANA, such as lupus, affect about 1 in 100 people. Because the test is positive far more often than the diseases occur, most positive results happen in people who do not have one of these diseases. Among people sent to a rheumatologist only because of a positive ANA, fewer than 1 in 10 turn out to have an ANA-related disease, and about 2 in 100 have lupus.
+
+WHAT WE LOOK AT INSTEAD
+- Your symptoms. A rash that flares in the sun, mouth sores, joints that swell and stay stiff for more than an hour in the morning, chest pain when breathing in, fingers that turn white and blue in the cold, or unexplained low blood counts matter far more than the test.
+- Your titer and pattern. A titer of 1:160 or higher and certain patterns carry more weight than a low titer.
+- More specific antibody tests, ordered only when symptoms point to a disease.
+
+YOUR RESULT
+- Your ANA titer was {titer:~1:80|1:40|1:160|1:320|1:640|1:1280 or higher}.
+- {conclusion:After reviewing your history, exam, and labs, we did not find an ANA-related disease. You do not need treatment or repeat ANA testing for this result.|We ordered more specific tests to look further. We will contact you with the results.|We found signs that need follow-up. Your next visit is scheduled.}
+
+WHAT TO DO
+- You do not need to avoid anything or change your diet because of this result.
+- Rechecking the ANA does not help. Once positive, it usually stays positive, and the number does not track disease.
+- Keep the result in your records and mention it to any new clinician.
+
+CALL THE OFFICE FOR
+- A new rash after sun exposure, or mouth sores that keep coming back.
+- Joints that swell, or morning stiffness that lasts more than an hour.
+- Chest pain when you breathe in, fingers that change color in the cold, unexplained fevers, or hair loss.
+- Any new symptom that worries you.`,
+bodyEs:
+`SU PRUEBA DE ANA SALIÓ POSITIVA: QUÉ SIGNIFICA
+
+QUÉ BUSCA LA PRUEBA
+ANA significa anticuerpo antinuclear. Los anticuerpos son proteínas que produce su sistema inmunitario. Un ANA es uno que reacciona contra el centro de sus propias células. El laboratorio lo reporta como un título, por ejemplo 1:40 o 1:160. Un segundo número más alto significa que el anticuerpo todavía se encontró después de diluir la sangre más veces.
+
+UN ANA POSITIVO ES COMÚN EN PERSONAS SANAS
+- Cerca de 1 de cada 3 adultos sanos sale positivo en la dilución más baja que usa el laboratorio (1:40). Cerca de 1 de cada 8 sale positivo en 1:80, y cerca de 1 de cada 20 en 1:160.
+- En Estados Unidos, cerca de 14 de cada 100 personas tienen un ANA positivo, y el número ha ido en aumento en los últimos 25 años.
+- La prueba sale positiva con más frecuencia en mujeres, cerca del doble que en hombres, y se vuelve más común con la edad.
+- Algunas infecciones, medicamentos y problemas de la tiroides también la vuelven positiva.
+
+POR QUÉ UNA PRUEBA POSITIVA CASI NUNCA SIGNIFICA ENFERMEDAD
+Las enfermedades ligadas al ANA, como el lupus, afectan a cerca de 1 de cada 100 personas. Como la prueba sale positiva mucho más seguido de lo que ocurren esas enfermedades, la mayoría de los resultados positivos son de personas que no tienen ninguna de ellas. Entre las personas enviadas al reumatólogo solo por un ANA positivo, menos de 1 de cada 10 resulta tener una enfermedad relacionada con el ANA, y cerca de 2 de cada 100 tienen lupus.
+
+LO QUE MIRAMOS EN SU LUGAR
+- Sus síntomas. Un sarpullido que empeora con el sol, llagas en la boca, articulaciones que se hinchan y quedan rígidas por más de una hora en la mañana, dolor de pecho al respirar, dedos que se ponen blancos y azules con el frío, o conteos de sangre bajos sin explicación importan mucho más que la prueba.
+- Su título y su patrón. Un título de 1:160 o más y ciertos patrones pesan más que un título bajo.
+- Pruebas de anticuerpos más específicas, que se piden solo cuando los síntomas apuntan a una enfermedad.
+
+SU RESULTADO
+- Su título de ANA fue {título:~1:80|1:40|1:160|1:320|1:640|1:1280 o más}.
+- {conclusión:Después de revisar su historia, su examen y sus análisis, no encontramos una enfermedad relacionada con el ANA. No necesita tratamiento ni repetir la prueba de ANA por este resultado.|Pedimos pruebas más específicas para investigar más. Nos comunicaremos con usted con los resultados.|Encontramos señales que necesitan seguimiento. Su próxima cita está programada.}
+
+QUÉ HACER
+- No necesita evitar nada ni cambiar su dieta por este resultado.
+- Repetir el ANA no ayuda. Una vez positivo, casi siempre sigue positivo, y el número no refleja la enfermedad.
+- Guarde el resultado en sus registros y menciónelo a cualquier médico nuevo.
+
+LLAME AL CONSULTORIO SI TIENE
+- Un sarpullido nuevo después de exponerse al sol, o llagas en la boca que vuelven una y otra vez.
+- Articulaciones que se hinchan, o rigidez en la mañana que dura más de una hora.
+- Dolor de pecho al respirar, dedos que cambian de color con el frío, fiebres sin explicación o caída de cabello.
+- Cualquier síntoma nuevo que le preocupe.`}
+]);
+})();
+(function(){ DEFAULT_DATA.version = 29; })();
 // ====================== CORE ======================
 const KEY = "rheumpad_v1";
 let DATA, FAVS, PRECHART, META = {};
@@ -5022,6 +5381,61 @@ function loadState(){
         if (gp3 && gp3.body && gp3.body.indexOf("Sequential therapy") < 0 && gp3.body.indexOf(anchor) >= 0) {
           gp3.body = gp3.body.split(anchor).join("deferred pending bone density}.\nSequential therapy: {seq:not planned at this time|after the teriparatide or abaloparatide course, transition to an antiresorptive (bisphosphonate or denosumab) is planned|after the 12-month romosozumab course, transition to an antiresorptive is planned|if denosumab is discontinued, transition to a bisphosphonate is planned to prevent rebound vertebral fractures}.\nSecondary causes reviewed:");
         }
+      }
+      // v25 -> v26: three phrases retired (the taper tab replaced the taper phrase, and the
+      // two attestations were dropped), the vaccine phrase rewritten, and the welcome and
+      // appointment sheets gained adjustable numbers. Each stored copy is replaced or removed
+      // only when its text still hashes to what shipped, so an edited copy stays.
+      if ((stored.seededVersion || 1) < 26) {
+        const OLD = {"p-predtaper": {"body": "17j8duc"}, "p2-longitudinal": {"body": "5jnmil"}, "p2-recordsrev": {"body": "b6rhvd"}, "p-vax": {"body": "5gvyvt"}, "i2-welcome": {"body": "hkchzu", "bodyEs": "1vz8em6"}, "i2-punctual": {"body": "fpc93v", "bodyEs": "elq20a"}};
+        ["p-predtaper","p2-longitudinal","p2-recordsrev"].forEach(id=>{
+          const cur = (DATA.phrases || []).find(x=>x.id === id);
+          if (cur && typeof cur.body === "string" && CARD_HASH(cur.body) === OLD[id].body) {
+            DATA.phrases = DATA.phrases.filter(x=>x.id !== id);
+            FAVS = FAVS.filter(k=>!k.endsWith(":" + id));
+          }
+        });
+        const vx = (DATA.phrases || []).find(x=>x.id === "p-vax");
+        const vxDef = DEFAULT_DATA.phrases.find(x=>x.id === "p-vax");
+        if (vx && vxDef && CARD_HASH(vx.body) === OLD["p-vax"].body) { vx.body = vxDef.body; vx.name = vxDef.name; }
+        ["i2-welcome","i2-punctual"].forEach(id=>{
+          const cur = (DATA.instructions || []).find(x=>x.id === id);
+          const def = DEFAULT_DATA.instructions.find(x=>x.id === id);
+          if (!cur || !def) return;
+          if (CARD_HASH(cur.body || "") === OLD[id].body) cur.body = def.body;
+          if (CARD_HASH(cur.bodyEs || "") === OLD[id].bodyEs) cur.bodyEs = def.bodyEs;
+        });
+      }
+      // v26 -> v27: the methotrexate vaccine hold moved from 2 weeks to 1 week, the visit
+      // lengths changed to 40 and 20 minutes, and the osteoarthritis sheets follow the 2026
+      // ACR guideline. Each stored field is replaced only when its text still hashes to what
+      // shipped, so anything you edited stays as you wrote it.
+      if ((stored.seededVersion || 1) < 27) {
+        const OLD27 = {"phrases": {"p-vax": {"body": "1sa4amj"}}, "drugs": {"d-mtx": {"pearls": "78usc"}, "d-dulox": {"pearls": "1ckbhuo"}}, "instructions": {"i6-vax": {"body": "q2q0gr", "bodyEs": "15cg6fm"}, "i6-mtx": {"body": "1vah5z5", "bodyEs": "153uvyv"}, "i6-oa": {"body": "1qclepv", "bodyEs": "k1bdif"}, "i5-oa": {"body": "1oydty8", "bodyEs": "25mj01"}, "i2-welcome": {"body": "135iww7", "bodyEs": "18dkzot"}, "i2-punctual": {"body": "1wo8jxz", "bodyEs": "15yl8f7"}}};
+        Object.keys(OLD27).forEach(coll=>Object.keys(OLD27[coll]).forEach(id=>{
+          const cur = (DATA[coll] || []).find(x=>x.id === id);
+          const def = DEFAULT_DATA[coll].find(x=>x.id === id);
+          if (!cur || !def) return;
+          Object.keys(OLD27[coll][id]).forEach(f=>{
+            if (typeof cur[f] === "string" && CARD_HASH(cur[f]) === OLD27[coll][id][f]) cur[f] = def[f];
+          });
+        }));
+      }
+      // v27 -> v28: the ANA 1:80 referral denial phrase is retired. A stored copy goes only
+      // when its text still hashes to what shipped; an edited copy stays.
+      if ((stored.seededVersion || 1) < 28) {
+        const cur = (DATA.phrases || []).find(x=>x.id === "p2-ana80");
+        if (cur && typeof cur.body === "string" && CARD_HASH(cur.body) === "1ee4bsn") {
+          DATA.phrases = DATA.phrases.filter(x=>x.id !== "p2-ana80");
+          FAVS = FAVS.filter(k=>!k.endsWith(":p2-ana80"));
+        }
+      }
+      // v28 -> v29: the positive ANA phrase gained a plan option naming the new patient sheet.
+      // Replaced only when the stored body still hashes to the v5.1 text.
+      if ((stored.seededVersion || 1) < 29) {
+        const cur = (DATA.phrases || []).find(x=>x.id === "p2-anapos");
+        const def = DEFAULT_DATA.phrases.find(x=>x.id === "p2-anapos");
+        if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "5h7ysf") cur.body = def.body;
       }
       // v23 -> v24: the letters' duration and hours lists widened. Swap only in a stored
       // copy still carrying the shipped placeholder, so an edited letter keeps its own.
@@ -5239,7 +5653,14 @@ function blankMark(label){
   const l = (label || "").trim();
   return "[" + (l && l !== "***" ? l : "fill in") + "]";
 }
-function collectText(node, forPrint){
+// A dropdown option reading "omit this line" removes its whole line from the copied
+// or printed text, so a long plan phrase collapses to the lines that apply today.
+const OMIT_LINE = "omit this line";
+function dropOmitted(text){
+  if (text.indexOf(OMIT_LINE) < 0) return text;
+  return text.split("\n").filter(l=>l.indexOf(OMIT_LINE) < 0).join("\n");
+}
+function collectRaw(node, forPrint){
   let out = "";
   node.childNodes.forEach(ch=>{
     if (ch.nodeType === 3) out += ch.data;
@@ -5247,10 +5668,11 @@ function collectText(node, forPrint){
     else if (ch.tagName === "SELECT") out += ch.value;
     else if (ch.tagName === "BR") out += "\n";
     else if (ch.tagName === "DATALIST") { /* suggestions only, never part of the text */ }
-    else out += collectText(ch, forPrint);
+    else out += collectRaw(ch, forPrint);
   });
   return out;
 }
+function collectText(node, forPrint){ return dropOmitted(collectRaw(node, forPrint)); }
 function preview(body){
   return Tok.apply(body).replace(PH_RE, (mm,a,b,c)=> a ? "["+a.trim()+"]" : (c ? "["+c.trim()+"]" : "[___]"));
 }
@@ -5949,6 +6371,7 @@ const Drugs = {
   },
   // What the patient gains. One line per card, the part the card fields never carried.
   BENEFIT: {
+    "d-nsaid": "Relieves pain and stiffness in osteoarthritis, gout flares, and spondyloarthritis within days, and the gel gives knee and hand relief with little systemic risk.",
     "d-mtx": "Anchor drug for RA and PsA. Reduces pain and swelling, slows joint damage on x-ray, and about half of patients reach low disease activity on it alone.",
     "d-hcq": "Cuts lupus flares by about half, lowers clot and organ damage risk, and treats mild joint and skin disease with very low infection risk.",
     "d-ssz": "Controls RA and peripheral spondyloarthritis with little infection risk, and is safe in pregnancy.",
@@ -5993,7 +6416,7 @@ const Drugs = {
     "d-bime": "i6-bio", "d-beli": "i6-bio", "d-anif": "i6-inf", "d-il23": "i6-bio",
     "d-dmab": "i6-dmab", "d-bis": "i6-bisp", "d-romo": "i-bone", "d-terip": "i-bone",
     "d-slcyclo": "i2-fibro", "d-dulox": "i2-fibro", "d-miln": "i2-fibro", "d-preg": "i2-fibro", "d-amit": "i2-fibro", "d-cyclo": "i2-fibro", "d-ldn": "i2-fibro",
-    "d-pilo": "i2-drymouth", "d-cevi": "i2-drymouth"
+    "d-pilo": "i2-drymouth", "d-cevi": "i2-drymouth", "d-nsaid": "i6-nsaid"
   },
   counselText(d, decision, sheetName){
     const lines = ["Shared decision-making discussion regarding starting " + d.name + "."];
@@ -8656,6 +9079,24 @@ const SCREEN = {
 };
 
 const CHANGELOG = [
+  {v:"5.2", d:"September 29, 2026", items:[
+    "A patient sheet for a positive ANA, English and Spanish: what the test looks for, how often healthy people test positive, why a positive result usually does not mean disease, what the visit looks at instead, a fillable titer and conclusion, and the symptoms that warrant a call. The .anapos phrase gained a plan option that records the sheet was given."
+  ]},
+  {v:"5.1", d:"September 29, 2026", items:[
+    "The ANA 1:80 referral denial phrase is retired. In its place, .anapos documents a positive ANA with the titer and pattern, the population prevalence (positive in about a third of healthy adults at 1:40 and 13.8 percent of the US population at 1:80), the false-positive arithmetic, the age and sex effect, and the referral data, with an assessment and plan dropdown and the four references in the text."
+  ]},
+  {v:"5.0", d:"September 29, 2026", items:[
+    "Comprehensive plans per disease. Seven Plans phrases (.planra, .planpsa, .planaxspa, .plansle, .plangout, .planpmr, .planoa) walk a fixed skeleton: activity and target, current therapy, the change, glucocorticoids, monitoring, vaccines, bone, cardiovascular risk, reproductive health, lifestyle, and follow-up, every line a dropdown. Pick omit this line on any dropdown and that line drops out of the copied and printed text.",
+    "Osteoarthritis updated to the 2026 ACR guideline (approved September 8, 2026). The patient sheet in English and Spanish, the lifestyle plan, and a new .oa2026 reference phrase carry the strength of every recommendation, including the GLP-1 option for knee OA with obesity, massage and methotrexate for erosive hand OA now recommended, and glucosamine plus chondroitin now strongly against.",
+    "NSAIDs get a drug card with the counseling button and a patient sheet on safe use, English and Spanish.",
+    "Methotrexate hold after the influenza vaccine is now 1 week, not 2, in the drug card, the .vax phrase, and both patient sheets. A randomized noninferiority trial found the 1-week hold matched the 2-week hold for antibody response (Park, Arthritis Rheumatol 2023).",
+    "Visit lengths now default to 40 minutes new and 20 minutes return in the welcome letter and the appointment sheet, still typable."
+  ]},
+  {v:"4.9", d:"September 28, 2026", items:[
+    "Recommended vaccines, for the note and for the patient. The .vax phrase now walks the full ACIP and 2022 ACR list with a status dropdown per vaccine, the methotrexate and rituximab timing rules, and the prednisone threshold. A matching patient sheet in English and Spanish says which vaccines to get, which to avoid, and how to time them.",
+    "Three phrases retired: the prednisone taper phrase, which the taper tab replaced, and the longitudinal care and records reviewed attestations. A copy you edited stays.",
+    "The welcome letter and the appointment sheet now take your own numbers. Visit lengths, arrival time, message and refill turnaround, and paperwork time are typable boxes in both languages."
+  ]},
   {v:"4.8", d:"September 22, 2026", items:[
     "Abnormal MSK exam phrase (.mskabn): one dropdown per region, each starting at normal, so you change only what was abnormal. Hands, elbows, shoulders, hips, knees, feet, spine, enthesitis, dactylitis, strength, gait, plus joint counts.",
     "Start counseling on every drug card. One button writes the shared decision-making note from the card itself: benefits, risks, side effects, dosing, monitoring, and the decision. A dropdown picks the patient sheet to hand over and opens it.",
