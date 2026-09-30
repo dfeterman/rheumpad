@@ -99,6 +99,27 @@
     opacity:0; pointer-events:none; transition:all .25s; z-index:200;}
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
+  /* MSK ultrasound */
+  .us-head{display:flex; gap:12px 18px; flex-wrap:wrap; margin-top:10px; font-size:.85rem; color:var(--muted);}
+  .us-head label{display:flex; flex-direction:column; gap:3px;}
+  .us-head select, .us-head input{border:1.5px solid var(--accent); background:var(--accent-soft); border-radius:6px; padding:3px 6px; font-size:.9rem; color:var(--ink); max-width:260px;}
+  .us-grp{font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--accent-ink); margin:10px 0 4px; padding-bottom:2px; border-bottom:1px solid var(--line);}
+  .us-row{display:grid; grid-template-columns:minmax(150px,1.2fr) 2fr 2fr; gap:6px 10px; align-items:center; padding:3px 0; border-bottom:1px dashed var(--line); font-size:.86rem;}
+  .us-lab{color:var(--ink);}
+  .us-cell{display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center; opacity:.55;}
+  .us-cell.on{opacity:1;}
+  .us-on{font-weight:700; display:inline-flex; align-items:center; gap:3px; min-width:34px;}
+  .us-flag{display:inline-flex; align-items:center; gap:2px; font-size:.8rem; color:var(--muted); white-space:nowrap;}
+  .us-cell select{border:1px solid var(--line); border-radius:5px; padding:1px 3px; font-size:.8rem; background:#fff;}
+  .us-cell.on select{border-color:var(--accent); background:var(--accent-soft);}
+  @media (max-width:760px){ .us-row{grid-template-columns:1fr;} }
+  .mpick{display:inline; line-height:2.1;}
+  .mpick .mp{margin:0 3px 0 0; vertical-align:middle; display:inline-block; user-select:none;}
+  .mpick .mp:hover{border-color:var(--accent);}
+  .mpick .mpn{width:52px; border:none; border-bottom:1px solid var(--accent); background:transparent; font-size:.8rem; padding:0 2px; margin:0 2px; outline:none; font-family:inherit;}
+  .mpick .mp{border:1px solid var(--line); background:#fff; color:var(--muted); border-radius:999px; padding:1px 9px; font-size:.8rem; cursor:pointer; font-family:inherit; line-height:1.5;}
+  .mpick .mp.on{border-color:var(--accent); background:var(--accent-soft); color:var(--ink); font-weight:600;}
+  .mpick .mp[data-normal="1"].on{background:var(--ok-soft, #e2f0dc); border-color:#7fb069;}
   /* Composer */
   .comp-section{background:#fff; border:1px solid var(--line); border-radius:var(--radius);
     padding:14px 18px; margin-bottom:12px; box-shadow:var(--shadow);}
@@ -134,6 +155,9 @@
   .joint.tender{fill:var(--tender-soft); stroke:var(--tender); stroke-width:2;}
   .joint.swollen{fill:var(--swollen-soft); stroke:var(--swollen); stroke-width:2;}
   .joint.both{fill:var(--both-soft); stroke:var(--both); stroke-width:2;}
+  .joint.off{opacity:.22; stroke-dasharray:2 2;}
+  #je-svgcard.exammode .joint{stroke:var(--accent);}
+  #je-svgcard.exammode .joint.off{opacity:.35;}
   .je-legend{display:flex; gap:14px; font-size:.78rem; color:var(--muted); margin-top:8px; flex-wrap:wrap;}
   .je-legend span::before{content:""; display:inline-block; width:11px; height:11px; border-radius:50%; margin-right:5px; vertical-align:-1px;}
   .je-legend .lt::before{background:var(--tender-soft); border:2px solid var(--tender);}
@@ -300,7 +324,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v5.2</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v5.5</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -317,6 +341,7 @@
   <button data-tab="templates">Note Templates</button>
   <button data-tab="picklists">Pick Lists</button>
   <button data-tab="jointexam">Joint Exam</button>
+  <button data-tab="msk-us">MSK Ultrasound</button>
   <button data-tab="calc">Calculators</button>
   <button data-tab="taper">Taper Builder</button>
   <button data-tab="periop">Peri-Op</button>
@@ -365,7 +390,12 @@
   </section>
 
   <section class="tab" id="tab-jointexam">
-    <p class="tab-intro">Tap a joint to cycle: tender &rarr; swollen &rarr; both &rarr; clear. Counts and exam text update as you go.</p>
+    <p class="tab-intro">Pick which joints you examined, then tap a joint to cycle: tender &rarr; swollen &rarr; both &rarr; clear. The exam text names every joint examined, so a normal exam reads as a list of joints rather than "no synovitis".</p>
+    <div class="comp-section" style="margin-bottom:12px;">
+      <h4><span>Joints examined</span><span>Examined: <b id="je-excount">0</b></span></h4>
+      <div class="pc-chips" id="je-sets"></div>
+      <p class="hint" style="margin:8px 0 0;">Faded joints on the diagram were not examined. Tap "Edit examined joints" to add or remove single joints, or mark a finding on a faded joint and it joins the examined set.</p>
+    </div>
     <div id="je-counts">
       <div class="stat"><b id="tjc">0</b><span>TJC-28</span></div>
       <div class="stat"><b id="sjc">0</b><span>SJC-28</span></div>
@@ -380,17 +410,82 @@
         <div class="je-modes">
           <button class="btn small" onclick="JE.clearAll()">Clear all</button>
           <button class="btn small" onclick="JE.setNormal()">Mark exam normal</button>
+          <button class="btn small" id="je-modebtn" onclick="JE.toggleMode()">Edit examined joints</button>
         </div>
         <div id="je-svg"></div>
         <div class="je-legend"><span class="lt">Tender</span><span class="ls">Swollen</span><span class="lb">Both</span></div>
       </div>
       <div>
+        <div class="comp-section" style="margin-bottom:12px;">
+          <h4><span>Axial and entheseal exam</span><label class="us-flag" style="font-size:.85rem;"><input type="checkbox" id="je-spa"> include</label></h4>
+          <div id="je-spabox" style="display:none;">
+            <div class="us-head" style="margin-top:4px;">
+              <label>Modified Schober (cm) <input type="number" id="je-schober" step="0.5" min="0" max="15" placeholder="&ndash;"></label>
+              <label>Chest expansion (cm) <input type="number" id="je-chest" step="0.5" min="0" max="15" placeholder="&ndash;"></label>
+              <label>Occiput to wall (cm) <input type="number" id="je-occ" step="0.5" min="0" max="40" placeholder="&ndash;"></label>
+              <label>Lateral lumbar flexion (cm) <input type="number" id="je-latflex" step="0.5" min="0" max="40" placeholder="&ndash;"></label>
+              <label>Cervical rotation (degrees) <input type="number" id="je-cerv" step="5" min="0" max="90" placeholder="&ndash;"></label>
+              <label>Sacroiliac joints
+                <select id="je-si"><option value="nontender">nontender</option><option value="tender on the right">tender right</option><option value="tender on the left">tender left</option><option value="tender bilaterally">tender bilaterally</option><option value="not examined">not examined</option></select>
+              </label>
+              <label>Dactylitis
+                <select id="je-dact"><option value="none">none</option><option value="one finger">one finger</option><option value="one toe">one toe</option><option value="more than one digit">more than one digit</option><option value="not examined">not examined</option></select>
+              </label>
+            </div>
+            <p class="hint" style="margin:10px 0 4px;">Entheses (MASES sites). Tap the tender ones; the rest document as examined and nontender.</p>
+            <div class="pc-chips" id="je-enth"></div>
+          </div>
+        </div>
         <div id="je-out"></div>
         <div class="modal-actions" style="justify-content:flex-start">
           <button class="btn primary" onclick="JE.copy()">Copy exam text</button>
         </div>
       </div>
     </div>
+  </section>
+
+  <section class="tab" id="tab-msk-us">
+    <p class="tab-intro">Point-of-care ultrasound, joint by joint. Load a protocol or tick the structures you scanned, grade the abnormal ones, and copy. The note names every structure you evaluated, so a normal study reads as a list of joints, not a bare "no synovitis".</p>
+    <div class="comp-section">
+      <h4><span>Protocol</span><span>Evaluated: <b id="us-count">0</b></span></h4>
+      <div class="pc-chips" id="us-presets"></div>
+      <div class="us-head">
+        <label>Indication
+          <select id="us-ind">
+            <option value="assessment of disease activity in rheumatoid arthritis">RA disease activity</option>
+            <option value="evaluation of suspected inflammatory arthritis">suspected inflammatory arthritis</option>
+            <option value="evaluation of enthesitis in spondyloarthritis">SpA enthesitis</option>
+            <option value="assessment of psoriatic arthritis activity">PsA activity</option>
+            <option value="monitoring response to therapy">monitoring response to therapy</option>
+            <option value="evaluation of joint pain with a normal or equivocal examination">joint pain, equivocal exam</option>
+            <option value="other">other (type below)</option>
+          </select>
+        </label>
+        <label>Other indication <input id="us-ind-other" type="text" placeholder="indication"></label>
+        <label>Comparison
+          <select id="us-cmp">
+            <option value="">none</option>
+            <option value="no prior ultrasound for comparison">no prior study</option>
+            <option value="improved compared with the prior study">improved from prior</option>
+            <option value="unchanged compared with the prior study">unchanged from prior</option>
+            <option value="worse compared with the prior study">worse than prior</option>
+          </select>
+        </label>
+        <label>US7 side
+          <select id="us-side"><option value="R">right</option><option value="L">left</option></select>
+        </label>
+      </div>
+      <p class="hint" style="margin:8px 0 0;">GS and PD grade 0 to 3 (EULAR-OMERACT). Setting any grade or flag ticks the structure as evaluated. Entheses take the OMERACT elementary lesions: thickening, hypoechogenicity, enthesophyte or calcification, erosion, bursitis, and Doppler at the insertion.</p>
+    </div>
+    <div class="comp-section">
+      <h4><span>Structures</span></h4>
+      <div id="us-table"></div>
+    </div>
+    <div class="comp-section">
+      <h4><span>Note</span><button class="btn small primary" onclick="US.copy()">Copy ultrasound note</button></h4>
+      <div id="us-out" class="filled" style="margin:0; white-space:pre-wrap;"></div>
+    </div>
+    <p class="modfoot">Billing reference: 76881 complete joint ultrasound or 76882 limited, one unit per anatomic region, with images retained and a separate report. Coverage rules vary by payer. No patient identifiers belong in this tab.</p>
   </section>
 
   <section class="tab" id="tab-calc">
@@ -849,8 +944,8 @@ const DEFAULT_DATA = {
 `Safety labs reviewed today: CBC, CMP{extra:, ESR, CRP|, ESR, CRP, uric acid|}. No significant cytopenias, transaminase elevation, or renal dysfunction{caveat: |; see plan for abnormalities}. Continue monitoring every {interval:4 weeks|8 weeks|12 weeks|6 months} while on current therapy.`},
     {id:"p-rosneg", name:"Negative rheum ROS", dot:".rosneg", cat:"Exam & ROS", body:
 `ROS: No fevers, chills, or unintentional weight loss. No new rash, photosensitivity, oral or nasal ulcers, or alopecia. No Raynaud phenomenon, sicca symptoms, pleuritic chest pain, or dyspnea. No new headache, jaw claudication, or visual change. No dysuria or hematuria. No new weakness or paresthesias. Remainder of a complete 10-system review is negative except as noted in the HPI.`},
-    {id:"p-mskexam", name:"Normal MSK exam", dot:".mskexam", cat:"Exam & ROS", body:
-`MSK: No active synovitis of the small joints of the hands, wrists, elbows, shoulders, knees, ankles, or feet. Full range of motion without pain. No joint effusions, deformities, or enthesitis. No dactylitis. Spine with normal range of motion, nontender. Muscle strength 5/5 proximally and distally. Gait normal.`},
+    {id:"p-mskexam", name:"Normal MSK exam, joints named", dot:".mskexam", cat:"Exam & ROS", body:
+`MSK: Joints examined: {joints:bilateral shoulders, elbows, wrists, MCPs, PIPs, DIPs, hips, knees, ankles, and MTPs|28-joint set, bilateral shoulders, elbows, wrists, MCPs, PIPs, and knees|bilateral wrists, MCPs, PIPs, DIPs, and MTPs|bilateral hips, knees, ankles, and MTPs|bilateral shoulders, elbows, hips, knees, and ankles}. No tenderness, swelling, or synovitis in any joint examined. Full range of motion without pain. No effusions, deformities, enthesitis, or dactylitis. Spine: {spine:normal range of motion, nontender, sacroiliac joints nontender|not examined}. Muscle strength 5/5 proximally and distally. Gait normal.`},
     {id:"p-goutflare", name:"Gout flare treatment", dot:".goutflare", cat:"Plans", body:
 `Acute gout flare: treated with {tx:colchicine 1.2 mg then 0.6 mg one hour later, then 0.6 mg daily-BID|prednisone 30-40 mg daily x 5 days|naproxen 500 mg BID with food x 5-7 days|intra-articular steroid injection today}. Continue urate-lowering therapy without interruption during the flare. Counseled on hydration, limiting alcohol and high-purine foods, and starting flare treatment at first symptoms.`},
     {id:"p-ultstart", name:"Urate-lowering therapy start", dot:".ultstart", cat:"Plans", body:
@@ -4161,8 +4256,25 @@ Sincerely,`}
 // ====================== ABNORMAL MSK EXAM + IN-DEPTH START SHEETS ======================
 (function(){
 DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
-{id:"p-mskabn", name:"Abnormal MSK exam", dot:".mskabn", cat:"Exam & ROS", body:
-`MSK: Hands and wrists: {hands:no synovitis, full range of motion|synovitis of the MCPs bilaterally|synovitis of the MCPs and PIPs bilaterally|synovitis of the right MCPs|synovitis of the left MCPs|synovitis of the wrists bilaterally|synovitis of the right wrist|synovitis of the left wrist|tenderness without synovitis|Heberden and Bouchard nodes with bony enlargement, no synovitis|ulnar deviation and swan neck deformities|reduced grip strength bilaterally}. Elbows: {elbows:normal|synovitis of the right elbow|synovitis of the left elbow|synovitis bilaterally|lateral epicondyle tenderness|loss of full extension}. Shoulders: {shoulders:normal|painful limited range of motion bilaterally|painful limited range of motion on the right|painful limited range of motion on the left|subacromial tenderness}. Hips: {hips:normal|painful internal rotation on the right|painful internal rotation on the left|painful internal rotation bilaterally|trochanteric tenderness}. Knees: {knees:normal|effusion of the right knee|effusion of the left knee|effusions bilaterally|synovitis without effusion|crepitus with bony enlargement|flexion contracture}. Ankles and feet: {feet:normal|synovitis of the ankles bilaterally|synovitis of the right ankle|synovitis of the left ankle|MTP synovitis bilaterally|MTP squeeze tenderness|first MTP erythema and tenderness consistent with gout}. Spine: {spine:normal range of motion, nontender|reduced lumbar flexion, Schober under 4 cm|reduced cervical rotation|paraspinal tenderness|sacroiliac joint tenderness|kyphosis with reduced chest expansion}. Enthesitis: {enth:none|Achilles insertion tenderness|plantar fascia tenderness|Achilles and plantar fascia tenderness|lateral epicondyle enthesitis}. Dactylitis: {dact:none|one finger|one toe|more than one digit}. Strength: {strength:5/5 proximally and distally|4/5 proximal weakness, symmetric|4/5 hip flexor weakness|unable to rise from a chair without using the arms|3/5 proximal weakness}. Gait: {gait:normal|antalgic|antalgic, favoring the right|antalgic, favoring the left|uses a cane|waddling}. Tender joint count {tjc}, swollen joint count {sjc}. {additional findings}`}
+{id:"p-mskabn", name:"MSK exam by region, multi-pick", dot:".mskabn", cat:"Exam & ROS", body:
+`MSK exam:
+Shoulders: {shoulders:+no tenderness to palpation, normal range of motion bilaterally|right shoulder mildly tender to palpation, normal range of motion|right shoulder exquisitely tender to palpation, decreased range of motion due to pain|right shoulder with decreased range of motion|right shoulder subacromial tenderness|right shoulder painful arc|left shoulder mildly tender to palpation, normal range of motion|left shoulder exquisitely tender to palpation, decreased range of motion due to pain|left shoulder with decreased range of motion|left shoulder subacromial tenderness|left shoulder painful arc|bilateral shoulders tender to palpation, normal range of motion|not examined}.
+Elbows: {elbows:+no tenderness to palpation, no bursitis, full extension bilaterally|bilateral tenderness to palpation at the lateral epicondyle|right lateral epicondyle tenderness|left lateral epicondyle tenderness|right medial epicondyle tenderness|left medial epicondyle tenderness|right elbow synovitis|left elbow synovitis|right elbow loss of full extension|left elbow loss of full extension|right olecranon bursitis|left olecranon bursitis|no bursitis|rheumatoid nodules|not examined}.
+Wrists: {wrists:+no swelling or tenderness to palpation, no effusions|right wrist synovitis|left wrist synovitis|bilateral wrist synovitis|right wrist tender to palpation without synovitis|left wrist tender to palpation without synovitis|right wrist decreased range of motion|left wrist decreased range of motion|right extensor tenosynovitis|left extensor tenosynovitis|positive Tinel and Phalen on the right|positive Tinel and Phalen on the left|not examined}.
+MCPs: {mcps:+no synovitis or tenderness to palpation bilaterally|left MCP # with synovitis and tenderness to palpation|left MCP # tender to palpation, no synovitis|left MCP # swollen without tenderness to palpation|left MCPs mildly tender to palpation, no significant synovitis|left MCPs without synovitis or tenderness|right MCP # with synovitis and tenderness to palpation|right MCP # tender to palpation, no synovitis|right MCP # swollen without tenderness to palpation|right MCPs mildly tender to palpation, no significant synovitis|right MCPs without synovitis or tenderness|positive MCP squeeze on the right|positive MCP squeeze on the left|ulnar deviation|not examined}.
+PIPs: {pips:+no synovitis or tenderness to palpation bilaterally|left PIP # with synovitis and tenderness to palpation|left PIP # tender to palpation, no synovitis|left PIP # mildly swollen without tenderness to palpation|left PIPs without synovitis or tenderness|right PIP # with synovitis and tenderness to palpation|right PIP # tender to palpation, no synovitis|right PIP # mildly swollen without tenderness to palpation|right PIPs without synovitis or tenderness|Bouchard nodes|swan neck deformities|boutonniere deformities|not examined}.
+DIPs: {dips:+no tenderness to palpation or synovitis|left DIP # with synovitis|right DIP # with synovitis|left DIP # tender to palpation|right DIP # tender to palpation|Heberden nodes|psoriatic nail changes|dactylitis of the # finger|not examined}.
+Hips: {hips:+full painless range of motion bilaterally, negative FABER|positive FABER on the left with low back pain|positive FABER on the right with low back pain|positive FABER bilaterally|right hip groin pain with internal and external rotation|left hip groin pain with internal and external rotation|right hip decreased internal rotation|left hip decreased internal rotation|right trochanteric tenderness|left trochanteric tenderness|not examined}.
+Knees: {knees:+no warmth, effusion, or tenderness to palpation, full range of motion bilaterally|right knee warm to touch|left knee warm to touch|right knee small effusion|left knee small effusion|right knee possible small effusion|left knee possible small effusion|right knee large effusion|left knee large effusion|right knee tender at the proximal patellar tendon insertion|left knee tender at the proximal patellar tendon insertion|right knee medial joint line tenderness|left knee medial joint line tenderness|right knee crepitus|left knee crepitus|right knee flexion contracture|left knee flexion contracture|right Baker cyst|left Baker cyst|not examined}.
+Ankles: {ankles:+no swelling, no tenderness to palpation|right ankle synovitis|left ankle synovitis|right ankle tender to palpation without swelling|left ankle tender to palpation without swelling|right posterior tibial tenosynovitis|left posterior tibial tenosynovitis|right peroneal tenosynovitis|left peroneal tenosynovitis|pedal edema bilaterally|not examined}.
+Feet: {feet:+negative MTP squeeze bilaterally, no Achilles insertion tenderness|positive MTP squeeze of the left foot|positive MTP squeeze of the right foot|left MTP # synovitis|right MTP # synovitis|first MTP erythema, warmth, and tenderness on the right|first MTP erythema, warmth, and tenderness on the left|no Achilles insertion tenderness|right Achilles insertion tenderness|left Achilles insertion tenderness|right plantar fascia tenderness|left plantar fascia tenderness|dactylitis of the # toe|hallux valgus|not examined}.
+Spine: {spine:+omit this line|full range of motion, nontender|reduced cervical rotation|reduced lumbar flexion|reduced lateral lumbar flexion|paraspinal tenderness|midline tenderness|kyphosis|reduced chest expansion|positive straight leg raise on the right|positive straight leg raise on the left}.
+Modified Schober: {schober:omit this line|under 3 cm|3 cm|3.5 cm|4 cm|4.5 cm|5 cm|5.5 cm|6 cm or more}.
+Sacroiliac joints: {si:+omit this line|nontender|tender on the right|tender on the left|tender bilaterally}.
+Entheses: {enth:+omit this line|no entheseal tenderness|lateral epicondyle tenderness|greater trochanter tenderness|iliac crest tenderness|costochondral tenderness|Achilles insertion tenderness|plantar fascia tenderness}.
+Strength: {strength:+omit this line|5/5 proximally and distally|4/5 proximal weakness, symmetric|4/5 hip flexor weakness|4/5 shoulder abduction weakness|unable to rise from a chair without using the arms|3/5 proximal weakness}.
+Gait: {gait:+omit this line|normal|antalgic|antalgic, favoring the right|antalgic, favoring the left|uses a cane|uses a walker|waddling}.
+Tender joint count {tjc:~0|1|2|3|4|5|6|8|10|12}, swollen joint count {sjc:~0|1|2|3|4|5|6|8|10|12}. {additional findings}`}
 ]);
 
 DEFAULT_DATA.instructions = DEFAULT_DATA.instructions.concat([
@@ -5271,7 +5383,7 @@ LLAME AL CONSULTORIO SI TIENE
 - Cualquier síntoma nuevo que le preocupe.`}
 ]);
 })();
-(function(){ DEFAULT_DATA.version = 29; })();
+(function(){ DEFAULT_DATA.version = 31; })();
 // ====================== CORE ======================
 const KEY = "rheumpad_v1";
 let DATA, FAVS, PRECHART, META = {};
@@ -5436,6 +5548,20 @@ function loadState(){
         const cur = (DATA.phrases || []).find(x=>x.id === "p2-anapos");
         const def = DEFAULT_DATA.phrases.find(x=>x.id === "p2-anapos");
         if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "5h7ysf") cur.body = def.body;
+      }
+      // v29 -> v30: the normal MSK exam names the joints examined instead of a bare
+      // "no active synovitis". Replaced only when the stored body still hashes to the old text.
+      if ((stored.seededVersion || 1) < 30) {
+        const cur = (DATA.phrases || []).find(x=>x.id === "p-mskexam");
+        const def = DEFAULT_DATA.phrases.find(x=>x.id === "p-mskexam");
+        if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "nf3mni") { cur.body = def.body; cur.name = def.name; }
+      }
+      // v30 -> v31: the region exam became multi-pick. Replaced only when the stored body
+      // still hashes to the single-dropdown version.
+      if ((stored.seededVersion || 1) < 31) {
+        const cur = (DATA.phrases || []).find(x=>x.id === "p-mskabn");
+        const def = DEFAULT_DATA.phrases.find(x=>x.id === "p-mskabn");
+        if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "1j4u42s") { cur.body = def.body; cur.name = def.name; }
       }
       // v23 -> v24: the letters' duration and hours lists widened. Swap only in a stored
       // copy still carrying the shipped placeholder, so an edited letter keeps its own.
@@ -5611,7 +5737,27 @@ function renderFillable(body, container){
     if (m.index > last) container.appendChild(document.createTextNode(body.slice(last, m.index)));
     if (m[1] !== undefined) {           // {label:opt|opt}, or {label:~opt|opt} for a typable list
       const label = m[1].trim();
-      if (m[2].charAt(0) === "~") {     // editable: suggestions offered, any value accepted
+      if (m[2].charAt(0) === "+") {     // multi-pick: tap any number of findings, the first option is the normal
+        const opts = m[2].slice(1).split("|");
+        const box = document.createElement("span"); box.className = "mpick"; box.dataset.multi = "1"; box.title = label + ": tap every finding that applies";
+        opts.forEach((opt, i)=>{
+          const b = document.createElement("span"); b.className = "mp" + (i === 0 ? " on" : ""); b.dataset.normal = i === 0 ? "1" : "0"; b.setAttribute("role", "button"); b.tabIndex = 0;
+          // a # inside an option becomes a small box for joint numbers: "left MCP # with synovitis" -> "left MCP 2 and 3 with synovitis"
+          opt.split("#").forEach((piece, k, arr)=>{
+            b.appendChild(document.createTextNode(piece));
+            if (k < arr.length - 1) { const n = document.createElement("input"); n.type = "text"; n.className = "mpn"; n.placeholder = "2 and 3"; n.size = 6; n.title = "joint numbers"; n.onclick = e=>e.stopPropagation(); n.onkeydown = e=>e.stopPropagation(); b.appendChild(n); }
+          });
+          b.onclick = ()=>{
+            b.classList.toggle("on");
+            const btns = [...box.querySelectorAll(".mp")];
+            if (b.dataset.normal === "1" && b.classList.contains("on")) btns.forEach(x=>{ if (x !== b) x.classList.remove("on"); });
+            else if (b.dataset.normal !== "1" && b.classList.contains("on")) btns[0].classList.remove("on");
+            if (!btns.some(x=>x.classList.contains("on"))) btns[0].classList.add("on");
+          };
+          box.appendChild(b);
+        });
+        container.appendChild(box);
+      } else if (m[2].charAt(0) === "~") {     // editable: suggestions offered, any value accepted
         const opts = m[2].slice(1).split("|");
         const inp = document.createElement("input");
         inp.type = "text"; inp.value = opts[0]; inp.placeholder = label;
@@ -5660,6 +5806,13 @@ function dropOmitted(text){
   if (text.indexOf(OMIT_LINE) < 0) return text;
   return text.split("\n").filter(l=>l.indexOf(OMIT_LINE) < 0).join("\n");
 }
+// "a", "a and b", "a, b, and c"
+function joinPicks(list){
+  if (list.length <= 1) return list.join("");
+  if (list.some(x=>x.indexOf(",") >= 0 || x.length > 30)) return list.join("; ");
+  if (list.length === 2) return list[0] + " and " + list[1];
+  return list.slice(0, -1).join(", ") + ", and " + list[list.length - 1];
+}
 function collectRaw(node, forPrint){
   let out = "";
   node.childNodes.forEach(ch=>{
@@ -5668,6 +5821,7 @@ function collectRaw(node, forPrint){
     else if (ch.tagName === "SELECT") out += ch.value;
     else if (ch.tagName === "BR") out += "\n";
     else if (ch.tagName === "DATALIST") { /* suggestions only, never part of the text */ }
+    else if (ch.dataset && ch.dataset.multi === "1") out += joinPicks([...ch.querySelectorAll(".mp.on")].map(b=>[...b.childNodes].map(x=>x.nodeType === 3 ? x.data : (x.value.trim() || (forPrint ? "____" : blankMark("joint numbers")))).join("")));
     else out += collectRaw(ch, forPrint);
   });
   return out;
@@ -6233,7 +6387,16 @@ function renderPicklists(){
 
 // ====================== JOINT EXAM ======================
 const JE = {
-  joints: [], state: {}, normal: false,
+  joints: [], state: {}, normal: false, examined: new Set(), mode: "find", enthTender: new Set(),
+  SETS: {
+    j28: {name:"28 joints (DAS28, CDAI)", pick: j=>j.in28},
+    hands: {name:"Hands, wrists, and feet", pick: j=>/wri|mcp|pip|dip|mtp/.test(j.id)},
+    all: {name:"All joints on the diagram", pick: ()=>true},
+    large: {name:"Large joints", pick: j=>/sho|elb|hip|kne|ank/.test(j.id)},
+    spa: {name:"SpA peripheral (knees, ankles, feet) + axial", pick: j=>/kne|ank|mtp/.test(j.id), spa:true},
+    none: {name:"None", pick: ()=>false}
+  },
+  ENTHESES: ["right first costochondral","left first costochondral","right seventh costochondral","left seventh costochondral","right ASIS","left ASIS","right iliac crest","left iliac crest","right PSIS","left PSIS","L5 spinous process","right Achilles insertion","left Achilles insertion"],
   build(){
     const J = [];
     const fingers = ["1","2","3","4","5"];
@@ -6288,25 +6451,121 @@ const JE = {
       svg.appendChild(c);
     });
     const host = document.getElementById("je-svg"); host.innerHTML = ""; host.appendChild(svg);
-    ["je-pga","je-ega"].forEach(id=>document.getElementById(id).addEventListener("input", ()=>JE.update()));
+    ["je-pga","je-ega","je-schober","je-chest","je-occ","je-latflex","je-cerv","je-si","je-dact"].forEach(id=>{ const el = document.getElementById(id); if (el) el.addEventListener("input", ()=>JE.update()); });
+    const spa = document.getElementById("je-spa");
+    if (spa) spa.addEventListener("change", ()=>{ document.getElementById("je-spabox").style.display = spa.checked ? "" : "none"; JE.update(); });
+    const sets = document.getElementById("je-sets");
+    if (sets) {
+      sets.innerHTML = "";
+      Object.keys(this.SETS).forEach(k=>{
+        const b = document.createElement("button"); b.className = "chip"; b.textContent = this.SETS[k].name; b.dataset.set = k;
+        b.onclick = ()=>JE.useSet(k); sets.appendChild(b);
+      });
+    }
+    const enth = document.getElementById("je-enth");
+    if (enth) {
+      enth.innerHTML = "";
+      this.ENTHESES.forEach(e=>{
+        const b = document.createElement("button"); b.className = "chip"; b.textContent = e;
+        b.onclick = ()=>{ if (JE.enthTender.has(e)) JE.enthTender.delete(e); else JE.enthTender.add(e); b.classList.toggle("on", JE.enthTender.has(e)); JE.normal = false; JE.update(); };
+        enth.appendChild(b);
+      });
+    }
+    this.useSet("j28", true);
+  },
+  useSet(k, quiet){
+    const set = this.SETS[k]; if (!set) return;
+    this.examined = new Set(this.joints.filter(set.pick).map(j=>j.id));
+    // findings already marked stay examined
+    Object.keys(this.state).forEach(id=>{ if (this.state[id]) this.examined.add(id); });
+    document.querySelectorAll("#je-sets .chip").forEach(c=>c.classList.toggle("on", c.dataset.set === k));
+    const spa = document.getElementById("je-spa");
+    if (set.spa && spa && !spa.checked) { spa.checked = true; document.getElementById("je-spabox").style.display = ""; }
+    this.update();
+    if (!quiet) toast(set.name + ": " + this.examined.size + " joints examined");
+  },
+  toggleMode(){
+    this.mode = this.mode === "find" ? "exam" : "find";
+    const btn = document.getElementById("je-modebtn");
+    if (btn) { btn.textContent = this.mode === "exam" ? "Done editing examined joints" : "Edit examined joints"; btn.classList.toggle("primary", this.mode === "exam"); }
+    const card = document.getElementById("je-svgcard"); if (card) card.classList.toggle("exammode", this.mode === "exam");
+    document.querySelectorAll("#je-sets .chip").forEach(c=>c.classList.remove("on"));
     this.update();
   },
   cycle(id){
+    if (this.mode === "exam") {
+      if (this.examined.has(id)) { this.examined.delete(id); this.state[id] = 0; } else this.examined.add(id);
+      this.update(); return;
+    }
     this.normal = false;
     const cur = this.state[id] || 0;
     this.state[id] = (cur + 1) % 4;   // 0 none, 1 tender, 2 swollen, 3 both
+    if (this.state[id]) { this.examined.add(id); document.querySelectorAll("#je-sets .chip").forEach(c=>c.classList.remove("on")); }
     this.update();
   },
-  clearAll(){ this.state = {}; this.normal = false; this.update(); },
-  setNormal(){ this.state = {}; this.normal = true; this.update(); },
+  clearAll(){ this.state = {}; this.normal = false; this.enthTender = new Set(); document.querySelectorAll("#je-enth .chip").forEach(c=>c.classList.remove("on")); this.update(); },
+  setNormal(){ this.state = {}; this.normal = true; this.enthTender = new Set(); document.querySelectorAll("#je-enth .chip").forEach(c=>c.classList.remove("on")); this.update(); },
+  // "bilateral MCP 1 to 5" rather than ten entries
+  examinedList(){
+    const items = [], groups = {};
+    const seen = new Set();
+    const ORDER = ["sho","elb","wri","mcp","pip","dip","hip","kne","ank","mtp"];
+    const rank = j=>{ const base = j.id.slice(1); const i = ORDER.findIndex(k=>base.startsWith(k)); return i * 10 + (parseInt(base.replace(/\D/g, "")) || 0); };
+    this.joints.slice().sort((a,b)=>rank(a) - rank(b)).forEach(j=>{
+      const base = j.id.slice(1);
+      if (seen.has(base)) return; seen.add(base);
+      const l = this.examined.has("L" + base), r = this.examined.has("R" + base);
+      if (!l && !r) return;
+      const tag = l && r ? "bilateral" : l ? "left" : "right";
+      const label = j.label.replace(/^(left|right) /, "");
+      const m = /^(MCP|PIP|DIP|MTP) (\d)$/.exec(label);
+      if (m) {
+        const gk = tag + " " + m[1];
+        if (!groups[gk]) { groups[gk] = {tag, prefix:m[1], nums:[]}; items.push(groups[gk]); }
+        groups[gk].nums.push(parseInt(m[2]));
+      } else items.push({tag, label: tag === "bilateral" ? label.replace(/^(shoulder|elbow|wrist|hip|knee|ankle)$/, "$1s") : label});
+    });
+    return items.map(it=>{
+      if (!it.nums) return it.tag + " " + it.label;
+      const runs = []; let start = it.nums[0], prev = it.nums[0];
+      for (let i = 1; i <= it.nums.length; i++) {
+        const n = it.nums[i];
+        if (n === prev + 1) { prev = n; continue; }
+        runs.push(start === prev ? String(start) : prev === start + 1 ? start + ", " + prev : start + " to " + prev);
+        start = n; prev = n;
+      }
+      return it.tag + " " + it.prefix + " " + runs.join(", ");
+    });
+  },
+  axialText(){
+    const spa = document.getElementById("je-spa");
+    if (!spa || !spa.checked) return "";
+    const v = id=>{ const el = document.getElementById(id); return el && el.value !== "" ? el.value : null; };
+    const parts = [];
+    const ax = [];
+    if (v("je-schober") !== null) ax.push("modified Schober " + v("je-schober") + " cm");
+    if (v("je-chest") !== null) ax.push("chest expansion " + v("je-chest") + " cm");
+    if (v("je-occ") !== null) ax.push("occiput-to-wall " + v("je-occ") + " cm");
+    if (v("je-latflex") !== null) ax.push("lateral lumbar flexion " + v("je-latflex") + " cm");
+    if (v("je-cerv") !== null) ax.push("cervical rotation " + v("je-cerv") + " degrees");
+    if (ax.length) parts.push("Axial: " + ax.join(", ") + ".");
+    const si = v("je-si"); if (si && si !== "not examined") parts.push("Sacroiliac joints " + si + ".");
+    const tender = this.ENTHESES.filter(e=>this.enthTender.has(e));
+    parts.push(tender.length
+      ? "Entheses (MASES, 13 sites examined): tender at " + tender.join(", ") + " (" + tender.length + " of 13), remaining sites nontender."
+      : "Entheses: all 13 MASES sites examined and nontender.");
+    const d = v("je-dact"); if (d && d !== "not examined") parts.push("Dactylitis: " + d + ".");
+    return "\n" + parts.join("\n");
+  },
   update(){
     this.joints.forEach(j=>{
       const el = document.getElementById("j-" + j.id); if (!el) return;
-      el.classList.remove("tender","swollen","both");
+      el.classList.remove("tender","swollen","both","off");
       const s = this.state[j.id] || 0;
       if (s === 1) el.classList.add("tender");
       if (s === 2) el.classList.add("swollen");
       if (s === 3) el.classList.add("both");
+      if (!this.examined.has(j.id)) el.classList.add("off");
     });
     const tender = this.joints.filter(j=>{const s=this.state[j.id]||0; return s===1||s===3;});
     const swollen = this.joints.filter(j=>{const s=this.state[j.id]||0; return s===2||s===3;});
@@ -6315,6 +6574,7 @@ const JE = {
     document.getElementById("sjc").textContent = s28;
     document.getElementById("tjc-all").textContent = tender.length;
     document.getElementById("sjc-all").textContent = swollen.length;
+    const exc = document.getElementById("je-excount"); if (exc) exc.textContent = this.examined.size;
     // CDAI: TJC28 + SJC28 + patient global + provider global
     const pga = parseFloat(document.getElementById("je-pga").value);
     const ega = parseFloat(document.getElementById("je-ega").value);
@@ -6328,23 +6588,29 @@ const JE = {
       document.getElementById("je-cdai").textContent = "–";
     }
     const out = document.getElementById("je-out");
-    if (this.normal) {
-      out.textContent = "Joint exam: No tender or swollen joints. TJC28 0, SJC28 0. No synovitis, effusions, or deformities appreciated. Full range of motion throughout." + cdaiTxt;
+    const n = this.examined.size;
+    const list = this.examinedList().join(", ");
+    const full28 = this.joints.filter(j=>j.in28).every(j=>this.examined.has(j.id));
+    const counts = full28 ? "TJC28 " + t28 + ", SJC28 " + s28 : "28-joint set not fully examined, counts limited to the joints examined";
+    const extra = (tender.length > t28 || swollen.length > s28) ? " (all examined joints: " + tender.length + " tender, " + swollen.length + " swollen)" : "";
+    if (!n) {
+      out.textContent = "Pick a set of joints examined above, then mark findings on the diagram.";
+    } else if (this.normal) {
+      out.textContent = "Joint exam, " + n + " joints examined: " + list + ". No tenderness, swelling, or synovitis in any joint examined; full range of motion without pain, no effusions or deformities. " + counts + "." + this.axialText() + cdaiTxt;
     } else if (!tender.length && !swollen.length) {
-      out.textContent = "Tap joints on the diagram to build the exam, or use \"Mark exam normal\".";
+      out.textContent = "Joint exam, " + n + " joints examined: " + list + ".\nTap joints on the diagram to mark findings, or use \"Mark exam normal\".";
     } else {
-      let txt = "Joint exam: TJC28 " + t28 + ", SJC28 " + s28;
-      if (tender.length > t28 || swollen.length > s28) txt += " (all joints assessed: " + tender.length + " tender, " + swollen.length + " swollen)";
-      txt += ".";
+      let txt = "Joint exam, " + n + " joints examined: " + list + ".";
       if (tender.length) txt += "\nTender: " + tender.map(j=>j.label).join(", ") + ".";
       if (swollen.length) txt += "\nSwollen: " + swollen.map(j=>j.label).join(", ") + ".";
-      txt += "\nNo other tender or swollen joints. Remainder of joints with full range of motion." + cdaiTxt;
+      txt += "\nAll other examined joints without tenderness, swelling, or synovitis, with full range of motion. " + counts + extra + ".";
+      txt += this.axialText() + cdaiTxt;
       out.textContent = txt;
     }
   },
   copy(){
     const out = document.getElementById("je-out").textContent;
-    if (out.startsWith("Tap joints")) { toast("Nothing marked yet"); return; }
+    if (out.startsWith("Pick a set") || /Tap joints on the diagram/.test(out)) { toast("Mark findings or mark the exam normal first"); return; }
     copyText(out);
   }
 };
@@ -6944,6 +7210,231 @@ const PS = {
 };
 
 // ====================== DISEASE ACTIVITY CALCULATORS ======================
+// ====================== MSK ULTRASOUND (joint by joint) ======================
+// Point-of-care musculoskeletal ultrasound documentation. Every row you tick becomes a
+// joint or enthesis "evaluated" in the note, graded 0 to 3 for grey-scale synovitis and
+// power Doppler per EULAR-OMERACT, with erosion and tenosynovitis flags. Entheses carry the
+// OMERACT elementary lesions. Nothing here is stored and nothing identifies a patient.
+const US = {
+  REGIONS: [
+    {id:"wri", label:"wrist (radiocarpal and intercarpal)", kind:"joint", grp:"Hands and wrists"},
+    {id:"mcp1", label:"MCP 1", kind:"joint", grp:"Hands and wrists"},
+    {id:"mcp2", label:"MCP 2", kind:"joint", grp:"Hands and wrists"},
+    {id:"mcp3", label:"MCP 3", kind:"joint", grp:"Hands and wrists"},
+    {id:"mcp4", label:"MCP 4", kind:"joint", grp:"Hands and wrists"},
+    {id:"mcp5", label:"MCP 5", kind:"joint", grp:"Hands and wrists"},
+    {id:"ip1", label:"thumb IP", kind:"joint", grp:"Hands and wrists"},
+    {id:"pip2", label:"PIP 2", kind:"joint", grp:"Hands and wrists"},
+    {id:"pip3", label:"PIP 3", kind:"joint", grp:"Hands and wrists"},
+    {id:"pip4", label:"PIP 4", kind:"joint", grp:"Hands and wrists"},
+    {id:"pip5", label:"PIP 5", kind:"joint", grp:"Hands and wrists"},
+    {id:"dip2", label:"DIP 2", kind:"joint", grp:"Hands and wrists"},
+    {id:"dip3", label:"DIP 3", kind:"joint", grp:"Hands and wrists"},
+    {id:"dip4", label:"DIP 4", kind:"joint", grp:"Hands and wrists"},
+    {id:"dip5", label:"DIP 5", kind:"joint", grp:"Hands and wrists"},
+    {id:"ext", label:"wrist extensor compartments", kind:"tendon", grp:"Hands and wrists"},
+    {id:"flex", label:"finger flexor tendons", kind:"tendon", grp:"Hands and wrists"},
+    {id:"sho", label:"shoulder (glenohumeral, biceps tendon, subacromial bursa)", kind:"joint", grp:"Large joints"},
+    {id:"elb", label:"elbow", kind:"joint", grp:"Large joints"},
+    {id:"hip", label:"hip", kind:"joint", grp:"Large joints"},
+    {id:"kne", label:"knee (suprapatellar recess)", kind:"joint", grp:"Large joints"},
+    {id:"ank", label:"ankle (tibiotalar)", kind:"joint", grp:"Feet and ankles"},
+    {id:"ankt", label:"ankle tendons (tibialis posterior, peroneal)", kind:"tendon", grp:"Feet and ankles"},
+    {id:"mtp1", label:"MTP 1", kind:"joint", grp:"Feet and ankles"},
+    {id:"mtp2", label:"MTP 2", kind:"joint", grp:"Feet and ankles"},
+    {id:"mtp3", label:"MTP 3", kind:"joint", grp:"Feet and ankles"},
+    {id:"mtp4", label:"MTP 4", kind:"joint", grp:"Feet and ankles"},
+    {id:"mtp5", label:"MTP 5", kind:"joint", grp:"Feet and ankles"},
+    {id:"e-tri", label:"triceps insertion", kind:"enthesis", grp:"Entheses"},
+    {id:"e-lat", label:"common extensor origin (lateral epicondyle)", kind:"enthesis", grp:"Entheses"},
+    {id:"e-qua", label:"quadriceps insertion", kind:"enthesis", grp:"Entheses"},
+    {id:"e-ppt", label:"proximal patellar tendon", kind:"enthesis", grp:"Entheses"},
+    {id:"e-dpt", label:"distal patellar tendon", kind:"enthesis", grp:"Entheses"},
+    {id:"e-ach", label:"Achilles insertion", kind:"enthesis", grp:"Entheses"},
+    {id:"e-pla", label:"plantar fascia insertion", kind:"enthesis", grp:"Entheses"}
+  ],
+  PRESETS: {
+    rahand: {ind:"assessment of disease activity in rheumatoid arthritis", name:"RA: hands and wrists", ids:["wri","mcp1","mcp2","mcp3","mcp4","mcp5","ip1","pip2","pip3","pip4","pip5","ext","flex"], sides:["L","R"]},
+    rafull: {ind:"assessment of disease activity in rheumatoid arthritis", name:"RA: hands, wrists, and feet", ids:["wri","mcp1","mcp2","mcp3","mcp4","mcp5","ip1","pip2","pip3","pip4","pip5","ext","flex","mtp1","mtp2","mtp3","mtp4","mtp5"], sides:["L","R"]},
+    us7: {name:"US7 score, one side", ids:["wri","mcp2","mcp3","pip2","pip3","mtp2","mtp5"], sides:["R"]},
+    psa: {ind:"assessment of psoriatic arthritis activity", name:"PsA: hands, feet, and entheses", ids:["wri","mcp2","mcp3","mcp4","mcp5","pip2","pip3","pip4","pip5","dip2","dip3","dip4","dip5","flex","mtp1","mtp2","mtp3","mtp4","mtp5","e-lat","e-qua","e-dpt","e-ach","e-pla"], sides:["L","R"]},
+    spa: {ind:"evaluation of enthesitis in spondyloarthritis", name:"SpA: entheses (MASEI sites)", ids:["e-tri","e-qua","e-ppt","e-dpt","e-ach","e-pla"], sides:["L","R"]},
+    large: {name:"Large joints", ids:["sho","elb","hip","kne","ank","ankt"], sides:["L","R"]}
+  },
+  LESIONS: [["thick","thickening"],["hypo","hypoechogenicity"],["enth","enthesophyte or calcification"],["ero","erosion"],["bursa","bursitis"]],
+  state: {},           // key side+id -> {on, gs, pd, ero, teno, thick, hypo, enth, bursa, eff}
+  key(sd, id){ return sd + ":" + id; },
+  get(sd, id){ const k = this.key(sd, id); if (!this.state[k]) this.state[k] = {on:false, gs:0, pd:0, ero:false, teno:false, eff:false, thick:false, hypo:false, enth:false, bursa:false}; return this.state[k]; },
+  init(){
+    const pick = document.getElementById("us-presets");
+    if (pick) {
+      pick.innerHTML = "";
+      Object.keys(this.PRESETS).forEach(k=>{
+        const b = document.createElement("button"); b.className = "btn small"; b.textContent = this.PRESETS[k].name;
+        b.onclick = ()=>US.preset(k); pick.appendChild(b);
+      });
+      const clr = document.createElement("button"); clr.className = "btn small"; clr.textContent = "Clear all"; clr.onclick = ()=>US.clear(); pick.appendChild(clr);
+    }
+    ["us-ind","us-ind-other","us-cmp","us-side"].forEach(id=>{ const el = document.getElementById(id); if (el) el.addEventListener("input", ()=>US.update()); });
+    this.renderTable();
+    this.update();
+  },
+  preset(k){
+    const p = this.PRESETS[k]; if (!p) return;
+    const side = document.getElementById("us-side");
+    const sides = p.sides.length === 1 && side && side.value ? [side.value] : p.sides;
+    p.ids.forEach(id=>sides.forEach(sd=>{ this.get(sd, id).on = true; }));
+    const ind = document.getElementById("us-ind");
+    if (p.ind && ind) ind.value = p.ind;
+    this.renderTable(); this.update();
+    toast(p.name + " loaded, untick anything you did not scan");
+  },
+  clear(){ this.state = {}; this.renderTable(); this.update(); },
+  renderTable(){
+    const host = document.getElementById("us-table"); if (!host) return;
+    host.innerHTML = "";
+    let lastGrp = null;
+    this.REGIONS.forEach(r=>{
+      if (r.grp !== lastGrp) {
+        const h = document.createElement("div"); h.className = "us-grp"; h.textContent = r.grp; host.appendChild(h); lastGrp = r.grp;
+      }
+      const row = document.createElement("div"); row.className = "us-row";
+      const lab = document.createElement("div"); lab.className = "us-lab"; lab.textContent = r.label; row.appendChild(lab);
+      ["L","R"].forEach(sd=>{
+        const s = this.get(sd, r.id);
+        const cell = document.createElement("div"); cell.className = "us-cell" + (s.on ? " on" : "");
+        const on = document.createElement("label"); on.className = "us-on";
+        const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = s.on; cb.title = (sd === "L" ? "left " : "right ") + r.label + " evaluated";
+        cb.onchange = ()=>{ s.on = cb.checked; cell.classList.toggle("on", s.on); US.update(); };
+        on.appendChild(cb); on.appendChild(document.createTextNode(sd)); cell.appendChild(on);
+        const mkSel = (field, title)=>{
+          const sel = document.createElement("select"); sel.title = title;
+          [0,1,2,3].forEach(v=>{ const o = document.createElement("option"); o.value = v; o.textContent = title.split(" ")[0] + " " + v; sel.appendChild(o); });
+          sel.value = s[field];
+          sel.onchange = ()=>{ s[field] = parseInt(sel.value); if (s[field] > 0 && !s.on) { s.on = true; cb.checked = true; cell.classList.add("on"); } US.update(); };
+          cell.appendChild(sel);
+        };
+        const mkFlag = (field, text, title)=>{
+          const l = document.createElement("label"); l.className = "us-flag"; l.title = title;
+          const c = document.createElement("input"); c.type = "checkbox"; c.checked = s[field];
+          c.onchange = ()=>{ s[field] = c.checked; if (c.checked && !s.on) { s.on = true; cb.checked = true; cell.classList.add("on"); } US.update(); };
+          l.appendChild(c); l.appendChild(document.createTextNode(text)); cell.appendChild(l);
+        };
+        if (r.kind === "joint") {
+          mkSel("gs", "GS synovitis grade 0 to 3"); mkSel("pd", "PD grade 0 to 3");
+          mkFlag("ero", "erosion", "erosion present"); mkFlag("teno", "teno", "tenosynovitis at this joint"); mkFlag("eff", "effusion", "effusion without synovial hypertrophy");
+        } else if (r.kind === "tendon") {
+          mkSel("gs", "GS tenosynovitis grade 0 to 3"); mkSel("pd", "PD grade 0 to 3");
+          mkFlag("ero", "tear", "tendon tear or rupture");
+        } else {
+          this.LESIONS.forEach(([f, t])=>mkFlag(f, t.split(" ")[0], t));
+          mkSel("pd", "PD grade 0 to 3");
+        }
+        row.appendChild(cell);
+      });
+      host.appendChild(row);
+    });
+  },
+  name(sd, r){ return (sd === "L" ? "left " : "right ") + r.label; },
+  describe(sd, r, s){
+    const n = this.name(sd, r);
+    if (r.kind === "joint") {
+      const bits = [];
+      if (s.gs > 0 || s.pd > 0) bits.push("grey-scale synovitis grade " + s.gs + ", power Doppler grade " + s.pd + " (combined " + Math.max(s.gs, s.pd) + ")");
+      if (s.eff) bits.push("effusion");
+      if (s.teno) bits.push("tenosynovitis");
+      if (s.ero) bits.push("erosion");
+      return n + ": " + bits.join(", ");
+    }
+    if (r.kind === "tendon") {
+      const bits = [];
+      if (s.gs > 0 || s.pd > 0) bits.push("tenosynovitis grey-scale grade " + s.gs + ", power Doppler grade " + s.pd);
+      if (s.ero) bits.push("tear");
+      return n + ": " + bits.join(", ");
+    }
+    const bits = this.LESIONS.filter(([f])=>s[f]).map(([f, t])=>t);
+    if (s.pd > 0) bits.push("power Doppler grade " + s.pd + " at the enthesis");
+    return n + ": " + bits.join(", ");
+  },
+  abnormal(r, s){
+    if (r.kind === "enthesis") return s.pd > 0 || this.LESIONS.some(([f])=>s[f]);
+    return s.gs > 0 || s.pd > 0 || s.ero || s.teno || s.eff;
+  },
+  // Compact list of what was scanned: "bilateral MCP 2 to 5" instead of ten entries.
+  compact(){
+    const items = [];
+    const groups = {};
+    this.REGIONS.forEach(r=>{
+      const l = this.state[this.key("L", r.id)], rt = this.state[this.key("R", r.id)];
+      const on = (l && l.on ? 1 : 0) + (rt && rt.on ? 2 : 0);
+      if (!on) return;
+      const tag = on === 3 ? "bilateral" : on === 1 ? "left" : "right";
+      const m = /^(MCP|PIP|DIP|MTP) (\d)$/.exec(r.label);
+      if (m) {
+        const gk = tag + " " + m[1];
+        if (!groups[gk]) { groups[gk] = {tag, prefix:m[1], nums:[]}; items.push(groups[gk]); }
+        groups[gk].nums.push(parseInt(m[2]));
+      } else items.push({tag, label:r.label});
+    });
+    return items.map(it=>{
+      if (!it.nums) return it.tag + " " + it.label;
+      const runs = []; let start = it.nums[0], prev = it.nums[0];
+      for (let i = 1; i <= it.nums.length; i++) {
+        const n = it.nums[i];
+        if (n === prev + 1) { prev = n; continue; }
+        runs.push(start === prev ? String(start) : prev === start + 1 ? start + ", " + prev : start + " to " + prev);
+        start = n; prev = n;
+      }
+      return it.tag + " " + it.prefix + " " + runs.join(", ");
+    });
+  },
+  text(){
+    const indSel = document.getElementById("us-ind");
+    const indOther = document.getElementById("us-ind-other");
+    const cmp = document.getElementById("us-cmp");
+    let ind = indSel ? indSel.value : "";
+    if (ind === "other") ind = (indOther && indOther.value.trim()) || "***";
+    const evald = [], findings = [], normal = [];
+    let joints = 0, synov = 0, pdpos = 0, eros = 0, enth = 0, enthAbn = 0, teno = 0;
+    this.REGIONS.forEach(r=>["L","R"].forEach(sd=>{
+      const s = this.state[this.key(sd, r.id)]; if (!s || !s.on) return;
+      evald.push(this.name(sd, r));
+      if (r.kind === "enthesis") enth++; else joints++;
+      if (this.abnormal(r, s)) {
+        findings.push(this.describe(sd, r, s));
+        if (r.kind === "enthesis") enthAbn++;
+        if (r.kind === "joint" && (s.gs > 0 || s.pd > 0)) synov++;
+        if ((r.kind === "tendon" && (s.gs > 0 || s.pd > 0)) || (r.kind === "joint" && s.teno)) teno++;
+        if (s.pd > 0) pdpos++;
+        if (s.ero) eros++;
+      } else normal.push(this.name(sd, r));
+    }));
+    if (!evald.length) return "";
+    const L = [];
+    L.push("Musculoskeletal ultrasound, performed and interpreted by the rheumatologist at the point of care with a high-frequency linear transducer, grey-scale and power Doppler. Indication: " + ind + ". Synovitis graded 0 to 3 for grey-scale hypertrophy and power Doppler signal per EULAR-OMERACT; entheses assessed for the OMERACT elementary lesions.");
+    L.push("Structures evaluated (" + evald.length + "): " + this.compact().join(", ") + ".");
+    if (findings.length) L.push("Findings:\n- " + findings.join("\n- "));
+    if (normal.length) L.push((findings.length ? "All other structures evaluated" : "Every structure evaluated") + " without synovitis, tenosynovitis, effusion, erosion, or entheseal lesion.");
+    const imp = [];
+    if (joints) imp.push(synov ? "ultrasound evidence of synovitis in " + synov + " of " + joints + " joints and tendon regions evaluated" + (pdpos ? ", power Doppler positive in " + pdpos : ", power Doppler negative") : "no ultrasound evidence of synovitis in the " + joints + " joints and tendon regions evaluated");
+    if (teno) imp.push("tenosynovitis in " + teno);
+    if (eros) imp.push("erosion in " + eros);
+    if (enth) imp.push(enthAbn ? "entheseal abnormality at " + enthAbn + " of " + enth + " entheses evaluated" : "no entheseal abnormality at the " + enth + " entheses evaluated");
+    L.push("Impression: " + imp.join("; ") + ".");
+    if (cmp && cmp.value) L.push("Comparison: " + cmp.value + ".");
+    L.push("Images reviewed and retained. Limited examination of the structures listed above.");
+    return L.join("\n");
+  },
+  update(){
+    const out = document.getElementById("us-out"); if (!out) return;
+    const t = this.text();
+    out.textContent = t || "Tick the structures you scanned, or load a protocol above. The note lists every structure you evaluated, grades the abnormal ones, and names the normal ones.";
+    const n = Object.values(this.state).filter(s=>s.on).length;
+    const cnt = document.getElementById("us-count"); if (cnt) cnt.textContent = n;
+  },
+  copy(){ const t = this.text(); if (!t) { toast("Nothing evaluated yet"); return; } copyText(t); }
+};
+
 const Calc = {
   current: "das28", f: {}, lab: {},
   LIST: [["das28","RA: DAS28 / SDAI"],["basdai","axSpA: BASDAI"],["asdas","axSpA: ASDAS-CRP"],["sledai","SLE: SLEDAI-2K"],["dapsa","PsA: DAPSA"],["frax","Bone: FRAX risk correction"]],
@@ -9079,6 +9570,18 @@ const SCREEN = {
 };
 
 const CHANGELOG = [
+  {v:"5.5", d:"September 29, 2026", items:[
+    "Multi-pick findings. A placeholder written {label:+normal|finding|finding} renders as tap chips instead of a dropdown: tap every finding that applies and the copied text joins them (\"synovitis of the right MCPs and left PIPs\"). The first option is the normal statement and clears itself when you pick a finding.",
+    "The .mskabn phrase is now the MSK exam by region: shoulders, elbows, wrists, hands, hips, knees, ankles, feet, spine with Schober, sacroiliac joints, entheses, strength, and gait, each region a multi-pick line with a not examined option, so the note reads region by region with several findings per region."
+  ]},
+  {v:"5.4", d:"September 29, 2026", items:[
+    "Joint exam names the joints examined. Pick a set (28 joints, hands wrists and feet, all 50 on the diagram, large joints, or SpA peripheral plus axial) or edit single joints, and the exam text opens with the list of joints examined, then tender, then swollen, then every other examined joint as normal. A normal exam reads as a list of joints, not two words.",
+    "Axial and entheseal exam on the same tab: modified Schober, chest expansion, occiput-to-wall, lateral lumbar flexion, cervical rotation, sacroiliac joints, dactylitis, and the 13 MASES enthesis sites as tap chips, documented as examined and nontender unless tapped.",
+    "The .mskexam phrase follows the same rule, with the joint set as a dropdown."
+  ]},
+  {v:"5.3", d:"September 29, 2026", items:[
+    "MSK Ultrasound tab. Load a protocol (RA hands and wrists, RA with feet, US7, PsA, SpA entheses, large joints) or tick the structures you scanned, grade grey-scale and power Doppler 0 to 3 per EULAR-OMERACT, flag erosion, tenosynovitis, and effusion, and mark the OMERACT entheseal lesions. The note lists every structure evaluated by name, grades the abnormal ones, names the normal ones, and writes an impression with counts, so a normal study documents which joints you looked at."
+  ]},
   {v:"5.2", d:"September 29, 2026", items:[
     "A patient sheet for a positive ANA, English and Spanish: what the test looks for, how often healthy people test positive, why a positive result usually does not mean disease, what the visit looks at instead, a fillable titer and conclusion, and the symptoms that warrant a call. The .anapos phrase gained a plan option that records the sheet was given."
   ]},
@@ -9420,6 +9923,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     toast(DATA.emr === "epic" ? "Epic SmartLinks on" : "Generic cues on");
   });
   JE.render();
+  US.init();
   Calc.init();
   Taper.init();
   EM.init();
