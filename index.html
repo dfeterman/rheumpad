@@ -116,6 +116,32 @@
   .mpick{display:inline; line-height:2.1;}
   .mpick .mp{margin:0 3px 0 0; vertical-align:middle; display:inline-block; user-select:none;}
   .mpick .mp:hover{border-color:var(--accent);}
+  .mpick .mpsel .mpt{display:inline-block; border:1px solid #7fb069; background:var(--ok-soft, #e2f0dc); color:var(--ink); border-radius:999px; padding:1px 9px; font-size:.8rem; margin:0 3px 0 0; cursor:pointer; vertical-align:middle; font-weight:600;}
+  .mpick .mpsel .mpt b{color:var(--muted); font-weight:700;}
+  .mpick .mpsel .mpt.neg{background:#f1f1ee; border-color:#b9b9b0; font-weight:500;}
+  .mpick .mpside{display:inline-block; margin:0 6px 0 2px; vertical-align:middle;}
+  .mpick .mps{display:inline-block; border:1px solid var(--accent); color:var(--accent-ink); border-radius:4px; padding:0 7px; font-size:.75rem; font-weight:700; cursor:pointer; margin-right:1px; background:#fff;}
+  .mpick .mps.on{background:var(--accent); color:#fff;}
+  .mpick.sided .mp:not([data-normal="1"]){border-style:dashed;}
+  .rx{display:block; margin:2px 0 4px 0;}
+  .rxrow{display:block; margin:3px 0 3px 10px; line-height:1.9;}
+  .rxside{display:inline-block; min-width:16px; text-align:center; border-radius:4px; background:#eee; color:var(--muted); font-size:.75rem; padding:0 5px; margin-right:6px; vertical-align:middle;}
+  .rxrow.abn .rxside{background:var(--accent); color:#fff;}
+  .rxseg{display:inline-block; margin:0 10px 0 0; padding-left:6px; border-left:2px solid var(--line); vertical-align:middle;}
+  .rxc{display:inline-block; border:1px solid var(--line); background:#fff; color:var(--muted); border-radius:999px; padding:0 8px; font-size:.76rem; cursor:pointer; margin:0 2px 0 0; vertical-align:middle; user-select:none; line-height:1.6;}
+  .rxc:hover{border-color:var(--accent);}
+  .rxc.on{border-color:var(--accent); background:var(--accent-soft); color:var(--ink); font-weight:600;}
+  .rxseg .rxc.on:first-child{background:var(--ok-soft, #e2f0dc); border-color:#7fb069;}
+  .rxextra .rxc.on{background:#fdf1d6; border-color:#d9a441;}
+  .rxj{display:inline-block; font-size:.78rem; color:var(--muted); margin-left:4px;}
+  .rxtools{display:block; margin:0 0 0 10px;}
+  .rxtools .rxc{font-size:.72rem;}
+  .rxne.on{background:#f1f1ee; border-color:#b9b9b0; color:var(--ink);}
+  .rx.ne .rxrow{opacity:.35;}
+  .tp{display:block; margin:2px 0 4px 10px; line-height:2;}
+  .tpsite{display:inline-block; margin:0 10px 0 0; font-size:.82rem; color:var(--ink);}
+  .tpc.on{background:#fde2e2; border-color:#d46a6a; color:var(--ink);}
+  .tpcount{margin-left:8px; color:var(--accent-ink);}
   .mpick .mpn{width:52px; border:none; border-bottom:1px solid var(--accent); background:transparent; font-size:.8rem; padding:0 2px; margin:0 2px; outline:none; font-family:inherit;}
   .mpick .mp{border:1px solid var(--line); background:#fff; color:var(--muted); border-radius:999px; padding:1px 9px; font-size:.8rem; cursor:pointer; font-family:inherit; line-height:1.5;}
   .mpick .mp.on{border-color:var(--accent); background:var(--accent-soft); color:var(--ink); font-weight:600;}
@@ -324,7 +350,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v5.5</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v5.8</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -4256,24 +4282,25 @@ Sincerely,`}
 // ====================== ABNORMAL MSK EXAM + IN-DEPTH START SHEETS ======================
 (function(){
 DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
-{id:"p-mskabn", name:"MSK exam by region, multi-pick", dot:".mskabn", cat:"Exam & ROS", body:
+{id:"p-mskabn", name:"MSK exam by region, standardized", dot:".mskabn", cat:"Exam & ROS", body:
 `MSK exam:
-Shoulders: {shoulders:+no tenderness to palpation, normal range of motion bilaterally|right shoulder mildly tender to palpation, normal range of motion|right shoulder exquisitely tender to palpation, decreased range of motion due to pain|right shoulder with decreased range of motion|right shoulder subacromial tenderness|right shoulder painful arc|left shoulder mildly tender to palpation, normal range of motion|left shoulder exquisitely tender to palpation, decreased range of motion due to pain|left shoulder with decreased range of motion|left shoulder subacromial tenderness|left shoulder painful arc|bilateral shoulders tender to palpation, normal range of motion|not examined}.
-Elbows: {elbows:+no tenderness to palpation, no bursitis, full extension bilaterally|bilateral tenderness to palpation at the lateral epicondyle|right lateral epicondyle tenderness|left lateral epicondyle tenderness|right medial epicondyle tenderness|left medial epicondyle tenderness|right elbow synovitis|left elbow synovitis|right elbow loss of full extension|left elbow loss of full extension|right olecranon bursitis|left olecranon bursitis|no bursitis|rheumatoid nodules|not examined}.
-Wrists: {wrists:+no swelling or tenderness to palpation, no effusions|right wrist synovitis|left wrist synovitis|bilateral wrist synovitis|right wrist tender to palpation without synovitis|left wrist tender to palpation without synovitis|right wrist decreased range of motion|left wrist decreased range of motion|right extensor tenosynovitis|left extensor tenosynovitis|positive Tinel and Phalen on the right|positive Tinel and Phalen on the left|not examined}.
-MCPs: {mcps:+no synovitis or tenderness to palpation bilaterally|left MCP # with synovitis and tenderness to palpation|left MCP # tender to palpation, no synovitis|left MCP # swollen without tenderness to palpation|left MCPs mildly tender to palpation, no significant synovitis|left MCPs without synovitis or tenderness|right MCP # with synovitis and tenderness to palpation|right MCP # tender to palpation, no synovitis|right MCP # swollen without tenderness to palpation|right MCPs mildly tender to palpation, no significant synovitis|right MCPs without synovitis or tenderness|positive MCP squeeze on the right|positive MCP squeeze on the left|ulnar deviation|not examined}.
-PIPs: {pips:+no synovitis or tenderness to palpation bilaterally|left PIP # with synovitis and tenderness to palpation|left PIP # tender to palpation, no synovitis|left PIP # mildly swollen without tenderness to palpation|left PIPs without synovitis or tenderness|right PIP # with synovitis and tenderness to palpation|right PIP # tender to palpation, no synovitis|right PIP # mildly swollen without tenderness to palpation|right PIPs without synovitis or tenderness|Bouchard nodes|swan neck deformities|boutonniere deformities|not examined}.
-DIPs: {dips:+no tenderness to palpation or synovitis|left DIP # with synovitis|right DIP # with synovitis|left DIP # tender to palpation|right DIP # tender to palpation|Heberden nodes|psoriatic nail changes|dactylitis of the # finger|not examined}.
-Hips: {hips:+full painless range of motion bilaterally, negative FABER|positive FABER on the left with low back pain|positive FABER on the right with low back pain|positive FABER bilaterally|right hip groin pain with internal and external rotation|left hip groin pain with internal and external rotation|right hip decreased internal rotation|left hip decreased internal rotation|right trochanteric tenderness|left trochanteric tenderness|not examined}.
-Knees: {knees:+no warmth, effusion, or tenderness to palpation, full range of motion bilaterally|right knee warm to touch|left knee warm to touch|right knee small effusion|left knee small effusion|right knee possible small effusion|left knee possible small effusion|right knee large effusion|left knee large effusion|right knee tender at the proximal patellar tendon insertion|left knee tender at the proximal patellar tendon insertion|right knee medial joint line tenderness|left knee medial joint line tenderness|right knee crepitus|left knee crepitus|right knee flexion contracture|left knee flexion contracture|right Baker cyst|left Baker cyst|not examined}.
-Ankles: {ankles:+no swelling, no tenderness to palpation|right ankle synovitis|left ankle synovitis|right ankle tender to palpation without swelling|left ankle tender to palpation without swelling|right posterior tibial tenosynovitis|left posterior tibial tenosynovitis|right peroneal tenosynovitis|left peroneal tenosynovitis|pedal edema bilaterally|not examined}.
-Feet: {feet:+negative MTP squeeze bilaterally, no Achilles insertion tenderness|positive MTP squeeze of the left foot|positive MTP squeeze of the right foot|left MTP # synovitis|right MTP # synovitis|first MTP erythema, warmth, and tenderness on the right|first MTP erythema, warmth, and tenderness on the left|no Achilles insertion tenderness|right Achilles insertion tenderness|left Achilles insertion tenderness|right plantar fascia tenderness|left plantar fascia tenderness|dactylitis of the # toe|hallux valgus|not examined}.
-Spine: {spine:+omit this line|full range of motion, nontender|reduced cervical rotation|reduced lumbar flexion|reduced lateral lumbar flexion|paraspinal tenderness|midline tenderness|kyphosis|reduced chest expansion|positive straight leg raise on the right|positive straight leg raise on the left}.
+Shoulders: {shoulders:=shoulder|painful arc|subacromial tenderness|crepitus}
+Elbows: {elbows:=elbow|lateral epicondyle tenderness|medial epicondyle tenderness|olecranon bursitis|loss of full extension|rheumatoid nodule}
+Wrists: {wrists:=wrist|extensor tenosynovitis|Tinel and Phalen positive}
+MCPs: {mcps:=MCP #|MCP squeeze positive|ulnar deviation}
+PIPs: {pips:=PIP #|Bouchard nodes|swan neck deformity|boutonniere deformity}
+DIPs: {dips:=DIP #|Heberden nodes|psoriatic nail changes|dactylitis}
+Hips: {hips:=hip -swell|FABER positive|groin pain with internal and external rotation|trochanteric tenderness}
+Knees: {knees:=knee|warm to touch|crepitus|proximal patellar tendon tenderness|medial joint line tenderness|lateral joint line tenderness|flexion contracture|Baker cyst}
+Ankles: {ankles:=ankle|posterior tibial tenosynovitis|peroneal tenosynovitis|pedal edema}
+Feet: {feet:=MTP #|MTP squeeze positive|first MTP erythema and warmth|Achilles insertion tenderness|plantar fascia tenderness|dactylitis|hallux valgus}
+Tender points: {tender points:*}
+Spine: {spine:+omit this line|full range of motion, nontender|reduced cervical rotation^full cervical rotation|reduced lumbar flexion^full lumbar flexion|reduced lateral lumbar flexion^full lateral lumbar flexion|paraspinal tenderness^no paraspinal tenderness|midline tenderness^no midline tenderness|kyphosis^no kyphosis|reduced chest expansion^normal chest expansion|@ straight leg raise positive^@ straight leg raise negative}.
 Modified Schober: {schober:omit this line|under 3 cm|3 cm|3.5 cm|4 cm|4.5 cm|5 cm|5.5 cm|6 cm or more}.
-Sacroiliac joints: {si:+omit this line|nontender|tender on the right|tender on the left|tender bilaterally}.
-Entheses: {enth:+omit this line|no entheseal tenderness|lateral epicondyle tenderness|greater trochanter tenderness|iliac crest tenderness|costochondral tenderness|Achilles insertion tenderness|plantar fascia tenderness}.
-Strength: {strength:+omit this line|5/5 proximally and distally|4/5 proximal weakness, symmetric|4/5 hip flexor weakness|4/5 shoulder abduction weakness|unable to rise from a chair without using the arms|3/5 proximal weakness}.
-Gait: {gait:+omit this line|normal|antalgic|antalgic, favoring the right|antalgic, favoring the left|uses a cane|uses a walker|waddling}.
+Sacroiliac joints: {si:+omit this line|nontender|@ sacroiliac tenderness^no @ sacroiliac tenderness}.
+Entheses: {enth:+omit this line|no entheseal tenderness|@ lateral epicondyle tenderness^no @ lateral epicondyle tenderness|@ greater trochanter tenderness^no @ greater trochanter tenderness|@ iliac crest tenderness^no @ iliac crest tenderness|costochondral tenderness^no costochondral tenderness|@ Achilles insertion tenderness^no @ Achilles insertion tenderness|@ plantar fascia tenderness^no @ plantar fascia tenderness}.
+Strength: {strength:+omit this line|5/5 proximally and distally|4/5 proximal weakness, symmetric^no proximal weakness|4/5 hip flexor weakness^no hip flexor weakness|4/5 shoulder abduction weakness^no shoulder abduction weakness|unable to rise from a chair without using the arms^rises from a chair without using the arms|3/5 proximal weakness^no proximal weakness}.
+Gait: {gait:+omit this line|normal|antalgic^not antalgic|antalgic, favoring the @|uses a cane^no assistive device|uses a walker^no assistive device|waddling^not waddling}.
 Tender joint count {tjc:~0|1|2|3|4|5|6|8|10|12}, swollen joint count {sjc:~0|1|2|3|4|5|6|8|10|12}. {additional findings}`}
 ]);
 
@@ -5383,7 +5410,7 @@ LLAME AL CONSULTORIO SI TIENE
 - Cualquier síntoma nuevo que le preocupe.`}
 ]);
 })();
-(function(){ DEFAULT_DATA.version = 31; })();
+(function(){ DEFAULT_DATA.version = 32; })();
 // ====================== CORE ======================
 const KEY = "rheumpad_v1";
 let DATA, FAVS, PRECHART, META = {};
@@ -5563,6 +5590,13 @@ function loadState(){
         const def = DEFAULT_DATA.phrases.find(x=>x.id === "p-mskabn");
         if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "1j4u42s") { cur.body = def.body; cur.name = def.name; }
       }
+      // v31 -> v32: the region exam became a standardized grid. Replaced only when the stored
+      // body still hashes to the v5.5 chip version.
+      if ((stored.seededVersion || 1) < 32) {
+        const cur = (DATA.phrases || []).find(x=>x.id === "p-mskabn");
+        const def = DEFAULT_DATA.phrases.find(x=>x.id === "p-mskabn");
+        if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "jdf6qm") { cur.body = def.body; cur.name = def.name; }
+      }
       // v23 -> v24: the letters' duration and hours lists widened. Swap only in a stored
       // copy still carrying the shipped placeholder, so an edited letter keeps its own.
       if ((stored.seededVersion || 1) < 24) {
@@ -5728,6 +5762,147 @@ const Tok = {
 // ---------- Fill-in rendering ----------
 const PH_RE = /\{([^{}|:]+):([^{}]*)\}|\{([^{}|:]+)\}|\*\*\*/g;
 let DL_N = 0;
+let MP_T = 0;   // tap counter so multi-pick findings copy in the order you tapped them
+// The negative of a finding when the phrase does not spell one out after a ^.
+function negateFinding(t){
+  if (/\b(not|no|without|negative)\b/.test(t)) return t;
+  if (/positive/.test(t)) return t.replace("positive", "negative");
+  if (/ with /.test(t)) return t.replace(" with ", " without ");
+  if (/ tender/.test(t)) return t.replace(/ (mildly |exquisitely )?tender/, " not tender");
+  return t.replace(/^(@ )?/, "$1no ");
+}
+// ====================== STANDARDIZED REGION EXAM WIDGET ======================
+// {shoulders:=shoulder|painful arc|subacromial tenderness}
+//   first option: the joint noun, with " #" when joints are numbered (MCP #) and " -swell" when
+//   swelling is not assessed there (hip). The remaining options are region-specific extras.
+// Every region gets the same four controls per side: tenderness, swelling, range of motion,
+// extras. The text comes out in one fixed order, so every exam reads the same way.
+const RX = {
+  TENDER: [["none","nontender"],["mild","mildly tender to palpation"],["mod","tender to palpation"],["exq","exquisitely tender to palpation"]],
+  SWELL: [["none","no synovitis"],["mild","mild synovitis"],["mod","synovitis"],["marked","marked synovitis"],["eff","effusion"]],
+  ROM: [["full","full range of motion"],["mild","mildly decreased range of motion"],["dec","decreased range of motion"],["pain","decreased range of motion due to pain"],["painful","full but painful range of motion"]],
+  plural(noun){ return /s$/.test(noun) ? noun : noun + "s"; }
+};
+function regionWidget(label, opts){
+  const spec = opts[0] || label;
+  const numbered = / #/.test(spec), noSwell = / -swell/.test(spec);
+  const noun = spec.replace(/ #| -swell/g, "").trim();
+  const extras = opts.slice(1).filter(Boolean);
+  const box = document.createElement("span"); box.className = "rx"; box.dataset.region = "1"; box.title = label + ": the same controls for every joint, left to right: tenderness, swelling, range of motion, extras";
+  const state = { R: fresh(), L: fresh(), notExamined: false };
+  function fresh(){ return { tender:"none", swell:"none", rom:"full", extras:new Set(), joints:"" }; }
+  const seg = (sideState, key, list, title)=>{
+    const g = document.createElement("span"); g.className = "rxseg"; g.title = title;
+    list.forEach(([v, t])=>{
+      if (noSwell && key === "swell" && v !== "none" && v !== "eff") return;
+      const c = document.createElement("span"); c.className = "rxc" + (sideState[key] === v ? " on" : ""); c.textContent = v === "none" ? (key === "tender" ? "nontender" : "none") : v; c.title = t; c.setAttribute("role", "button");
+      c.onclick = ()=>{ sideState[key] = v; g.querySelectorAll(".rxc").forEach(x=>x.classList.toggle("on", x === c)); state.notExamined = false; ne.classList.remove("on"); sync(); };
+      g.appendChild(c);
+    });
+    return g;
+  };
+  const rows = {};
+  const sync = ()=>{
+    ["R","L"].forEach(sd=>{
+      const abn = state[sd].tender !== "none" || state[sd].swell !== "none" || state[sd].rom !== "full" || state[sd].extras.size > 0;
+      rows[sd].classList.toggle("abn", abn);
+      const jb = rows[sd].querySelector(".rxj"); if (jb) jb.style.display = (numbered && (state[sd].tender !== "none" || state[sd].swell !== "none")) ? "" : "none";
+    });
+    box.classList.toggle("ne", state.notExamined);
+  };
+  const ne = document.createElement("span"); ne.className = "rxc rxne"; ne.textContent = "not examined"; ne.setAttribute("role", "button");
+  ne.onclick = ()=>{ state.notExamined = !state.notExamined; ne.classList.toggle("on", state.notExamined); sync(); };
+  const same = document.createElement("span"); same.className = "rxc rxsame"; same.textContent = "L same as R"; same.title = "copy the right side to the left"; same.setAttribute("role", "button");
+  same.onclick = ()=>{ state.L = { tender:state.R.tender, swell:state.R.swell, rom:state.R.rom, extras:new Set(state.R.extras), joints:state.R.joints }; build(); sync(); };
+  const build = ()=>{
+    box.textContent = "";
+    ["R","L"].forEach(sd=>{
+      const row = document.createElement("span"); row.className = "rxrow"; rows[sd] = row;
+      const tag = document.createElement("b"); tag.className = "rxside"; tag.textContent = sd; row.appendChild(tag);
+      row.appendChild(seg(state[sd], "tender", RX.TENDER, "tenderness to palpation"));
+      row.appendChild(seg(state[sd], "swell", RX.SWELL, "swelling"));
+      row.appendChild(seg(state[sd], "rom", RX.ROM, "range of motion"));
+      if (extras.length) {
+        const g = document.createElement("span"); g.className = "rxseg rxextra"; g.title = "extras";
+        extras.forEach(ex=>{
+          const c = document.createElement("span"); c.className = "rxc" + (state[sd].extras.has(ex) ? " on" : ""); c.textContent = ex; c.setAttribute("role", "button");
+          c.onclick = ()=>{ if (state[sd].extras.has(ex)) state[sd].extras.delete(ex); else state[sd].extras.add(ex); c.classList.toggle("on", state[sd].extras.has(ex)); state.notExamined = false; ne.classList.remove("on"); sync(); };
+          g.appendChild(c);
+        });
+        row.appendChild(g);
+      }
+      if (numbered) {
+        const j = document.createElement("span"); j.className = "rxj"; j.appendChild(document.createTextNode("joints "));
+        const inp = document.createElement("input"); inp.type = "text"; inp.className = "mpn"; inp.placeholder = "2 and 3"; inp.size = 6; inp.title = "which " + RX.plural(noun) + " (blank means all)"; inp.value = state[sd].joints;
+        inp.addEventListener("input", ()=>{ state[sd].joints = inp.value; });
+        j.appendChild(inp); row.appendChild(j);
+      }
+      box.appendChild(row);
+    });
+    const tools = document.createElement("span"); tools.className = "rxtools"; tools.appendChild(same); tools.appendChild(ne); box.appendChild(tools);
+  };
+  build(); sync();
+  const word = (list, v)=>(list.find(x=>x[0] === v) || [])[1] || "";
+  const sideText = (sd, forPrint)=>{
+    const st = state[sd], sideName = sd === "R" ? "right" : "left";
+    const abn = st.tender !== "none" || st.swell !== "none" || st.rom !== "full" || st.extras.size > 0;
+    const bits = [word(RX.TENDER, st.tender)];
+    if (!noSwell || st.swell !== "none") bits.push(word(RX.SWELL, st.swell));
+    bits.push(word(RX.ROM, st.rom));
+    let text;
+    if (numbered && st.joints.trim() && (st.tender !== "none" || st.swell !== "none")) {
+      text = sideName + " " + noun + " " + st.joints.trim() + " " + bits.join(", ") + "; remaining " + sideName + " " + RX.plural(noun) + " nontender without synovitis";
+    } else {
+      text = sideName + " " + (numbered ? RX.plural(noun) : noun) + " " + bits.join(", ");
+    }
+    if (st.extras.size) text += ", " + [...st.extras].join(", ");
+    return { abn, text };
+  };
+  const sameState = ()=>{
+    const a = state.R, b = state.L;
+    return a.tender === b.tender && a.swell === b.swell && a.rom === b.rom && a.joints.trim() === b.joints.trim() && a.extras.size === b.extras.size && [...a.extras].every(x=>b.extras.has(x));
+  };
+  box._out = forPrint=>{
+    if (state.notExamined) return "not examined.";
+    const r = sideText("R", forPrint), l = sideText("L", forPrint);
+    if (!r.abn && !l.abn) {
+      const bits = ["nontender"]; if (!noSwell) bits.push("no synovitis"); bits.push("full range of motion bilaterally");
+      return bits.join(", ") + ".";
+    }
+    if (sameState()) return r.text.replace(/^right /, "bilateral ").replace(numbered ? /^$/ : new RegExp("^bilateral " + noun + " "), "bilateral " + RX.plural(noun) + " ").replace(/; remaining right /, "; remaining ") + ".";
+    return r.text + "; " + l.text + ".";
+  };
+  return box;
+}
+// {tender points:*}  the 18 ACR 1990 fibromyalgia tender points, nine sites, both sides
+function tenderPointWidget(label){
+  const SITES = ["occiput","low cervical","trapezius","supraspinatus","second rib","lateral epicondyle","gluteal","greater trochanter","knee"];
+  const box = document.createElement("span"); box.className = "tp"; box.title = label + ": tap each tender point, or mark all 18 negative";
+  const on = new Set(); let assessed = false;
+  const allNeg = document.createElement("span"); allNeg.className = "rxc rxne"; allNeg.textContent = "all 18 negative"; allNeg.setAttribute("role", "button");
+  const count = document.createElement("b"); count.className = "tpcount";
+  const update = ()=>{ count.textContent = assessed ? on.size + " of 18" : ""; allNeg.classList.toggle("on", assessed && on.size === 0); };
+  allNeg.onclick = ()=>{ on.clear(); assessed = true; box.querySelectorAll(".tpc").forEach(c=>c.classList.remove("on")); update(); };
+  SITES.forEach(site=>{
+    const g = document.createElement("span"); g.className = "tpsite"; g.appendChild(document.createTextNode(site + " "));
+    ["R","L"].forEach(sd=>{
+      const c = document.createElement("span"); c.className = "rxc tpc"; c.textContent = sd; c.title = (sd === "R" ? "right " : "left ") + site; c.setAttribute("role", "button");
+      const key = (sd === "R" ? "right " : "left ") + site;
+      c.onclick = ()=>{ if (on.has(key)) on.delete(key); else on.add(key); assessed = true; c.classList.toggle("on", on.has(key)); update(); };
+      g.appendChild(c);
+    });
+    box.appendChild(g);
+  });
+  box.appendChild(allNeg); box.appendChild(count);
+  box._out = ()=>{
+    if (!assessed) return OMIT_LINE;
+    if (!on.size) return "0 of 18 fibromyalgia tender points positive.";
+    const list = SITES.map(site=>{ const r = on.has("right " + site), l = on.has("left " + site); return r && l ? "bilateral " + site : r ? "right " + site : l ? "left " + site : null; }).filter(Boolean);
+    return on.size + " of 18 fibromyalgia tender points positive (" + list.join(", ") + ")" + (on.size >= 11 ? ", meeting the 1990 ACR threshold of 11" : "") + ".";
+  };
+  return box;
+}
+
 function renderFillable(body, container){
   body = Tok.apply(body);
   container.textContent = "";
@@ -5738,25 +5913,57 @@ function renderFillable(body, container){
     if (m[1] !== undefined) {           // {label:opt|opt}, or {label:~opt|opt} for a typable list
       const label = m[1].trim();
       if (m[2].charAt(0) === "+") {     // multi-pick: tap any number of findings, the first option is the normal
+        // Options may carry @ for the side ("@ shoulder tender" with the side toggle set to left copies as
+        // "left shoulder tender") and # for joint numbers ("@ MCP # with synovitis" -> "left MCP 2 and 3 with synovitis").
+        // "finding^negative": tap adds the finding, right-click adds the negative. Findings copy in tap order.
         const opts = m[2].slice(1).split("|");
-        const box = document.createElement("span"); box.className = "mpick"; box.dataset.multi = "1"; box.title = label + ": tap every finding that applies";
-        opts.forEach((opt, i)=>{
-          const b = document.createElement("span"); b.className = "mp" + (i === 0 ? " on" : ""); b.dataset.normal = i === 0 ? "1" : "0"; b.setAttribute("role", "button"); b.tabIndex = 0;
-          // a # inside an option becomes a small box for joint numbers: "left MCP # with synovitis" -> "left MCP 2 and 3 with synovitis"
-          opt.split("#").forEach((piece, k, arr)=>{
-            b.appendChild(document.createTextNode(piece));
-            if (k < arr.length - 1) { const n = document.createElement("input"); n.type = "text"; n.className = "mpn"; n.placeholder = "2 and 3"; n.size = 6; n.title = "joint numbers"; n.onclick = e=>e.stopPropagation(); n.onkeydown = e=>e.stopPropagation(); b.appendChild(n); }
+        const sided = opts.some(o=>o.indexOf("@") >= 0);
+        const box = document.createElement("span"); box.className = "mpick" + (sided ? " sided" : ""); box.dataset.multi = "1"; box.title = label + ": tap a finding to add it, right-click a finding to add its negative, tap a tag to remove it";
+        const normal = document.createElement("span"); normal.className = "mp on"; normal.dataset.normal = "1"; normal.setAttribute("role", "button"); normal.tabIndex = 0; normal.textContent = opts[0];
+        box.appendChild(normal);
+        const sel = document.createElement("span"); sel.className = "mpsel"; box.appendChild(sel);
+        let side = "right";
+        const sideBar = document.createElement("span"); sideBar.className = "mpside";
+        if (sided) {
+          [["right","R"],["left","L"],["bilateral","Both"]].forEach(([v, t], i)=>{
+            const c = document.createElement("span"); c.className = "mps" + (i === 0 ? " on" : ""); c.textContent = t; c.title = "findings you tap next apply to the " + v + " side"; c.setAttribute("role", "button");
+            c.onclick = ()=>{ side = v; sideBar.querySelectorAll(".mps").forEach(x=>x.classList.toggle("on", x === c)); };
+            sideBar.appendChild(c);
           });
-          b.onclick = ()=>{
-            b.classList.toggle("on");
-            const btns = [...box.querySelectorAll(".mp")];
-            if (b.dataset.normal === "1" && b.classList.contains("on")) btns.forEach(x=>{ if (x !== b) x.classList.remove("on"); });
-            else if (b.dataset.normal !== "1" && b.classList.contains("on")) btns[0].classList.remove("on");
-            if (!btns.some(x=>x.classList.contains("on"))) btns[0].classList.add("on");
+          box.appendChild(sideBar);
+        }
+        const fill = (el, text)=>{
+          text.split("#").forEach((piece, k, arr)=>{
+            el.appendChild(document.createTextNode(piece));
+            if (k < arr.length - 1) { const n = document.createElement("input"); n.type = "text"; n.className = "mpn"; n.placeholder = "2 and 3"; n.size = 6; n.title = "joint numbers"; n.onclick = e=>e.stopPropagation(); n.onkeydown = e=>e.stopPropagation(); el.appendChild(n); }
+          });
+        };
+        const refresh = ()=>{ const any = sel.querySelectorAll(".mpt").length > 0; normal.classList.toggle("on", !any); };
+        normal.onclick = ()=>{ sel.textContent = ""; box.querySelectorAll(".mp").forEach(x=>{ if (x !== normal) x.classList.remove("on"); }); refresh(); };
+        opts.slice(1).forEach(optRaw=>{
+          const parts = optRaw.split("^");
+          const opt = parts[0], neg = parts[1] || negateFinding(opt);
+          const b = document.createElement("span"); b.className = "mp"; b.dataset.normal = "0"; b.setAttribute("role", "button"); b.tabIndex = 0;
+          b.textContent = opt.replace(/@ ?/, "");
+          b.title = "tap: " + opt.replace(/@ ?/, "") + "\nright-click: " + neg.replace(/@ ?/, "");
+          const add = (text, isNeg)=>{
+            const tag = document.createElement("span"); tag.className = "mpt" + (isNeg ? " neg" : ""); tag.dataset.t = ++MP_T; tag.title = "tap to remove";
+            fill(tag, sided ? text.replace("@", side) : text);
+            const x = document.createElement("b"); x.textContent = " \u00d7"; tag.appendChild(x);
+            tag.onclick = ()=>{ tag.remove(); refresh(); };
+            sel.appendChild(tag);
+            const nInp = tag.querySelector(".mpn"); if (nInp) nInp.focus();
+            refresh();
           };
+          b.onclick = ()=>add(opt, false);
+          b.oncontextmenu = e=>{ e.preventDefault(); add(neg, true); };
           box.appendChild(b);
         });
         container.appendChild(box);
+      } else if (m[2].charAt(0) === "=") {     // standardized region exam: {shoulders:=shoulder|extra|extra}
+        container.appendChild(regionWidget(label, m[2].slice(1).split("|")));
+      } else if (m[2].charAt(0) === "*") {     // tender point grid: {tender points:*}
+        container.appendChild(tenderPointWidget(label));
       } else if (m[2].charAt(0) === "~") {     // editable: suggestions offered, any value accepted
         const opts = m[2].slice(1).split("|");
         const inp = document.createElement("input");
@@ -5821,7 +6028,12 @@ function collectRaw(node, forPrint){
     else if (ch.tagName === "SELECT") out += ch.value;
     else if (ch.tagName === "BR") out += "\n";
     else if (ch.tagName === "DATALIST") { /* suggestions only, never part of the text */ }
-    else if (ch.dataset && ch.dataset.multi === "1") out += joinPicks([...ch.querySelectorAll(".mp.on")].map(b=>[...b.childNodes].map(x=>x.nodeType === 3 ? x.data : (x.value.trim() || (forPrint ? "____" : blankMark("joint numbers")))).join("")));
+    else if (typeof ch._out === "function") out += ch._out(forPrint);
+    else if (ch.dataset && ch.dataset.multi === "1") {
+      const tags = [...ch.querySelectorAll(".mpt")].sort((a,b)=>(+a.dataset.t) - (+b.dataset.t));
+      const picks = tags.length ? tags : [...ch.querySelectorAll(".mp.on")];
+      out += joinPicks(picks.map(b=>[...b.childNodes].filter(x=>x.tagName !== "B").map(x=>x.nodeType === 3 ? x.data : (x.value.trim() || (forPrint ? "____" : blankMark("joint numbers")))).join("").trim()));
+    }
     else out += collectRaw(ch, forPrint);
   });
   return out;
@@ -6684,12 +6896,21 @@ const Drugs = {
     "d-slcyclo": "i2-fibro", "d-dulox": "i2-fibro", "d-miln": "i2-fibro", "d-preg": "i2-fibro", "d-amit": "i2-fibro", "d-cyclo": "i2-fibro", "d-ldn": "i2-fibro",
     "d-pilo": "i2-drymouth", "d-cevi": "i2-drymouth", "d-nsaid": "i6-nsaid"
   },
+  // A full counseling paragraph in the clinician's own words replaces the generated benefit,
+  // risk, and side effect lines for that card.
+  NARRATIVE: {
+    "d-tnf": "I reviewed the possible benefits of starting a TNF inhibitor, which include improved fatigue, disease activity (joint pain, swelling, and stiffness), decreased local joint and systemic inflammation, and decreased risk of disease progression. I also reviewed the risk of injection site reactions, the annual approximate 2% risk of serious infection requiring hospitalization, and the rare risks of opportunistic infections (fungal, mycobacterial, and atypical mycobacterial). We discussed extremely rare risks, including lupus-like diseases, neurologic diseases (resembling MS), hepatitis, new psoriasis, skin cancer, and pancytopenia. The patient was counseled to hold the medication in the case of febrile illness or open skin lesions."
+  },
   counselText(d, decision, sheetName){
     const lines = ["Shared decision-making discussion regarding starting " + d.name + "."];
+    const narrative = this.NARRATIVE[d.id];
     const benefit = this.BENEFIT[d.id];
-    if (benefit) lines.push("Benefits reviewed: " + benefit);
-    if (d.serious) lines.push("Risks reviewed: " + d.serious);
-    if (d.se) lines.push("Common side effects reviewed: " + d.se);
+    if (narrative) lines.push(narrative);
+    else {
+      if (benefit) lines.push("Benefits reviewed: " + benefit);
+      if (d.serious) lines.push("Risks reviewed: " + d.serious);
+      if (d.se) lines.push("Common side effects reviewed: " + d.se);
+    }
     if (d.dosing) lines.push("Dosing: " + d.dosing);
     if (d.monitor) lines.push("Monitoring plan: " + d.monitor);
     lines.push("Alternatives, including no treatment, were discussed. Questions were answered. " + decision);
@@ -9570,6 +9791,17 @@ const SCREEN = {
 };
 
 const CHANGELOG = [
+  {v:"5.8", d:"October 29, 2026", items:[
+    "Standardized region exam. Every joint region now shows the same four controls per side, in the same order: tenderness (nontender, mild, moderate, exquisite), swelling (none, mild synovitis, synovitis, marked, effusion), range of motion (full, mildly decreased, decreased, decreased due to pain, full but painful), and a short row of region-specific extras. MCPs, PIPs, DIPs, and MTPs take joint numbers. L same as R copies a side, and not examined blanks the region. The text comes out in one fixed order for every region, so the exam reads the same way every time.",
+    "Widespread pain points. A tender point grid documents the 18 ACR 1990 fibromyalgia sites, nine sites by side, with the count, the list, and the 11-point threshold. It stays out of the note until you tap a point or mark all 18 negative."
+  ]},
+  {v:"5.7", d:"October 8, 2026", items:[
+    "Right-click a finding chip to add its negative. Left-click on hip tender to palpation gives left hip tender to palpation, right-click gives left hip not tender to palpation, as a grey tag. Every chip in the region exam carries a written negative, and chips you write yourself take one after a ^ (finding^negative) or get a plain no in front."
+  ]},
+  {v:"5.6", d:"October 7, 2026", items:[
+    "Faster region exam. Each region row now has a side toggle (R, L, Both) and one chip per finding instead of a left and a right copy of every finding, so the rows are half as long. Tap a finding and it becomes a green tag with the side filled in; tap the tag to remove it. Tap the same finding twice with different sides for two entries. Findings copy in the order you tapped them.",
+    "TNF inhibitor counseling now uses your own paragraph in place of the generated benefit, risk, and side effect lines. Dosing, monitoring, alternatives, the decision, and the handout line follow it as before."
+  ]},
   {v:"5.5", d:"September 29, 2026", items:[
     "Multi-pick findings. A placeholder written {label:+normal|finding|finding} renders as tap chips instead of a dropdown: tap every finding that applies and the copied text joins them (\"synovitis of the right MCPs and left PIPs\"). The first option is the normal statement and clears itself when you pick a finding.",
     "The .mskabn phrase is now the MSK exam by region: shoulders, elbows, wrists, hands, hips, knees, ankles, feet, spine with Schober, sacroiliac joints, entheses, strength, and gait, each region a multi-pick line with a not examined option, so the note reads region by region with several findings per region."
