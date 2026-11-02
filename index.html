@@ -138,6 +138,10 @@
   .rxtools .rxc{font-size:.72rem;}
   .rxne.on{background:#f1f1ee; border-color:#b9b9b0; color:var(--ink);}
   .rx.ne .rxrow{opacity:.35;}
+  .jc{display:inline-flex; flex-wrap:wrap; gap:6px 10px; align-items:center; vertical-align:middle;}
+  .jcl{font-size:.85rem; color:var(--muted);}
+  .jcn{width:52px; border:1.5px solid var(--accent); background:var(--accent-soft); border-radius:6px; padding:2px 6px; font-size:.9rem; color:var(--ink);}
+  .jcsub{font-size:.8rem; color:var(--muted);}
   .tp{display:block; margin:2px 0 4px 10px; line-height:2;}
   .tpsite{display:inline-block; margin:0 10px 0 0; font-size:.82rem; color:var(--ink);}
   .tpc.on{background:#fde2e2; border-color:#d46a6a; color:var(--ink);}
@@ -350,7 +354,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v5.8</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v6.6</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -4301,7 +4305,7 @@ Sacroiliac joints: {si:+omit this line|nontender|@ sacroiliac tenderness^no @ sa
 Entheses: {enth:+omit this line|no entheseal tenderness|@ lateral epicondyle tenderness^no @ lateral epicondyle tenderness|@ greater trochanter tenderness^no @ greater trochanter tenderness|@ iliac crest tenderness^no @ iliac crest tenderness|costochondral tenderness^no costochondral tenderness|@ Achilles insertion tenderness^no @ Achilles insertion tenderness|@ plantar fascia tenderness^no @ plantar fascia tenderness}.
 Strength: {strength:+omit this line|5/5 proximally and distally|4/5 proximal weakness, symmetric^no proximal weakness|4/5 hip flexor weakness^no hip flexor weakness|4/5 shoulder abduction weakness^no shoulder abduction weakness|unable to rise from a chair without using the arms^rises from a chair without using the arms|3/5 proximal weakness^no proximal weakness}.
 Gait: {gait:+omit this line|normal|antalgic^not antalgic|antalgic, favoring the @|uses a cane^no assistive device|uses a walker^no assistive device|waddling^not waddling}.
-Tender joint count {tjc:~0|1|2|3|4|5|6|8|10|12}, swollen joint count {sjc:~0|1|2|3|4|5|6|8|10|12}. {additional findings}`}
+{joint counts:%} {additional findings}`}
 ]);
 
 DEFAULT_DATA.instructions = DEFAULT_DATA.instructions.concat([
@@ -5410,7 +5414,291 @@ LLAME AL CONSULTORIO SI TIENE
 - Cualquier síntoma nuevo que le preocupe.`}
 ]);
 })();
-(function(){ DEFAULT_DATA.version = 32; })();
+// ====================== v5.9: SHOULDER AND DISEASE-FOCUSED EXAMS ======================
+(function(){
+DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
+  {id:"p-shoulder", name:"Shoulder exam with rotator cuff testing", dot:".shoulder", cat:"Exam & ROS", body:
+`Shoulder exam, {which:bilateral|right|left}.
+Inspection: {insp:+no atrophy, no deformity, no scapular winging|@ supraspinatus and infraspinatus fossa atrophy^no @ fossa atrophy|@ scapular winging^no @ scapular winging|@ deltoid atrophy|@ acromioclavicular joint prominence|surgical scars}.
+Palpation: {palp:+nontender|@ acromioclavicular joint tenderness^@ acromioclavicular joint nontender|@ bicipital groove tenderness^@ bicipital groove nontender|@ greater tuberosity tenderness^@ greater tuberosity nontender|@ subacromial tenderness^no @ subacromial tenderness|@ trapezius tenderness}.
+Active range of motion, right: forward flexion {rff:~180|160|140|120|90|60} degrees, abduction {rab:~180|160|140|120|90|60} degrees, external rotation {rer:~90|70|45|30|0} degrees, internal rotation to {rir:~T7|T4|T10|T12|L5|sacrum|buttock}.
+Active range of motion, left: forward flexion {lff:~180|160|140|120|90|60} degrees, abduction {lab:~180|160|140|120|90|60} degrees, external rotation {ler:~90|70|45|30|0} degrees, internal rotation to {lir:~T7|T4|T10|T12|L5|sacrum|buttock}.
+Passive range of motion: {prom:+full and equal to active bilaterally|@ passive range exceeds active, a cuff weakness or pain pattern|@ passive range limited in all planes, an adhesive capsulitis pattern|@ passive external rotation limited|@ crepitus with passive motion}.
+Rotator cuff: {cuff:+empty can, external rotation strength, and lift-off intact bilaterally without pain|@ empty can (Jobe) positive for pain^@ empty can (Jobe) negative|@ empty can (Jobe) positive for weakness^@ empty can (Jobe) negative|@ drop arm positive^@ drop arm negative|@ external rotation weakness at the side^@ external rotation strength intact|@ external rotation lag sign positive^@ external rotation lag sign negative|@ hornblower sign positive^@ hornblower sign negative|@ lift-off positive^@ lift-off negative|@ belly press positive^@ belly press negative|@ internal rotation lag sign positive^@ internal rotation lag sign negative}.
+Impingement: {imp:+Neer, Hawkins-Kennedy, and painful arc negative bilaterally|@ Neer positive^@ Neer negative|@ Hawkins-Kennedy positive^@ Hawkins-Kennedy negative|@ painful arc between 60 and 120 degrees^@ no painful arc}.
+Biceps and labrum: {bic:+Speed, Yergason, and O'Brien negative bilaterally|@ Speed positive^@ Speed negative|@ Yergason positive^@ Yergason negative|@ O'Brien positive^@ O'Brien negative|@ Popeye deformity}.
+Acromioclavicular joint: {ac:+cross-body adduction negative bilaterally|@ cross-body adduction positive^@ cross-body adduction negative}.
+Instability: {inst:+apprehension and sulcus negative bilaterally|@ apprehension positive^@ apprehension negative|@ relocation positive^@ relocation negative|@ sulcus sign positive^@ sulcus sign negative|@ load and shift positive}.
+Neurovascular: {nv:+distal pulses, sensation, and strength intact|@ decreased sensation in the axillary nerve distribution|cervical radicular signs, see spine exam}.
+Impression: {impr:examination consistent with rotator cuff tendinopathy|examination consistent with subacromial impingement|examination consistent with a full-thickness rotator cuff tear|examination consistent with adhesive capsulitis|examination consistent with acromioclavicular joint arthritis|examination consistent with glenohumeral osteoarthritis|examination consistent with biceps tendinopathy|examination consistent with glenohumeral instability|pain referred from the cervical spine|omit this line}.`},
+
+  {id:"p-sleexam", name:"Lupus-focused exam", dot:".sleexam", cat:"Exam & ROS", body:
+`Lupus-focused exam:
+Skin: {skin:+no malar, discoid, or photosensitive rash|malar rash sparing the nasolabial folds^no malar rash|discoid lesions^no discoid lesions|photodistributed rash^no photodistributed rash|subacute cutaneous lupus lesions, annular or papulosquamous|periungual erythema|livedo reticularis^no livedo|palpable purpura^no purpura|digital vasculitic lesions|cutaneous ulcers}.
+Hair: {hair:+no alopecia|non-scarring alopecia^no alopecia|scarring alopecia|short broken frontal hairs}.
+Mucosa: {muc:+no oral or nasal ulcers|painless hard palate ulcers^no oral ulcers|buccal ulcers|nasal septal ulceration|dry mucosa}.
+Eyes: {eyes:+no conjunctival pallor or injection|conjunctival pallor|episcleritis^no episcleritis|dry eyes}.
+Lymph nodes: {ln:+no lymphadenopathy|cervical lymphadenopathy^no cervical lymphadenopathy|axillary lymphadenopathy|generalized lymphadenopathy}.
+Cardiopulmonary: {cp:+clear lungs, no rub, no murmur|pericardial friction rub^no pericardial rub|pleural friction rub^no pleural rub|decreased breath sounds at a base|new murmur|bibasilar crackles}.
+Abdomen: {abd:+soft, nontender, no hepatosplenomegaly|splenomegaly^no splenomegaly|hepatomegaly^no hepatomegaly|diffuse tenderness}.
+Vascular: {vasc:+no Raynaud changes, warm digits|Raynaud color change observed on exam^no Raynaud changes|digital ischemia|livedo}.
+Neurologic: {neuro:+alert, oriented, no focal deficit|cognitive slowing|focal deficit, see neurologic exam|peripheral neuropathy|cranial nerve deficit}.
+Joints: {joints:+no synovitis|synovitis of the hands|Jaccoud deformities, reducible|see MSK exam by region}.
+Edema: {edema:+none|periorbital edema|lower extremity edema}.`},
+
+  {id:"p-sscexam", name:"Systemic sclerosis exam", dot:".sscexam", cat:"Exam & ROS", body:
+`Systemic sclerosis exam:
+Skin: {skin:+no skin thickening|skin thickening distal to the elbows and knees, limited pattern|skin thickening proximal to the elbows or knees or on the trunk, diffuse pattern|puffy fingers^no puffy fingers|sclerodactyly^no sclerodactyly|salt-and-pepper dyspigmentation|facial skin tightening with microstomia|hyperpigmentation|edematous phase skin with pruritus}.
+Modified Rodnan skin score: {mrss:~not scored today|see calculator|4 of 51|8 of 51|12 of 51|16 of 51|20 of 51|24 of 51|30 of 51}.
+Hands: {hands:+no digital pits, ulcers, or calcinosis|digital pitting scars^no digital pits|active digital ulcer^no digital ulcers|healed digital ulcer|calcinosis^no calcinosis|finger flexion contractures^no contractures|tendon friction rubs^no tendon friction rubs|acro-osteolysis|reduced fist closure}.
+Nailfold capillaries: {nf:+normal pattern on dermatoscopy|dilated capillary loops|giant capillaries|capillary dropout with avascular areas|microhemorrhages|late scleroderma pattern|not examined}.
+Telangiectasia: {tel:+none|facial telangiectasia|palmar telangiectasia|lip and oral telangiectasia|matted telangiectasia of the hands}.
+Raynaud: {ray:+no color change on exam|triphasic color change observed|digital pallor|digital cyanosis}.
+Mouth opening: {mouth:~not measured|under 3 cm|3 to 4 cm|over 4 cm} interincisal.
+Lungs: {lungs:+clear|bibasilar fine crackles^no crackles|decreased breath sounds}.
+Heart: {heart:+regular rhythm, no loud P2, no edema|loud P2^no loud P2|right ventricular heave|jugular venous distension|lower extremity edema|irregular rhythm}.
+Abdomen: {abd:+soft, nontender|distension|epigastric tenderness}.
+Musculoskeletal: {msk:+no synovitis, strength 5/5|synovitis|proximal weakness|joint contractures|see MSK exam by region}.`},
+
+  {id:"p-myoexam", name:"Inflammatory myopathy exam", dot:".myoexam", cat:"Exam & ROS", body:
+`Inflammatory myopathy exam:
+Strength (MRC): neck flexion {nf:5|4|3|2}; shoulder abduction right {sar:5|4+|4|4-|3|2}, left {sal:5|4+|4|4-|3|2}; hip flexion right {hfr:5|4+|4|4-|3|2}, left {hfl:5|4+|4|4-|3|2}; elbow flexion {ef:5|4|3}; knee extension {ke:5|4|3}; wrist extension {we:5|4|3}; finger flexion {ff:5|4|3}.
+Functional: {func:+rises from a chair without using the arms, no Gowers sign|uses the arms to rise from a chair^rises from a chair without using the arms|Gowers sign positive|unable to rise from a chair|difficulty lifting the arms overhead|difficulty climbing a step}.
+Skin: {skin:+no Gottron papules, heliotrope rash, or mechanic hands|Gottron papules over the MCPs and PIPs^no Gottron papules|Gottron sign over the elbows or knees|heliotrope rash^no heliotrope rash|V sign^no V sign|shawl sign^no shawl sign|holster sign|mechanic hands^no mechanic hands|periungual erythema with dilated capillary loops|calcinosis|cutaneous ulceration|facial erythema}.
+Muscle: {musc:+no muscle tenderness or atrophy|proximal muscle tenderness|proximal muscle atrophy|forearm flexor and quadriceps atrophy, an inclusion body pattern}.
+Lungs: {lungs:+clear|bibasilar fine crackles^no crackles|tachypnea at rest}.
+Swallowing and voice: {dys:+no dysphagia or dysphonia|dysphagia by history|nasal speech or dysphonia}.
+Joints: {joints:+no synovitis|synovitis of the hands, an antisynthetase pattern|see MSK exam by region}.
+Malignancy screen: {ca:+lymph nodes, breast, abdomen, and skin examined without mass|documented separately|omit this line}.`},
+
+  {id:"p-vascexam", name:"Vasculitis-focused exam", dot:".vascexam", cat:"Exam & ROS", body:
+`Vasculitis-focused exam:
+Blood pressure: right arm {bpr}, left arm {bpl}, {bpdiff:no interarm difference over 10 mmHg|interarm difference over 10 mmHg}.
+Pulses: {pulses:+radial, brachial, carotid, femoral, dorsalis pedis, and posterior tibial pulses 2+ and symmetric|@ radial pulse diminished^@ radial pulse normal|@ brachial pulse diminished|@ carotid pulse diminished|@ femoral pulse diminished|@ dorsalis pedis pulse absent|@ posterior tibial pulse absent}.
+Bruits: {bruits:+no carotid, subclavian, abdominal, or femoral bruit|@ carotid bruit^no @ carotid bruit|@ subclavian bruit^no @ subclavian bruit|abdominal bruit^no abdominal bruit|@ femoral bruit}.
+Temporal arteries: {ta:+nontender with normal pulses bilaterally|@ temporal artery tenderness^@ temporal artery nontender|@ temporal artery thickened or beaded|@ temporal artery pulse diminished|scalp tenderness^no scalp tenderness}.
+Skin: {skin:+no purpura, livedo, nodules, or ulcers|palpable purpura of the lower extremities^no purpura|livedo reticularis^no livedo|livedo racemosa|subcutaneous nodules^no nodules|digital infarcts^no digital infarcts|splinter hemorrhages|skin ulcers|urticarial lesions}.
+Ear, nose, throat: {ent:+no nasal crusting, saddle nose, or oral ulcers|nasal crusting or septal perforation^no nasal findings|saddle nose deformity|oral ulcers|hearing loss on whisper test|sinus tenderness}.
+Eyes: {eyes:+no scleritis or episcleritis|scleritis^no scleritis|episcleritis|conjunctival injection|visual field defect to confrontation|relative afferent pupillary defect}.
+Neurologic: {neuro:+no mononeuritis multiplex, sensation and strength intact|foot drop^no foot drop|wrist drop|asymmetric sensory loss|stocking pattern neuropathy|cranial nerve palsy}.
+Cardiopulmonary: {cp:+clear lungs, no murmur or rub|crackles|wheeze|new murmur|pericardial rub}.
+Abdomen: {abd:+soft, nontender|diffuse tenderness|guarding}.
+Joints: {joints:+no synovitis|synovitis|see MSK exam by region}.`},
+
+  {id:"p-sjoexam", name:"Sjögren exam", dot:".sjoexam", cat:"Exam & ROS", body:
+`Sjögren exam:
+Eyes: {eyes:+no conjunctival injection, normal tear meniscus|conjunctival injection^no conjunctival injection|reduced tear meniscus|blepharitis|corneal haze}. Schirmer: {schirmer:~not done|under 5 mm|5 to 10 mm|over 10 mm} at 5 minutes.
+Mouth: {mouth:+moist mucosa with a sublingual salivary pool|dry mucosa, tongue blade sticks^moist mucosa|absent sublingual salivary pool|fissured or depapillated tongue|angular cheilitis|oral candidiasis|multiple dental caries or restorations|edentulous}.
+Salivary glands: {glands:+parotid and submandibular glands normal and nontender|@ parotid enlargement^@ parotid normal|bilateral parotid enlargement|@ parotid tenderness|@ submandibular enlargement|firm or nodular parotid}.
+Lymph nodes: {ln:+no lymphadenopathy|cervical lymphadenopathy^no cervical lymphadenopathy|generalized lymphadenopathy}.
+Skin: {skin:+no purpura or annular erythema|palpable purpura of the lower extremities^no purpura|annular erythema|xerosis|Raynaud changes}.
+Neurologic: {neuro:+sensation intact|stocking sensory loss|small fiber pattern by history|cranial neuropathy}.
+Lungs: {lungs:+clear|crackles^no crackles}.
+Joints: {joints:+no synovitis|synovitis of the hands|see MSK exam by region}.`},
+
+  {id:"p-psaskin", name:"Psoriatic skin and nail exam", dot:".psaskin", cat:"Exam & ROS", body:
+`Psoriatic skin and nail exam:
+Plaques: {plq:+no psoriatic plaques|scalp plaques^no scalp involvement|extensor elbow plaques|extensor knee plaques|trunk plaques|intergluteal or perianal psoriasis|umbilical psoriasis|palmoplantar psoriasis|inverse psoriasis|guttate lesions|erythroderma}. Body surface area {bsa:~under 3 percent|3 to 10 percent|over 10 percent}.
+Nails: {nails:+no nail changes|pitting^no pitting|onycholysis^no onycholysis|oil drop discoloration|subungual hyperkeratosis|nail dystrophy|splinter hemorrhages}. Nails involved: {ncount:~0|1 to 3|4 to 9|10 or more} of 20.
+Dactylitis: {dact:+none|dactylitis, @ finger #|dactylitis, @ toe #|resolved dactylitis with residual thickening}.
+Entheses: {enth:+no entheseal tenderness|@ Achilles insertion tenderness^no @ Achilles insertion tenderness|@ plantar fascia tenderness^no @ plantar fascia tenderness|@ lateral epicondyle tenderness|@ patellar tendon insertion tenderness|@ iliac crest tenderness}.
+Joints: {joints:see MSK exam by region|omit this line}.`}
+]);
+})();
+// ====================== v6.5: REFERRAL A&P LIBRARY, CONSULT NOTE TO THE REFERRING CLINICIAN ======================
+// Written for the assessment and plan of a consult visit: the patient was seen here, and the note goes
+// back to the referring clinician with the impression, what was done, a teaching point, what the
+// patient was told, return criteria, and the disposition. Thanks, teaching, and counseling lines omit.
+(function(){
+const OPEN = "{open:Thank you for referring this patient, whom I saw in clinic today.|Thank you for the referral.|omit this line}";
+const CLOSE = "{close:Thank you for involving me in this patient's care. Please reach out with questions at any time.|Happy to see the patient again whenever it would help.|omit this line}";
+const R = (id, name, dot, body)=>({id, name, dot, cat:"Referral A&P", body:OPEN + "\n" + body + "\n" + CLOSE});
+DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
+  R("r-ana", "Referral A&P: positive ANA without features", ".refana",
+`Impression: {imp:positive ANA without an ANA-associated rheumatic disease|positive ANA with nonspecific symptoms and no evidence of lupus or a related disease on history, exam, and labs|positive ANA with findings that need further evaluation, see plan}.
+Findings: ANA titer {titer:~1:80|1:40|1:160|1:320|1:640}, pattern {pattern:homogeneous|speckled|nucleolar|centromere|dense fine speckled (DFS70)|not reported}. {features:No photosensitive or malar rash, oral ulcers, synovitis, serositis, Raynaud, cytopenias, or urine abnormality.|Fatigue and diffuse arthralgia with a normal joint exam.|Findings present, detailed above.} {sero:Extractable nuclear antigen panel, anti-dsDNA, and complements negative or normal.|Specific serologies pending.|Specific serologies not indicated.}
+Why: a positive ANA is common in healthy people. It is positive in 31.7 percent of healthy adults at 1:40, 13.3 percent at 1:80, and 5 percent at 1:160 (Tan 1997), while ANA-associated disease affects about 1 percent of the population. Among patients referred for a positive ANA alone, 9.1 percent had an ANA-associated rheumatic disease and 2.1 percent had lupus, none with a titer below 1:160 (Abeles 2013). A dense fine speckled (DFS70) pattern argues against systemic autoimmune disease.
+Teaching point: {teach:The ANA is a screening test with high sensitivity and low specificity: order it when the history or exam already suggests lupus or a related disease, and read the result with the titer and pattern, since 1:40 and 1:80 are common in health and 1:160 and higher carry more weight. A positive ANA with no symptoms needs follow-up of the patient, not of the test.|omit this line}
+Plan: {plan:no treatment and no further serologic testing; the ANA does not need to be repeated, since a positive result stays positive and the titer does not track disease|extractable nuclear antigen panel, anti-dsDNA, C3, C4, CBC with differential, creatinine, and urinalysis with a protein-to-creatinine ratio ordered today, results to both of us|further evaluation as outlined above}.
+Counseled the patient: {tell:that this result is positive in about one healthy adult in eight at this level, that it does not mean lupus, and that nothing needs to be done unless specific symptoms appear; the patient sheet Your ANA test came back positive was provided|omit this line}.
+Please send the patient back if any of these appear: a photosensitive or malar rash, oral ulcers, joint swelling or morning stiffness over 30 minutes, pleuritic chest pain, Raynaud with digital ulcers, unexplained low blood counts, or proteinuria or hematuria.
+Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 to 12 months|follow-up here in 3 months once the labs return|follow-up here as needed}.`),
+
+  R("r-back", "Referral A&P: low back pain, inflammatory or mechanical", ".refback",
+`Impression: {imp:mechanical low back pain without features of axial spondyloarthritis|low back pain with inflammatory features, axial spondyloarthritis under evaluation|axial spondyloarthritis, see plan}.
+Findings: {dur:chronic (over 3 months)|subacute (6 to 12 weeks)|recurrent} low back pain in a patient aged {age:~35|25|45|55|65}, with {ibp:0|1|2|3|4|5} of 5 inflammatory back pain features (onset before 45, insidious onset, improvement with exercise, no improvement with rest, night pain that eases on rising). {extra:No psoriasis, uveitis, inflammatory bowel disease, dactylitis, or enthesitis.|With psoriasis.|With a history of anterior uveitis.|With inflammatory bowel disease.|With heel enthesitis or dactylitis.} Morning stiffness {stiff:under 30 minutes|30 to 60 minutes|over 60 minutes}. Spine exam {spine:with full range of motion and nontender sacroiliac joints|with reduced lumbar flexion|with sacroiliac tenderness}. CRP {crp:normal|elevated|pending}. HLA-B27 {b27:not indicated|negative|positive|pending}. {img:No imaging indicated.|AP pelvis radiograph without sacroiliitis.|AP pelvis radiograph with sacroiliitis.|MRI of the sacroiliac joints ordered.}
+Why: four or more of the five features identify inflammatory back pain with about 80 percent sensitivity and 72 percent specificity (ASAS 2009). With fewer than two features and a normal CRP, spondyloarthritis is unlikely.
+Teaching point: {teach:Ask five questions of every back pain patient under 45: did it start slowly, does it improve with activity, does rest fail to help, does it wake you in the second half of the night, and is there morning stiffness over 30 minutes. Four yes answers change the workup from physical therapy to CRP, HLA-B27, and a pelvic film.|omit this line}
+Plan: {plan:physical therapy with a core and hip program, activity as tolerated, and an NSAID as needed; no imaging or serology, and a lumbar MRI is not needed without a neurologic deficit|CRP and HLA-B27 drawn today and an AP pelvis radiograph ordered, with MRI of the sacroiliac joints without contrast if the radiograph is normal|treatment for axial spondyloarthritis started, detailed above}.
+Counseled the patient: {tell:that back pain which improves with movement and comes with long morning stiffness is a different kind of back pain from the common kind, and that back pain which improves with rest is treated with movement and strength work rather than imaging|omit this line}.
+Please send the patient back if any of these appear: new inflammatory features, a positive HLA-B27 with symptoms, back pain alongside psoriasis, uveitis, or inflammatory bowel disease, sacroiliitis on any imaging, or an elevated CRP without another explanation. New weakness, bowel or bladder symptoms, fever, or weight loss need urgent evaluation outside rheumatology.
+Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 to 8 weeks with the results|follow-up here in 3 months|follow-up here as needed}.`),
+
+  R("r-fibro", "Referral A&P: fibromyalgia", ".reffibro",
+`Impression: {imp:fibromyalgia, with no evidence of an inflammatory or autoimmune disease on history, exam, and labs|fibromyalgia alongside a stable, separately managed rheumatic condition|chronic widespread pain, fibromyalgia likely, with one feature still under evaluation}.
+Findings: widespread pain for {dur:~over 3 months|over 1 year|several years} with {sx:fatigue, unrefreshing sleep, and cognitive symptoms|fatigue and unrefreshing sleep|widespread pain alone}, {exam:a normal joint exam without synovitis|tender points without synovitis|diffuse soft tissue tenderness}, and {labs:normal CBC, CMP, TSH, CK, and inflammatory markers|labs pending|labs not yet obtained}. This meets {crit:the 2016 ACR fibromyalgia criteria (widespread pain index 7 or more with symptom severity 5 or more, or WPI 4 to 6 with SSS 9 or more, symptoms over 3 months)|a clinical picture of fibromyalgia, criteria not formally scored}.
+Why: fibromyalgia is a clinical diagnosis, and the treatment is the same in any office. Autoantibody panels ordered without inflammatory features turn up false positives more often than diagnoses, and a low-titer ANA in this setting does not change the plan.
+Teaching point: {teach:Fibromyalgia is diagnosed from the history (widespread pain over 3 months with fatigue, poor sleep, and fog) and a normal exam, and the 2016 criteria score it in 2 minutes. The labs that matter are the ones that find a mimic: CBC, CMP, TSH, CK, ESR, and CRP. Naming the diagnosis with confidence is itself a treatment.|omit this line}
+Plan: {plan:the diagnosis was named and explained; graded aerobic exercise as the first treatment (start at 10 minutes, build toward 150 minutes a week), regular sleep hours, and cognitive behavioral therapy or an app-based program where available|the above plus one medication, below|the current plan continued with the exercise reinforced}.
+Medication added: {med:omit this line|duloxetine 30 mg daily for 1 week, then 60 mg daily|amitriptyline 10 to 25 mg at bedtime|pregabalin 75 mg at bedtime, titrated to 150 to 300 mg a day|cyclobenzaprine 5 to 10 mg at bedtime|milnacipran 12.5 mg daily, titrated to 50 mg twice daily}.
+Opioids worsen outcomes in fibromyalgia and I would avoid them. Labs can stay limited to CBC, CMP, TSH, CK, ESR, and CRP, and imaging is not needed for diffuse pain.
+Counseled the patient: {tell:that this is a real condition of the pain processing system, that it does not damage joints, and that the treatments that work best are the ones the patient does rather than takes; the Lifestyle plan for fibromyalgia sheet was provided|omit this line}.
+This patient's pain is real and deserves steady treatment from the clinician who knows the patient best. Please send the patient back if any of these appear: joint swelling, morning stiffness over 60 minutes, an elevated CRP or ESR without another cause, proximal weakness with an elevated CK, dry eyes and mouth with parotid enlargement, Raynaud with digital changes, or a positive specific antibody (anti-CCP, anti-dsDNA, ENA) with symptoms.
+Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the plan above|one follow-up here in 3 months to review the medication and the exercise plan, then back to your care|follow-up here as needed}.`),
+
+  R("r-urate", "Referral A&P: asymptomatic hyperuricemia", ".refurate",
+`Impression: {imp:asymptomatic hyperuricemia without gout|hyperuricemia with a possible past flare, not confirmed|gout, see plan}.
+Findings: serum urate {urate:~8.2|7.0|7.5|9.0|10.0} mg/dL in a patient {hx:with no history of gout flares, tophi, or urate stones|with a possible past flare that was never confirmed|with chronic kidney disease stage 3 or higher}. Joint exam {exam:without tophi, synovitis, or first MTP changes|with findings detailed above}. Contributors: {contrib:+none identified|thiazide or loop diuretic|low-dose aspirin|alcohol, especially beer|sugar-sweetened beverages or high-fructose corn syrup|chronic kidney disease|obesity|cyclosporine or tacrolimus}.
+Why: most people with hyperuricemia never develop gout, and the 2020 ACR gout guideline recommends against urate-lowering therapy for asymptomatic hyperuricemia, including with chronic kidney disease or kidney stones. Allopurinol and febuxostat carry their own risks (hypersensitivity, a cardiovascular signal) without a proven benefit here.
+Teaching point: {teach:A urate level is a risk factor, not a disease. Treat flares, tophi, and stones; address the diuretic, alcohol, and sugary drinks; and let the number alone sit, however high it looks. A first typical podagra flare with normal kidneys responds to colchicine, an NSAID, or a short prednisone course in your office.|omit this line}
+Plan: {plan:no urate-lowering therapy; the contributors above addressed, the diuretic flagged for review with its prescriber, alcohol and sweetened drinks limited, weight loss supported if overweight, and the urate rechecked only if a flare occurs|no urate-lowering therapy; blood pressure, lipids, glucose, and kidney function reviewed, since hyperuricemia travels with metabolic syndrome|urate-lowering therapy started for confirmed gout, detailed above}.
+Counseled the patient: {tell:that a high uric acid raises the chance of gout but most people with it never get gout, and that the step that helps most is changing what drives it rather than starting a daily pill|omit this line}.
+Please send the patient back if any of these appear: a first flare with chronic kidney disease stage 3 or higher, a flare with urate above 9 mg/dL, two or more flares a year, tophi, urate stones, erosions on a radiograph, or a flare that is hard to treat because of anticoagulation, kidney disease, or diabetes.
+Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 months|follow-up here as needed}.`),
+
+  R("r-oa", "Referral A&P: osteoarthritis", ".refoa",
+`Impression: {imp:osteoarthritis without evidence of inflammatory arthritis|osteoarthritis with a feature under further evaluation, see plan|erosive hand osteoarthritis}.
+Findings: {site:knee|hip|hand|knee and hand|first CMC joint} osteoarthritis, {sev:mild|moderate|severe} symptoms, with {feat:bony enlargement, crepitus, and morning stiffness under 30 minutes|activity-related pain and a gel phenomenon|Heberden and Bouchard nodes}. MCPs and wrists {mcp:spared|involved, see plan}. {img:Radiographs show joint space narrowing and osteophytes consistent with the diagnosis.|Radiographs were not needed for a typical presentation.|Radiographs show erosive changes of the hand DIP and PIP joints.} Inflammatory markers {crp:normal|not indicated|elevated, see plan}.
+Why: osteoarthritis is a clinical diagnosis, and the 2026 ACR guideline treatments work the same from any prescriber.
+Teaching point: {teach:Osteoarthritis spares the MCPs and wrists and brings stiffness that lasts minutes, not an hour. When a patient with knee or hand pain has MCP or wrist swelling, stiffness over an hour, or a high CRP, think inflammatory arthritis and send the patient early.|omit this line}
+Plan, per the 2026 ACR osteoarthritis guideline: exercise and strength training and, when overweight, weight loss of 5 to 10 percent (both strongly recommended); topical diclofenac for the knee and hand before any oral agent; an oral NSAID at the lowest effective dose with food when needed; {more:+acetaminophen up to 3 g daily|duloxetine 30 to 60 mg daily for persistent pain|intra-articular glucocorticoid injection performed today|physical therapy referral placed|a knee brace or thumb orthosis|a GLP-1 receptor agonist for knee osteoarthritis with obesity, alongside diet and exercise, discussed|tai chi or yoga}. The guideline recommends against glucosamine, chondroitin, hyaluronic acid, platelet-rich plasma, stem cells, opioids, vitamin D, and fish oil.
+Counseled the patient: {tell:that this is wear and repair in the joint, that exercise and weight loss are the treatments with the strongest evidence, and that the gel works for knees and hands with far less risk than pills; the Osteoarthritis sheet was provided|omit this line}.
+Please send the patient back if any of these appear: morning stiffness over 30 to 60 minutes, warmth or synovitis on exam, an elevated CRP or ESR without another cause, or symmetric MCP or wrist involvement. When pain limits daily function despite the plan above, orthopedics is the right referral for arthroplasty.
+Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 3 months to review the injection response|follow-up here as needed}.`),
+
+  R("r-esr", "Referral A&P: elevated ESR or CRP without a diagnosis", ".refesr",
+`Impression: {imp:elevated ESR without an inflammatory rheumatic disease on history, exam, and labs|elevated ESR under evaluation, repeat and workup pending|polymyalgia rheumatica, see plan|giant cell arteritis suspected, see plan}.
+Findings: ESR {esr:~45|30|60|80|100} mm/h and CRP {crp:~normal|12|25|50} mg/L in a patient aged {age:~70|50|60|80} with {sx:no localizing symptoms|fatigue alone|the symptoms detailed above}. {gca:No headache, jaw claudication, scalp tenderness, or visual symptoms.|Cranial symptoms present, see plan.} {pmr:No shoulder or hip girdle stiffness.|Shoulder and hip girdle stiffness present.} Exam {exam:without synovitis, rash, lymphadenopathy, or organomegaly|with findings detailed above}.
+Why: the upper limit of ESR rises with age, roughly age divided by 2 for men and age plus 10 divided by 2 for women (Miller 1983), so an ESR of 40 is within range for a 70-year-old woman. ESR also rises with anemia, kidney disease, obesity, pregnancy, and monoclonal proteins, while CRP does not, so a high ESR with a normal CRP points toward those causes rather than inflammation.
+Teaching point: {teach:Interpret the ESR against age (age over 2 for men, age plus 10 over 2 for women) and against the CRP: both high means inflammation, ESR high with CRP normal points to anemia, kidney disease, obesity, or a monoclonal protein. The two diagnoses that cannot wait are giant cell arteritis and polymyalgia rheumatica in a patient over 50, so ask about headache, jaw pain with chewing, vision change, and shoulder and hip stiffness every time.|omit this line}
+Plan: {plan:repeat ESR and CRP in 4 to 6 weeks, since a single value often normalizes; no autoantibody testing without a clinical question|CBC with differential, CMP, urinalysis, SPEP with free light chains, hepatitis B and C, HIV, and TSH ordered today, with a chest radiograph given cough or weight loss|the above plus age-appropriate cancer screening coordinated with your office|prednisone started today for polymyalgia rheumatica, taper per the taper tab|prednisone 40 to 60 mg daily started today and temporal artery ultrasound or biopsy arranged for suspected giant cell arteritis}.
+Counseled the patient: {tell:that this blood test rises with many things including age, that a single value is repeated before anyone acts on it, and to call the same day for a new headache, jaw pain with chewing, or any change in vision|omit this line}.
+Please send the patient back, or call the same day, if a patient 50 or older develops a new headache, jaw claudication, scalp tenderness, or visual symptoms (start prednisone 40 to 60 mg daily and call), or bilateral shoulder and hip girdle pain with morning stiffness over 45 minutes. Please send the patient back for joint swelling, rash with fever, mononeuritis, or an ESR over 100 without an explanation after the workup. A monoclonal protein or low blood counts belong with hematology.
+Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 weeks with the repeat labs|follow-up here in 4 weeks on prednisone|follow-up here as needed}.`),
+
+  R("r-rf", "Referral A&P: positive RF or anti-CCP without synovitis", ".refrf",
+`Impression: {imp:positive rheumatoid factor without rheumatoid arthritis|positive anti-CCP with arthralgia and no synovitis, at risk for rheumatoid arthritis|seronegative arthralgia, serology of uncertain significance|early rheumatoid arthritis, see plan}.
+Findings: {test:rheumatoid factor positive|anti-CCP positive|rheumatoid factor and anti-CCP both positive} at {titer:~low titer|high titer, over 3 times the upper limit} in a patient with {exam:arthralgia and a normal joint exam without synovitis|no joint symptoms|morning stiffness and a joint exam without definite synovitis}. MCP and MTP squeeze {squeeze:negative|positive}. Inflammatory markers {crp:normal|elevated|pending}. {xr:No radiographs indicated.|Radiographs of the hands and feet without erosions.|Radiographs of the hands and feet ordered.} Hepatitis C antibody {hcv:negative|ordered|not indicated}.
+Why: rheumatoid factor is positive in about 5 percent of healthy adults, more often with age, hepatitis C, chronic infections, and other autoimmune diseases, so an isolated low-titer RF carries little weight. Anti-CCP is about 95 percent specific for rheumatoid arthritis, and a high-titer anti-CCP with arthralgia predicts arthritis within a few years in a substantial minority. There is no preventive treatment to start on serology alone outside a trial.
+Teaching point: {teach:Rheumatoid factor alone is a weak test; anti-CCP is the strong one. Order both together when you suspect rheumatoid arthritis, and when either is positive, examine the MCPs, PIPs, wrists, and MTPs with a squeeze test at every visit, because swelling, not the antibody, is what starts treatment.|omit this line}
+Plan: {plan:no treatment; a joint exam at each visit in your office with attention to the MCPs, PIPs, wrists, and MTPs|no treatment; the patient will be followed here as an at-risk patient given the anti-CCP and arthralgia|treatment for rheumatoid arthritis started, detailed above}.
+Counseled the patient: {tell:that this antibody is found in some healthy people, that it does not by itself mean rheumatoid arthritis, and that joint swelling or morning stiffness lasting more than half an hour should prompt a call the same week|omit this line}.
+Please send the patient back if any of these appear: any joint swelling, or 3 or more of the EULAR 2016 clinically suspect arthralgia features (symptoms under 1 year, MCP symptoms, morning stiffness of 60 minutes or more, symptoms worst in the early morning, difficulty making a fist, a positive MCP squeeze, a first-degree relative with rheumatoid arthritis). An early visit matters, since treatment in the first 3 months of arthritis changes the long-term outcome.
+Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 months as an at-risk patient|follow-up here in 3 months|follow-up here as needed}.`),
+
+  R("r-raynaud", "Referral A&P: Raynaud phenomenon", ".refraynaud",
+`Impression: {imp:primary Raynaud phenomenon|Raynaud phenomenon with a feature of secondary disease, under evaluation|secondary Raynaud phenomenon, see plan}.
+Findings: Raynaud phenomenon, {onset:onset before age 30|onset after age 40}, {sym:symmetric and episodic with cold or stress|asymmetric or with an atypical trigger}, {tissue:without digital ulcers, pits, or tissue loss|with digital pitting or ulceration}, {nail:nailfold capillaries normal on dermatoscopy|nailfold capillaries dilated, dropped out, or hemorrhagic}. {skin:No puffy fingers, sclerodactyly, or telangiectasia.|Puffy fingers present.|Skin thickening present.} ANA {ana:~negative|1:80|1:160|1:320|pending}, pattern {pattern:~not applicable|nucleolar|centromere|speckled|homogeneous}, ESR {esr:normal|elevated|pending}.
+Why: primary Raynaud affects 3 to 5 percent of adults, mostly young women, and does not progress to connective tissue disease. The features that point to secondary Raynaud are onset after 40, asymmetry, digital ulcers or pits, abnormal nailfold capillaries, a positive ANA (centromere or nucleolar patterns in particular), and a high ESR. Patients with both a positive ANA and abnormal capillaries progressed to definite systemic sclerosis in a majority over long-term follow-up (Koenig 2008).
+Teaching point: {teach:Separate primary from secondary Raynaud with five observations: age of onset, symmetry, any ulcer or pit, the nailfold capillaries (a dermatoscope or the otoscope on the nail bed shows dilated loops or dropout), and the ANA. Primary needs reassurance and warmth; any secondary feature needs a visit.|omit this line}
+Plan: {plan:whole-body cold avoidance rather than gloves alone, smoking cessation, and a review of vasoconstrictors (decongestants, stimulants, beta blockers, triptans)|the above plus amlodipine 5 mg daily, titrated to 10 mg, or nifedipine extended release 30 to 60 mg daily, since attacks limit daily life|ANA with reflex ENA (anticentromere, anti-Scl-70, anti-RNA polymerase III), ESR, CBC, and urinalysis ordered today, and the patient will be followed here}. Aspirin and topical nitrates are options for ulcers.
+Counseled the patient: {tell:that color changes in the fingers with cold are common and usually harmless, that keeping the whole body warm matters more than gloves, and that any sore or ulcer on a fingertip should be seen promptly|omit this line}.
+Please send the patient back if any of these appear: a digital ulcer or pit, puffy fingers or skin thickening, reflux or dysphagia out of proportion, shortness of breath, or a change to asymmetric attacks. Critical digital ischemia needs same-day attention.
+Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 to 12 months given a positive ANA|follow-up here in 3 months with the results|follow-up here as needed}.`),
+
+  R("r-arthralgia", "Referral A&P: arthralgia with a normal exam and labs", ".refarthralgia",
+`Impression: {imp:arthralgia without evidence of inflammatory arthritis on history, exam, and labs|post-viral arthralgia, expected to resolve|medication-associated arthralgia|arthralgia with a feature under evaluation, see plan}.
+Findings: {pattern:polyarticular|oligoarticular|migratory|small joint} arthralgia for {dur:~3 months|6 weeks|6 months|over 1 year} with {stiff:morning stiffness under 30 minutes|morning stiffness 30 to 60 minutes|no morning stiffness}, a joint exam {exam:without synovitis, warmth, or effusion|with tenderness but no swelling}, MCP and MTP squeeze {squeeze:negative|positive}, full fist closure {fist:bilaterally|limited}, and {labs:normal CBC, CMP, ESR, CRP, RF, and anti-CCP|normal inflammatory markers, serologies pending|labs pending}. {assoc:No psoriasis, inflammatory bowel disease, recent infection, or new medication.|A recent viral illness within 6 weeks.|A new medication (statin, aromatase inhibitor, checkpoint inhibitor, or fluoroquinolone).|Perimenopausal.}
+Why: arthralgia with a normal exam and normal labs is rarely inflammatory arthritis. Post-viral arthralgia (parvovirus, chikungunya, COVID) settles over weeks to months, and aromatase inhibitors and statins cause arthralgia in about a quarter of users.
+Teaching point: {teach:Pain without swelling, stiffness under 30 minutes, and normal inflammatory markers is not arthritis yet. The exam, not the labs, carries the decision, so document the MCP squeeze and fist closure, and ask the patient to photograph any swelling, since swelling that comes and goes is the finding most often missed.|omit this line}
+Plan: {plan:an NSAID or acetaminophen for symptoms and a repeat joint exam in 6 to 8 weeks in your office; no imaging or further serology|hand and foot radiographs ordered given symptoms past 3 months, with ESR and CRP to be rechecked|the medication reviewed with its prescriber, since the timeline fits a drug cause|further evaluation as outlined above}. The patient was asked to photograph any joint swelling when it happens.
+Counseled the patient: {tell:that aching joints with a normal exam and normal labs are common and most often settle, and that a photograph of any swelling, taken when it happens, is the most useful thing to bring to the next visit|omit this line}.
+Please send the patient back if any of these appear: swelling seen by a clinician or on a photograph, a positive anti-CCP, or 3 or more of the EULAR 2016 clinically suspect arthralgia features (symptoms under 1 year, MCP symptoms, morning stiffness of 60 minutes or more, symptoms worst in the early morning, difficulty making a fist, a positive MCP squeeze, a first-degree relative with rheumatoid arthritis). Psoriasis, inflammatory bowel disease, uveitis, or dactylitis alongside the pain would move the visit up.
+Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 3 months|follow-up here in 6 to 8 weeks with the results|follow-up here as needed}.`),
+
+  R("r-b27", "Referral A&P: HLA-B27 positive without inflammatory back pain", ".refb27",
+`Impression: {imp:HLA-B27 carrier without spondyloarthritis|HLA-B27 positive with anterior uveitis and no musculoskeletal disease|HLA-B27 positive, spondyloarthritis under evaluation}.
+Findings: HLA-B27 positive, tested for {why:mechanical back pain|a family history of spondyloarthritis|anterior uveitis|psoriasis|no clear indication}, in a patient with {ibp:0|1|2|3} of 5 inflammatory back pain features and {extra:no uveitis, psoriasis, inflammatory bowel disease, enthesitis, or dactylitis|a history of anterior uveitis|psoriasis|inflammatory bowel disease}. Spine and sacroiliac exam {spine:normal|with findings detailed above}. CRP {crp:normal|elevated|not indicated}. {img:No imaging indicated.|AP pelvis radiograph without sacroiliitis.|AP pelvis radiograph ordered.}
+Why: HLA-B27 is carried by 6 to 8 percent of people of European ancestry, and fewer than 5 percent of carriers ever develop spondyloarthritis. The test is informative when inflammatory back pain or a spondyloarthritis feature is already present; on its own it is neither a diagnosis nor a reason for an MRI.
+Teaching point: {teach:HLA-B27 is a test to confirm a suspicion, not to screen a back. Order it when inflammatory back pain, uveitis, psoriasis, or inflammatory bowel disease is already on the table; a positive result in a patient without those features changes nothing.|omit this line}
+Plan: {plan:no further testing; the result reviewed with the patient and the symptoms that would warrant a recheck explained|CRP and an AP pelvis radiograph given the uveitis history|further evaluation as outlined above}.
+Counseled the patient: {tell:that this gene is carried by about one person in fifteen and most carriers never develop arthritis, and that it only matters alongside specific symptoms, which were reviewed|omit this line}.
+Please send the patient back if any of these appear: inflammatory back pain (onset before 45, insidious, better with exercise, not better with rest, night pain), heel enthesitis or dactylitis, anterior uveitis alongside back or joint symptoms, peripheral arthritis, or an elevated CRP. Ophthalmology manages the uveitis itself, and I am glad to join when it recurs or when musculoskeletal symptoms appear.
+Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 12 months|follow-up here as needed}.`)
+]);
+})();
+// ====================== v6.6: HYPERMOBILITY ======================
+(function(){
+DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
+  {id:"p-hypermob", name:"Hypermobility exam: Beighton, 5PQ, and 2017 hEDS criteria", dot:".hypermobility", cat:"Exam & ROS", body:
+`Hypermobility assessment.
+Beighton score {beighton:~0|1|2|3|4|5|6|7|8|9} of 9 (see the Beighton calculator): {items:+no Beighton criteria met|@ fifth finger passive dorsiflexion beyond 90 degrees^@ fifth finger dorsiflexion under 90 degrees|@ thumb apposition to the forearm^@ thumb does not reach the forearm|@ elbow hyperextension beyond 10 degrees^@ elbow without hyperextension|@ knee hyperextension beyond 10 degrees^@ knee without hyperextension|palms flat on the floor with knees straight^palms do not reach the floor}.
+Age-adjusted threshold for generalized joint hypermobility: {thr:5 or more (pubertal to age 50)|6 or more (prepubertal)|4 or more (over age 50)}. {ghj:Does not meet the threshold.|One point below the threshold; the five-point questionnaire below decides.|Meets the threshold.}
+Five-point hypermobility questionnaire (Hakim and Grahame 2003), {fpq:0|1|2|3|4|5} of 5 yes: {fpqitems:+none|can now or could ever place the hands flat on the floor without bending the knees|can now or could ever bend the thumb to touch the forearm|as a child amused friends by contorting the body or could do the splits|as a child or teenager the shoulder or kneecap dislocated on more than one occasion|considers themselves double-jointed}. Two or more yes answers identify hypermobility with 80 to 85 percent sensitivity and 80 to 90 percent specificity.
+2017 hEDS criterion 2, feature A (5 or more of 12 needed): {featA:+none|unusually soft or velvety skin|mild skin hyperextensibility|unexplained striae without weight change|bilateral piezogenic papules of the heels|recurrent or multiple abdominal hernias|atrophic scarring at 2 or more sites|pelvic floor, rectal, or uterine prolapse without a predisposing condition|dental crowding and high or narrow palate|arachnodactyly (positive wrist or thumb sign bilaterally)|arm span to height ratio of 1.05 or more|mitral valve prolapse on echocardiogram|aortic root dilation, Z score over 2}. Feature B: {featB:no first-degree relative meeting hEDS criteria|a first-degree relative meets hEDS criteria independently|family history not established}. Feature C: {featC:+none|musculoskeletal pain in 2 or more limbs recurring daily for 3 months or more|chronic widespread pain for 3 months or more|recurrent joint dislocations or frank instability without trauma}.
+Criterion 3 (exclusions): {excl:no unusual skin fragility, no other heritable or acquired connective tissue disease, and no alternative diagnosis explaining the hypermobility|alternative diagnosis under consideration, see plan|features suggesting another Ehlers-Danlos subtype or Marfan syndrome, genetics referral planned}.
+Related features: {rel:+none elicited|orthostatic symptoms or tachycardia on standing|gastrointestinal dysmotility symptoms|easy bruising|chronic fatigue|anxiety|temporomandibular symptoms|flat feet}.
+Assessment: {assess:generalized joint hypermobility without symptoms, no diagnosis needed|hypermobility spectrum disorder (symptomatic hypermobility not meeting hEDS criteria)|meets the 2017 criteria for hypermobile Ehlers-Danlos syndrome|localized or historical hypermobility only|hypermobility with features of another connective tissue disorder, genetics referral}.
+Plan: {plan:+education on joint protection and pacing|physical therapy for proprioception, core, and joint stabilization, avoiding end-range stretching|evaluation for orthostatic intolerance with standing vital signs|echocardiogram for aortic root and mitral valve assessment|genetics referral|the Joint hypermobility patient sheet provided|follow-up as needed}.`}
+]);
+DEFAULT_DATA.instructions = DEFAULT_DATA.instructions.concat([
+{id:"i6-hypermob", name:"Joint hypermobility: what it means", body:
+`JOINT HYPERMOBILITY: WHAT IT MEANS
+
+WHAT IT IS
+Hypermobility means some of your joints move further than most people's. It runs in families and is common: about 1 in 10 adults has it, and more women than men. For most people it causes no trouble. For some it brings joint pain, sprains, or joints that slip, and then it has a name: hypermobility spectrum disorder, or, when a set of other features is present, hypermobile Ehlers-Danlos syndrome.
+
+HOW WE MEASURED IT
+- The Beighton score checks nine movements: the little fingers, the thumbs, the elbows, the knees, and bending forward with flat hands. Your score was {score:~5|4|6|7|8|9} out of 9.
+- Five questions about what your joints could do as a child and now. You answered yes to {yes:~2|0|1|3|4|5} of 5.
+- A checklist of skin, heart, and other features that go with the Ehlers-Danlos type.
+
+YOUR RESULT
+{result:You have hypermobile joints without the other features of a connective tissue disorder. This is a trait, not a disease.|You have hypermobility spectrum disorder: hypermobile joints that cause symptoms. It does not damage joints and it does not shorten life, and the treatment is physical, not a pill.|You meet the criteria for hypermobile Ehlers-Danlos syndrome. There is no blood test for this type, and the diagnosis is made from the exam and the checklist we went through.|We found features that need a genetics evaluation, and we have referred you.}
+
+WHAT HELPS MOST
+- Strength and control, not stretching. Hypermobile joints are already loose; what they lack is muscle control at the end of their range. A physical therapist who knows hypermobility teaches proprioception, core, and stabilization exercises. Avoid yoga poses and stretches that push joints to their limit.
+- Pacing. Spread activity through the week rather than one long day followed by three sore ones.
+- Low-impact aerobic exercise: swimming, cycling, walking.
+- Supportive footwear, and taping or soft braces for a joint that slips during activity.
+- Pain medicine only as a bridge. Opioids do not help this kind of pain.
+
+OTHER THINGS THAT CAN GO WITH IT
+- Feeling faint or a racing heart on standing. Tell us; fluids, salt, compression, and sometimes medicine help.
+- Stomach upset, bloating, or constipation.
+- Easy bruising and slow-healing cuts.
+- Anxiety, which is more common with hypermobility and responds to the usual treatments.
+
+CALL THE OFFICE FOR
+- A joint that dislocates and does not go back.
+- A joint that is hot, red, and swollen.
+- Fainting.
+- Chest pain or a tearing pain in the chest or back, which needs emergency care.`,
+bodyEs:
+`HIPERMOVILIDAD ARTICULAR: QUÉ SIGNIFICA
+
+QUÉ ES
+Hipermovilidad significa que algunas de sus articulaciones se mueven más allá de lo que se mueven en la mayoría de las personas. Viene de familia y es común: cerca de 1 de cada 10 adultos la tiene, y más mujeres que hombres. Para la mayoría no causa problemas. Para algunas personas trae dolor en las articulaciones, esguinces o articulaciones que se salen, y entonces tiene un nombre: trastorno del espectro de hipermovilidad, o, cuando hay un conjunto de otras características, síndrome de Ehlers-Danlos hipermóvil.
+
+CÓMO LA MEDIMOS
+- La escala de Beighton revisa nueve movimientos: los dedos meñiques, los pulgares, los codos, las rodillas y doblarse hacia adelante con las manos planas. Su puntaje fue {puntaje:~5|4|6|7|8|9} de 9.
+- Cinco preguntas sobre lo que sus articulaciones podían hacer de niño y ahora. Usted respondió sí a {sí:~2|0|1|3|4|5} de 5.
+- Una lista de características de la piel, el corazón y otras que acompañan al tipo Ehlers-Danlos.
+
+SU RESULTADO
+{resultado:Usted tiene articulaciones hipermóviles sin las otras características de un trastorno del tejido conectivo. Es un rasgo, no una enfermedad.|Usted tiene trastorno del espectro de hipermovilidad: articulaciones hipermóviles que causan síntomas. No daña las articulaciones ni acorta la vida, y el tratamiento es físico, no una pastilla.|Usted cumple los criterios del síndrome de Ehlers-Danlos hipermóvil. No hay un análisis de sangre para este tipo, y el diagnóstico se hace con el examen y la lista que revisamos.|Encontramos características que necesitan una evaluación genética, y lo hemos referido.}
+
+QUÉ AYUDA MÁS
+- Fuerza y control, no estiramiento. Las articulaciones hipermóviles ya están sueltas; lo que les falta es control muscular al final de su rango. Un fisioterapeuta que conozca la hipermovilidad enseña ejercicios de propiocepción, de centro del cuerpo y de estabilización. Evite las posturas de yoga y los estiramientos que llevan las articulaciones a su límite.
+- Dosificar la actividad. Reparta la actividad en la semana en lugar de un día largo seguido de tres días adoloridos.
+- Ejercicio aeróbico de bajo impacto: nadar, bicicleta, caminar.
+- Calzado con soporte, y cinta o soportes blandos para una articulación que se sale durante la actividad.
+- Medicamentos para el dolor solo como puente. Los opioides no ayudan con este tipo de dolor.
+
+OTRAS COSAS QUE PUEDEN ACOMPAÑARLA
+- Sentirse mareado o con el corazón acelerado al ponerse de pie. Díganos; los líquidos, la sal, la compresión y a veces un medicamento ayudan.
+- Malestar de estómago, hinchazón o estreñimiento.
+- Moretones fáciles y cortadas que sanan despacio.
+- Ansiedad, que es más común con la hipermovilidad y responde a los tratamientos habituales.
+
+LLAME AL CONSULTORIO SI TIENE
+- Una articulación que se disloca y no vuelve a su lugar.
+- Una articulación caliente, roja e hinchada.
+- Desmayos.
+- Dolor de pecho o un dolor desgarrador en el pecho o la espalda, que necesita atención de emergencia.`}
+]);
+})();
+(function(){ DEFAULT_DATA.version = 40; })();
 // ====================== CORE ======================
 const KEY = "rheumpad_v1";
 let DATA, FAVS, PRECHART, META = {};
@@ -5596,6 +5884,50 @@ function loadState(){
         const cur = (DATA.phrases || []).find(x=>x.id === "p-mskabn");
         const def = DEFAULT_DATA.phrases.find(x=>x.id === "p-mskabn");
         if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "jdf6qm") { cur.body = def.body; cur.name = def.name; }
+      }
+      // v34 -> v35: the fibromyalgia referral phrase closes more kindly. Replaced only when the
+      // stored body still hashes to the v6.0 text.
+      if ((stored.seededVersion || 1) < 35) {
+        const cur = (DATA.phrases || []).find(x=>x.id === "r-fibro");
+        const def = DEFAULT_DATA.phrases.find(x=>x.id === "r-fibro");
+        if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "1mt9beb") cur.body = def.body;
+      }
+      // v35 -> v36: the region exam counts its own tender and swollen joints. Replaced only when
+      // the stored body still hashes to the v6.1 text.
+      if ((stored.seededVersion || 1) < 36) {
+        const cur = (DATA.phrases || []).find(x=>x.id === "p-mskabn");
+        const def = DEFAULT_DATA.phrases.find(x=>x.id === "p-mskabn");
+        if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "v7uzh0") cur.body = def.body;
+      }
+      // v36 -> v37: the referral library was rewritten in a collegial register. Each stored body
+      // is replaced only when it still hashes to the v6.0 text.
+      if ((stored.seededVersion || 1) < 37) {
+        const OLD37 = {"r-ana": "hfmsh6", "r-back": "160p425", "r-fibro": "o8jlpj", "r-urate": "7uor7a", "r-oa": "d8xkuq", "r-esr": "15vba08", "r-rf": "16hc2yj", "r-raynaud": "1n473ed", "r-arthralgia": "17dauhu", "r-b27": "1453phh"};
+        Object.keys(OLD37).forEach(id=>{
+          const cur = (DATA.phrases || []).find(x=>x.id === id);
+          const def = DEFAULT_DATA.phrases.find(x=>x.id === id);
+          if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === OLD37[id]) cur.body = def.body;
+        });
+      }
+      // v37 -> v38: the referral library gained a teaching point and a what-to-tell-the-patient
+      // line in each phrase. Replaced only when the stored body still hashes to the v6.3 text.
+      if ((stored.seededVersion || 1) < 38) {
+        const OLD38 = {"r-ana": "13r2tv4", "r-back": "n44yo", "r-fibro": "jrmdfk", "r-urate": "twp8q8", "r-oa": "1xoiwoc", "r-esr": "17ufq1i", "r-rf": "1g5zgwi", "r-raynaud": "1c1lro5", "r-arthralgia": "towt1a", "r-b27": "pxzfci"};
+        Object.keys(OLD38).forEach(id=>{
+          const cur = (DATA.phrases || []).find(x=>x.id === id);
+          const def = DEFAULT_DATA.phrases.find(x=>x.id === id);
+          if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === OLD38[id]) cur.body = def.body;
+        });
+      }
+      // v38 -> v39: the referral library became a consult note back to the referring clinician.
+      // Each stored body is replaced only when it still hashes to the v6.4 text.
+      if ((stored.seededVersion || 1) < 39) {
+        const OLD39 = {"r-ana": "4y2yp7", "r-back": "15ucbgr", "r-fibro": "1ijd9gh", "r-urate": "e9hnzj", "r-oa": "1hbeoys", "r-esr": "1qrfhiv", "r-rf": "1kcw70q", "r-raynaud": "k5aagg", "r-arthralgia": "1r257br", "r-b27": "1fi0pt1"};
+        Object.keys(OLD39).forEach(id=>{
+          const cur = (DATA.phrases || []).find(x=>x.id === id);
+          const def = DEFAULT_DATA.phrases.find(x=>x.id === id);
+          if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === OLD39[id]) cur.body = def.body;
+        });
       }
       // v23 -> v24: the letters' duration and hours lists widened. Swap only in a stored
       // copy still carrying the shipped placeholder, so an edited letter keeps its own.
@@ -5809,6 +6141,27 @@ function regionWidget(label, opts){
       const jb = rows[sd].querySelector(".rxj"); if (jb) jb.style.display = (numbered && (state[sd].tender !== "none" || state[sd].swell !== "none")) ? "" : "none";
     });
     box.classList.toggle("ne", state.notExamined);
+    box.dispatchEvent(new CustomEvent("rxchange", {bubbles:true}));
+  };
+  // Joint counts for this region. A numbered region with a blank joint box counts every joint on
+  // that side (the text says "right MCPs"), otherwise the joints typed in the box.
+  const JOINTS = {MCP:5, PIP:5, DIP:4, MTP:5};
+  const IN28 = /^(shoulder|elbow|wrist|knee|MCP|PIP)$/.test(noun);
+  const listed = txt=>{
+    const set = new Set();
+    txt.replace(/(\d)\s*(?:-|to|through)\s*(\d)/g, (m, a, b)=>{ for (let i = +a; i <= +b; i++) set.add(i); return " "; }).replace(/\d/g, d=>{ set.add(+d); return ""; });
+    return set.size;
+  };
+  box._counts = ()=>{
+    const out = {tender:0, swollen:0, tender28:0, swollen28:0};
+    if (state.notExamined) return out;
+    ["R","L"].forEach(sd=>{
+      const st = state[sd];
+      const n = numbered ? (st.joints.trim() ? listed(st.joints) || 1 : JOINTS[noun] || 1) : 1;
+      if (st.tender !== "none") { out.tender += n; if (IN28) out.tender28 += n; }
+      if (st.swell !== "none") { out.swollen += n; if (IN28) out.swollen28 += n; }
+    });
+    return out;
   };
   const ne = document.createElement("span"); ne.className = "rxc rxne"; ne.textContent = "not examined"; ne.setAttribute("role", "button");
   ne.onclick = ()=>{ state.notExamined = !state.notExamined; ne.classList.toggle("on", state.notExamined); sync(); };
@@ -5871,6 +6224,38 @@ function regionWidget(label, opts){
     }
     if (sameState()) return r.text.replace(/^right /, "bilateral ").replace(numbered ? /^$/ : new RegExp("^bilateral " + noun + " "), "bilateral " + RX.plural(noun) + " ").replace(/; remaining right /, "; remaining ") + ".";
     return r.text + "; " + l.text + ".";
+  };
+  return box;
+}
+// {joint counts:%}  tender and swollen joint counts summed from every region grid in the same phrase,
+// with the 28-joint subset, editable by hand and sent to the DAS28 and CDAI calculator on request
+function jointCountWidget(label){
+  const box = document.createElement("span"); box.className = "jc"; box.title = label + ": summed from the region grids above; type to override, auto to resum";
+  const mk = (lab)=>{ const l = document.createElement("label"); l.className = "jcl"; l.appendChild(document.createTextNode(lab + " ")); const i = document.createElement("input"); i.type = "number"; i.min = 0; i.max = 68; i.className = "jcn"; i.title = lab; l.appendChild(i); box.appendChild(l); return i; };
+  const tj = mk("tender"), sj = mk("swollen");
+  const sub = document.createElement("span"); sub.className = "jcsub"; box.appendChild(sub);
+  const auto = document.createElement("span"); auto.className = "rxc rxne"; auto.textContent = "auto"; auto.title = "resum from the grids"; auto.setAttribute("role", "button"); box.appendChild(auto);
+  const send = document.createElement("span"); send.className = "rxc"; send.textContent = "send to DAS28 and CDAI"; send.title = "open the calculator with the 28-joint counts filled"; send.setAttribute("role", "button"); box.appendChild(send);
+  let manual = false, last = {tender:0, swollen:0, tender28:0, swollen28:0};
+  const sum = ()=>{
+    const host = box.parentNode; if (!host) return;
+    const t = {tender:0, swollen:0, tender28:0, swollen28:0};
+    host.querySelectorAll(".rx").forEach(r=>{ if (typeof r._counts === "function") { const c = r._counts(); Object.keys(t).forEach(k=>{ t[k] += c[k]; }); } });
+    last = t;
+    if (!manual) { tj.value = t.tender; sj.value = t.swollen; }
+    sub.textContent = "(28-joint set: " + t.tender28 + " tender, " + t.swollen28 + " swollen)";
+    window.RX_COUNTS = {tjc28:t.tender28, sjc28:t.swollen28, tjc:+tj.value || 0, sjc:+sj.value || 0};
+    auto.classList.toggle("on", !manual);
+  };
+  tj.addEventListener("input", ()=>{ manual = true; auto.classList.remove("on"); window.RX_COUNTS = {tjc28:last.tender28, sjc28:last.swollen28, tjc:+tj.value || 0, sjc:+sj.value || 0}; });
+  sj.addEventListener("input", ()=>{ manual = true; auto.classList.remove("on"); window.RX_COUNTS = {tjc28:last.tender28, sjc28:last.swollen28, tjc:+tj.value || 0, sjc:+sj.value || 0}; });
+  auto.onclick = ()=>{ manual = false; sum(); };
+  send.onclick = ()=>{ sum(); App.closeModal(); App.showTab("calc"); if (typeof Calc !== "undefined") { Calc.current = "das28"; Calc.render(); document.querySelectorAll("#calc-pick .chip").forEach(c=>c.classList.toggle("on", c.dataset.id === "das28")); if (Calc.f.tjc) { Calc.f.tjc.value = last.tender28; Calc.f.sjc.value = last.swollen28; Calc.update(); } } toast("28-joint counts sent: " + last.tender28 + " tender, " + last.swollen28 + " swollen"); };
+  // listen once the widget is in the document
+  setTimeout(()=>{ const host = box.parentNode; if (host) { host.addEventListener("rxchange", sum); sum(); } }, 0);
+  box._out = ()=>{
+    const t = +tj.value || 0, sw = +sj.value || 0;
+    return "Tender joint count " + t + " (TJC28 " + last.tender28 + "), swollen joint count " + sw + " (SJC28 " + last.swollen28 + ").";
   };
   return box;
 }
@@ -5964,6 +6349,8 @@ function renderFillable(body, container){
         container.appendChild(regionWidget(label, m[2].slice(1).split("|")));
       } else if (m[2].charAt(0) === "*") {     // tender point grid: {tender points:*}
         container.appendChild(tenderPointWidget(label));
+      } else if (m[2].charAt(0) === "%") {     // joint counts summed from the region grids: {joint counts:%}
+        container.appendChild(jointCountWidget(label));
       } else if (m[2].charAt(0) === "~") {     // editable: suggestions offered, any value accepted
         const opts = m[2].slice(1).split("|");
         const inp = document.createElement("input");
@@ -7658,7 +8045,10 @@ const US = {
 
 const Calc = {
   current: "das28", f: {}, lab: {},
-  LIST: [["das28","RA: DAS28 / SDAI"],["basdai","axSpA: BASDAI"],["asdas","axSpA: ASDAS-CRP"],["sledai","SLE: SLEDAI-2K"],["dapsa","PsA: DAPSA"],["frax","Bone: FRAX risk correction"]],
+  LIST: [["das28","RA: DAS28 / SDAI"],["basdai","axSpA: BASDAI"],["asdas","axSpA: ASDAS-CRP"],["sledai","SLE: SLEDAI-2K"],["dapsa","PsA: DAPSA"],["mrss","SSc: modified Rodnan skin score"],["beighton","Hypermobility: Beighton and 5PQ"],["frax","Bone: FRAX risk correction"]],
+  BEIGHTON_ITEMS: [["Right fifth finger dorsiflexion beyond 90 degrees"],["Left fifth finger dorsiflexion beyond 90 degrees"],["Right thumb to forearm"],["Left thumb to forearm"],["Right elbow hyperextension beyond 10 degrees"],["Left elbow hyperextension beyond 10 degrees"],["Right knee hyperextension beyond 10 degrees"],["Left knee hyperextension beyond 10 degrees"],["Palms flat on the floor, knees straight"]],
+  FPQ_ITEMS: ["Can now, or could ever, place the hands flat on the floor without bending the knees","Can now, or could ever, bend the thumb to touch the forearm","As a child, amused friends by contorting the body or could do the splits","As a child or teenager, the shoulder or kneecap dislocated on more than one occasion","Considers themselves double-jointed"],
+  MRSS_SITES: [["face","Face"],["chest","Anterior chest"],["abd","Abdomen"],["rfin","Right fingers"],["lfin","Left fingers"],["rhand","Right hand"],["lhand","Left hand"],["rfa","Right forearm"],["lfa","Left forearm"],["rua","Right upper arm"],["lua","Left upper arm"],["rth","Right thigh"],["lth","Left thigh"],["rleg","Right leg"],["lleg","Left leg"],["rft","Right foot"],["lft","Left foot"]],
   FRAX_URL: "https://www.fraxplus.org/calculation-tool",
   SLEDAI_ITEMS: [
     [8,"Seizure (recent onset)"],[8,"Psychosis"],[8,"Organic brain syndrome"],[8,"Visual disturbance (retinal changes)"],
@@ -7695,6 +8085,19 @@ const Calc = {
       ["DAPSA", "Schoels M, Aletaha D, Funovits J, Kavanaugh A, Baker D, Smolen JS. Application of the DAREA/DAPSA score for assessment of disease activity in psoriatic arthritis. Ann Rheum Dis. 2010;69(8):1441-1447.",
        "No license fee. Free for clinical and research use."],
       ["Remission cut-offs", "Schoels MM, Aletaha D, Alasti F, Smolen JS. Disease activity in psoriatic arthritis: defining remission and treatment success using the DAPSA score. Ann Rheum Dis. 2016;75(5):811-818.", ""]
+    ],
+    beighton: [
+      ["Beighton score", "Beighton P, Solomon L, Soskolne CL. Articular mobility in an African population. Ann Rheum Dis. 1973;32(5):413-418.",
+       "No license fee. Nine items, one point each."],
+      ["Five-point questionnaire", "Hakim AJ, Grahame R. A simple questionnaire to detect hypermobility: an adjunct to the assessment of patients with diffuse musculoskeletal pain. Int J Clin Pract. 2003;57(3):163-166.",
+       "Two or more yes answers detect hypermobility with 80 to 85 percent sensitivity and 80 to 90 percent specificity."],
+      ["Age thresholds", "Malfait F, Francomano C, Byers P, et al. The 2017 international classification of the Ehlers-Danlos syndromes. Am J Med Genet C Semin Med Genet. 2017;175(1):8-26.",
+       "Generalized joint hypermobility: Beighton 6 or more before puberty, 5 or more from puberty to age 50, 4 or more after 50. A score one point below the threshold counts when the questionnaire has 2 or more yes answers."]
+    ],
+    mrss: [
+      ["Modified Rodnan skin score", "Clements PJ, Lachenbruch PA, Seibold JR, et al. Inter and intraobserver variability of total skin thickness score (modified Rodnan TSS) in systemic sclerosis. J Rheumatol. 1995;22(7):1281-1285.",
+       "No license fee. Seventeen sites scored 0 (normal), 1 (mild), 2 (moderate), 3 (severe thickening) by palpation, total 0 to 51."],
+      ["Scoring standardization", "Khanna D, Furst DE, Clements PJ, et al. Standardization of the modified Rodnan skin score for use in clinical trials of systemic sclerosis. J Scleroderma Relat Disord. 2017;2(1):11-18.", ""]
     ],
     frax: [
       ["FRAX", "Kanis JA, Johnell O, Oden A, Johansson H, McCloskey E. FRAX and the assessment of fracture probability in men and women from the UK. Osteoporos Int. 2008;19(4):385-397.",
@@ -7758,7 +8161,10 @@ const Calc = {
       const bl = document.createElement("label"); bl.textContent = "From diagram"; btnWrap.appendChild(bl);
       const jb = document.createElement("button"); jb.className = "btn small"; jb.textContent = "Use joint exam counts";
       jb.onclick = ()=>{ this.f.tjc.value = document.getElementById("tjc").textContent; this.f.sjc.value = document.getElementById("sjc").textContent; this.update(); };
-      btnWrap.appendChild(jb); host.appendChild(btnWrap);
+      btnWrap.appendChild(jb);
+      const rb = document.createElement("button"); rb.className = "btn small"; rb.textContent = "Use region exam counts"; rb.style.marginLeft = "6px"; rb.title = "the 28-joint counts from the last .mskabn exam you filled";
+      rb.onclick = ()=>{ const c = window.RX_COUNTS; if (!c) { toast("Fill the region exam first"); return; } this.f.tjc.value = c.tjc28; this.f.sjc.value = c.sjc28; this.update(); };
+      btnWrap.appendChild(rb); host.appendChild(btnWrap);
       this.num(host, "gh", "Patient global (0-100 mm)", {max:100});
       this.num(host, "pga", "Patient global (0-10, for SDAI)", {max:10, step:0.5});
       this.num(host, "ega", "Provider global (0-10, for SDAI)", {max:10, step:0.5});
@@ -7793,6 +8199,31 @@ const Calc = {
       this.num(host, "pain", "Pain (0-10)", {max:10, step:0.5});
       this.num(host, "ptg", "Patient global (0-10)", {max:10, step:0.5});
       this.num(host, "crp", "CRP (mg/dL)", {max:40, step:0.1});
+    } else if (c === "beighton") {
+      host.style.display = "block";
+      const mkChips = (title, list, key)=>{
+        const h = document.createElement("p"); h.className = "hint"; h.style.margin = "6px 0 4px"; h.textContent = title; host.appendChild(h);
+        const wrap = document.createElement("div"); wrap.className = "pc-chips"; this.f[key] = [];
+        list.forEach(label=>{
+          const chip = document.createElement("button"); chip.className = "chip"; chip.textContent = label; chip.dataset.label = label; chip.dataset.w = 1;
+          chip.onclick = ()=>{ chip.classList.toggle("on"); this.update(); };
+          wrap.appendChild(chip); this.f[key].push(chip);
+        });
+        host.appendChild(wrap);
+      };
+      const ageWrap = document.createElement("div"); ageWrap.className = "pc-field"; ageWrap.style.maxWidth = "320px";
+      const al = document.createElement("label"); al.textContent = "Age group"; ageWrap.appendChild(al);
+      const sel = document.createElement("select"); sel.id = "calc-age";
+      [["adult","pubertal to age 50 (threshold 5)"],["child","prepubertal (threshold 6)"],["older","over age 50 (threshold 4)"]].forEach(([v, t])=>{ const o = document.createElement("option"); o.value = v; o.textContent = t; sel.appendChild(o); });
+      sel.onchange = ()=>this.update(); ageWrap.appendChild(sel); host.appendChild(ageWrap);
+      mkChips("Beighton items, tap each that is positive", this.BEIGHTON_ITEMS.map(x=>x[0]), "items");
+      mkChips("Five-point questionnaire, tap each yes", this.FPQ_ITEMS, "fpq");
+    } else if (c === "mrss") {
+      const note = document.createElement("div"); note.style.cssText = "grid-column:1/-1;";
+      const p1 = document.createElement("p"); p1.className = "hint"; p1.style.margin = "0";
+      p1.textContent = "Pinch the skin at each site and score 0 normal, 1 mild, 2 moderate, 3 severe thickening. Leave a site blank if you did not score it; the total counts only the sites you entered.";
+      note.appendChild(p1); host.appendChild(note);
+      this.MRSS_SITES.forEach(([id, label])=>this.num(host, id, label + " (0-3)", {max:3}));
     } else if (c === "frax") {
       const note = document.createElement("div");
       note.style.cssText = "grid-column:1/-1;";
@@ -7811,7 +8242,7 @@ const Calc = {
       this.num(host, "hip", "FRAX hip fracture, 10-year percent", {max:100, step:0.1});
       this.num(host, "gcdose", "Prednisone equivalent, mg daily", {max:200, step:0.5});
     }
-    if (c !== "sledai") host.style.display = "";
+    if (c !== "sledai" && c !== "beighton") host.style.display = "";
     this.renderAttr();
     this.update();
   },
@@ -7827,6 +8258,12 @@ const Calc = {
     if (this.current === "sledai") {
       (this.f.items || []).filter(ch=>ch.classList.contains("on"))
         .forEach(ch=>out.push([ch.dataset.label, "+" + ch.dataset.w]));
+      return out;
+    }
+    if (this.current === "beighton") {
+      const age = document.getElementById("calc-age"); if (age) out.push(["Age group", age.options[age.selectedIndex].textContent]);
+      (this.f.items || []).filter(ch=>ch.classList.contains("on")).forEach(ch=>out.push([ch.dataset.label, "positive"]));
+      (this.f.fpq || []).filter(ch=>ch.classList.contains("on")).forEach(ch=>out.push([ch.dataset.label, "yes"]));
       return out;
     }
     Object.keys(this.lab).forEach(id=>{
@@ -7901,6 +8338,25 @@ const Calc = {
       const s = t + s6 + pain + ptg + crp;
       const sc = s <= 4 ? "remission" : s <= 14 ? "low disease activity" : s <= 28 ? "moderate disease activity" : "high disease activity";
       return "DAPSA " + r1(s) + " (" + sc + ").";
+    }
+    if (c === "beighton") {
+      const on = (this.f.items || []).filter(ch=>ch.classList.contains("on")).length;
+      const yes = (this.f.fpq || []).filter(ch=>ch.classList.contains("on")).length;
+      const age = (document.getElementById("calc-age") || {}).value || "adult";
+      const thr = age === "child" ? 6 : age === "older" ? 4 : 5;
+      const ghj = on >= thr || (on === thr - 1 && yes >= 2);
+      const how = on >= thr ? "at or above the age threshold of " + thr : (on === thr - 1 && yes >= 2) ? "one point below the threshold of " + thr + ", counted as positive because the questionnaire has " + yes + " yes answers" : "below the threshold of " + thr;
+      return "Beighton score " + on + " of 9, " + how + ". Five-point questionnaire " + yes + " of 5" + (yes >= 2 ? ", positive" : ", negative") + ". Generalized joint hypermobility: " + (ghj ? "present" : "not present") + " by the 2017 hEDS criterion 1.";
+    }
+    if (c === "mrss") {
+      const vals = this.MRSS_SITES.map(([id])=>this.v(id));
+      const scored = vals.filter(x=>x !== null);
+      if (!scored.length) return null;
+      const total = scored.reduce((a, x)=>a + x, 0);
+      const proximal = ["chest","abd","rua","lua","rth","lth"].some(id=>(this.v(id) || 0) > 0);
+      const distal = ["rfin","lfin","rhand","lhand","rfa","lfa","rleg","lleg","rft","lft","face"].some(id=>(this.v(id) || 0) > 0);
+      const pattern = proximal ? "skin involvement proximal to the elbows or knees or on the trunk, the diffuse cutaneous pattern" : distal ? "skin involvement limited to distal to the elbows and knees and the face, the limited cutaneous pattern" : "no skin thickening at the scored sites";
+      return "Modified Rodnan skin score " + total + " of 51 (" + scored.length + " of 17 sites scored). " + pattern.charAt(0).toUpperCase() + pattern.slice(1) + ".";
     }
     if (c === "frax") {
       const mof = this.v("mof"), hip = this.v("hip"), dose = this.v("gcdose");
@@ -9791,6 +10247,32 @@ const SCREEN = {
 };
 
 const CHANGELOG = [
+  {v:"6.6", d:"November 2, 2026", items:[
+    "Hypermobility. A Beighton and five-point questionnaire calculator (nine items by side, the five Hakim and Grahame questions, the 2017 hEDS age thresholds of 6, 5, and 4, and the one-point-below rule) under Calculators. A .hypermobility exam phrase with the Beighton items as tap chips, the questionnaire, the 2017 hEDS criterion 2 features A, B, and C, the exclusions, related features, an assessment from asymptomatic hypermobility to hEDS, and a plan. A patient sheet, Joint hypermobility: what it means, in English and Spanish."
+  ]},
+  {v:"6.5", d:"October 30, 2026", items:[
+    "The referral A&P library is now the assessment and plan of a consult visit, written back to the referring clinician: Impression (dropdown), Findings from the visit with exam and lab dropdowns, Why with the numbers, Teaching point, Plan as what was done or ordered today, Counseled the patient, please send the patient back if, and Disposition (back to your care, or follow-up here at an interval). Thanks, teaching, counseling, and closing lines omit."
+  ]},
+  {v:"6.4", d:"October 30, 2026", items:[
+    "The referral A&P library teaches as well as answers. Each phrase gained a Teaching point after the Why paragraph, a rule the referring clinician can carry to the next patient (when to order the test, how to read it, what finding changes the plan), and a closing line on what to tell the patient in plain words, pointing to the matching patient sheet where one exists. Both lines are dropdowns that omit for an experienced colleague."
+  ]},
+  {v:"6.3", d:"October 30, 2026", items:[
+    "The referral A&P library reads as a note to a colleague. Each phrase now opens with thanks, gives the answer in one line (Bottom line), describes what you see, explains why with the same numbers as before, offers suggested next steps rather than instructions, lists what would prompt a visit as please send the patient if, and closes with an open door. The thanks and the closing are dropdowns that can be omitted."
+  ]},
+  {v:"6.2", d:"October 30, 2026", items:[
+    "The region exam counts its own joints. The tender and swollen joint counts at the bottom of .mskabn sum from the grids as you mark them, with the 28-joint subset beside them (shoulders, elbows, wrists, MCPs, PIPs, knees). A numbered region with a blank joint box counts every joint on that side, matching the text; typed joints count the joints listed. Type over a count to override and tap auto to resum. Send to DAS28 and CDAI opens the calculator with the 28-joint counts filled, and the calculator gained a Use region exam counts button."
+  ]},
+  {v:"6.1", d:"October 30, 2026", items:[
+    "The fibromyalgia referral phrase closes more kindly: the pain is real and deserves steady treatment with the clinician who sees the patient regularly, and a visit here would repeat the plan without adding to it, with an offer to see the patient if features appear or a second opinion would help the patient trust the diagnosis."
+  ]},
+  {v:"6.0", d:"October 30, 2026", items:[
+    "Referral A&P library, a new phrase category. Ten assessment-and-plan paragraphs for the questions primary care sends most: positive ANA without features (.refana), low back pain (.refback), fibromyalgia (.reffibro), asymptomatic hyperuricemia (.refurate), osteoarthritis (.refoa), elevated ESR or CRP alone (.refesr), positive RF or anti-CCP without synovitis (.refrf), Raynaud phenomenon (.refraynaud), arthralgia with a normal exam and labs (.refarthralgia), and HLA-B27 positive without back pain (.refb27). Each states the assessment with dropdowns, gives the number that frames the decision, lists what to do first, and names the findings that warrant a visit. Written for an e-consult reply or a consult note back to the referring clinician, in this-patient language."
+  ]},
+  {v:"5.9", d:"October 30, 2026", items:[
+    "Shoulder exam with rotator cuff testing (.shoulder): inspection, palpation, active range of motion in degrees per side, passive range, the cuff tests (empty can, drop arm, external rotation strength and lag, hornblower, lift-off, belly press, internal rotation lag), impingement (Neer, Hawkins-Kennedy, painful arc), biceps and labrum (Speed, Yergason, O'Brien), acromioclavicular, instability, neurovascular, and an impression dropdown. Every test chip has a side toggle and a written negative on right-click.",
+    "Disease-focused exams under Exam & ROS: lupus (.sleexam), systemic sclerosis (.sscexam), inflammatory myopathy (.myoexam) with MRC grades per muscle group, vasculitis (.vascexam) with pulses, bruits, and temporal arteries, Sjogren (.sjoexam) with Schirmer, and psoriatic skin and nails (.psaskin). Each line opens at its normal and takes several findings.",
+    "Modified Rodnan skin score under Calculators: seventeen sites scored 0 to 3, the total of 51, the number of sites scored, and the limited or diffuse pattern."
+  ]},
   {v:"5.8", d:"October 29, 2026", items:[
     "Standardized region exam. Every joint region now shows the same four controls per side, in the same order: tenderness (nontender, mild, moderate, exquisite), swelling (none, mild synovitis, synovitis, marked, effusion), range of motion (full, mildly decreased, decreased, decreased due to pain, full but painful), and a short row of region-specific extras. MCPs, PIPs, DIPs, and MTPs take joint numbers. L same as R copies a side, and not examined blanks the region. The text comes out in one fixed order for every region, so the exam reads the same way every time.",
     "Widespread pain points. A tender point grid documents the 18 ACR 1990 fibromyalgia sites, nine sites by side, with the count, the list, and the 11-point threshold. It stays out of the note until you tap a point or mark all 18 negative."
