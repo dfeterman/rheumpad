@@ -133,6 +133,7 @@
   .rxc.on{border-color:var(--accent); background:var(--accent-soft); color:var(--ink); font-weight:600;}
   .rxseg .rxc.on:first-child{background:var(--ok-soft, #e2f0dc); border-color:#7fb069;}
   .rxextra .rxc.on{background:#fdf1d6; border-color:#d9a441;}
+  .rxextra .rxc.neg{background:#f1f1ee; border-color:#b9b9b0; color:var(--ink); text-decoration:line-through; text-decoration-color:#b9b9b0;}
   .rxj{display:inline-block; font-size:.78rem; color:var(--muted); margin-left:4px;}
   .rxtools{display:block; margin:0 0 0 10px;}
   .rxtools .rxc{font-size:.72rem;}
@@ -354,7 +355,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v6.6</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v6.9</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -4288,21 +4289,20 @@ Sincerely,`}
 DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
 {id:"p-mskabn", name:"MSK exam by region, standardized", dot:".mskabn", cat:"Exam & ROS", body:
 `MSK exam:
-Shoulders: {shoulders:=shoulder|painful arc|subacromial tenderness|crepitus}
-Elbows: {elbows:=elbow|lateral epicondyle tenderness|medial epicondyle tenderness|olecranon bursitis|loss of full extension|rheumatoid nodule}
-Wrists: {wrists:=wrist|extensor tenosynovitis|Tinel and Phalen positive}
-MCPs: {mcps:=MCP #|MCP squeeze positive|ulnar deviation}
+Shoulders: {shoulders:=shoulder -swell normalrom|painful arc|subacromial tenderness|crepitus}
+Elbows: {elbows:=elbow normalrom|lateral epicondyle tenderness^no lateral or medial epicondyle tenderness|medial epicondyle tenderness^no lateral or medial epicondyle tenderness|olecranon bursitis|loss of full extension|rheumatoid nodule}
+Wrists: {wrists:=wrist -rom|extensor tenosynovitis|Tinel and Phalen positive}
+MCPs: {mcps:=MCP # -rom|MCP squeeze positive|ulnar deviation}
 PIPs: {pips:=PIP #|Bouchard nodes|swan neck deformity|boutonniere deformity}
 DIPs: {dips:=DIP #|Heberden nodes|psoriatic nail changes|dactylitis}
-Hips: {hips:=hip -swell|FABER positive|groin pain with internal and external rotation|trochanteric tenderness}
-Knees: {knees:=knee|warm to touch|crepitus|proximal patellar tendon tenderness|medial joint line tenderness|lateral joint line tenderness|flexion contracture|Baker cyst}
-Ankles: {ankles:=ankle|posterior tibial tenosynovitis|peroneal tenosynovitis|pedal edema}
-Feet: {feet:=MTP #|MTP squeeze positive|first MTP erythema and warmth|Achilles insertion tenderness|plantar fascia tenderness|dactylitis|hallux valgus}
+Hips: {hips:=hip -swell|FABER positive^FABER negative|FADIR positive^FADIR negative|SI joint tenderness^SI joints nontender|groin pain with internal and external rotation|trochanteric tenderness}
+Knees: {knees:=knee|warm to touch^cool to touch|effusion^no effusions|crepitus|proximal patellar tendon tenderness|medial joint line tenderness|lateral joint line tenderness|flexion contracture|Baker cyst}
+Ankles: {ankles:=ankle -rom|effusion^no swelling or effusion|posterior tibial tenosynovitis|peroneal tenosynovitis|pedal edema}
+Feet: {feet:=MTP # -rom|MTP squeeze positive^negative MTP squeeze|first MTP erythema and warmth|Achilles insertion tenderness|plantar fascia tenderness|dactylitis|hallux valgus}
 Tender points: {tender points:*}
 Spine: {spine:+omit this line|full range of motion, nontender|reduced cervical rotation^full cervical rotation|reduced lumbar flexion^full lumbar flexion|reduced lateral lumbar flexion^full lateral lumbar flexion|paraspinal tenderness^no paraspinal tenderness|midline tenderness^no midline tenderness|kyphosis^no kyphosis|reduced chest expansion^normal chest expansion|@ straight leg raise positive^@ straight leg raise negative}.
 Modified Schober: {schober:omit this line|under 3 cm|3 cm|3.5 cm|4 cm|4.5 cm|5 cm|5.5 cm|6 cm or more}.
-Sacroiliac joints: {si:+omit this line|nontender|@ sacroiliac tenderness^no @ sacroiliac tenderness}.
-Entheses: {enth:+omit this line|no entheseal tenderness|@ lateral epicondyle tenderness^no @ lateral epicondyle tenderness|@ greater trochanter tenderness^no @ greater trochanter tenderness|@ iliac crest tenderness^no @ iliac crest tenderness|costochondral tenderness^no costochondral tenderness|@ Achilles insertion tenderness^no @ Achilles insertion tenderness|@ plantar fascia tenderness^no @ plantar fascia tenderness}.
+Entheses: {enth:+no entheseal tenderness|omit this line|@ lateral epicondyle tenderness^no @ lateral epicondyle tenderness|@ greater trochanter tenderness^no @ greater trochanter tenderness|@ iliac crest tenderness^no @ iliac crest tenderness|costochondral tenderness^no costochondral tenderness|@ Achilles insertion tenderness^no @ Achilles insertion tenderness|@ plantar fascia tenderness^no @ plantar fascia tenderness}.
 Strength: {strength:+omit this line|5/5 proximally and distally|4/5 proximal weakness, symmetric^no proximal weakness|4/5 hip flexor weakness^no hip flexor weakness|4/5 shoulder abduction weakness^no shoulder abduction weakness|unable to rise from a chair without using the arms^rises from a chair without using the arms|3/5 proximal weakness^no proximal weakness}.
 Gait: {gait:+omit this line|normal|antalgic^not antalgic|antalgic, favoring the @|uses a cane^no assistive device|uses a walker^no assistive device|waddling^not waddling}.
 {joint counts:%} {additional findings}`}
@@ -5537,14 +5537,14 @@ Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to 
   R("r-fibro", "Referral A&P: fibromyalgia", ".reffibro",
 `Impression: {imp:fibromyalgia, with no evidence of an inflammatory or autoimmune disease on history, exam, and labs|fibromyalgia alongside a stable, separately managed rheumatic condition|chronic widespread pain, fibromyalgia likely, with one feature still under evaluation}.
 Findings: widespread pain for {dur:~over 3 months|over 1 year|several years} with {sx:fatigue, unrefreshing sleep, and cognitive symptoms|fatigue and unrefreshing sleep|widespread pain alone}, {exam:a normal joint exam without synovitis|tender points without synovitis|diffuse soft tissue tenderness}, and {labs:normal CBC, CMP, TSH, CK, and inflammatory markers|labs pending|labs not yet obtained}. This meets {crit:the 2016 ACR fibromyalgia criteria (widespread pain index 7 or more with symptom severity 5 or more, or WPI 4 to 6 with SSS 9 or more, symptoms over 3 months)|a clinical picture of fibromyalgia, criteria not formally scored}.
-Why: fibromyalgia is a clinical diagnosis, and the treatment is the same in any office. Autoantibody panels ordered without inflammatory features turn up false positives more often than diagnoses, and a low-titer ANA in this setting does not change the plan.
-Teaching point: {teach:Fibromyalgia is diagnosed from the history (widespread pain over 3 months with fatigue, poor sleep, and fog) and a normal exam, and the 2016 criteria score it in 2 minutes. The labs that matter are the ones that find a mimic: CBC, CMP, TSH, CK, ESR, and CRP. Naming the diagnosis with confidence is itself a treatment.|omit this line}
-Plan: {plan:the diagnosis was named and explained; graded aerobic exercise as the first treatment (start at 10 minutes, build toward 150 minutes a week), regular sleep hours, and cognitive behavioral therapy or an app-based program where available|the above plus one medication, below|the current plan continued with the exercise reinforced}.
+Why: this pattern, widespread pain over 3 months with fatigue, unrefreshing sleep, and cognitive symptoms alongside a normal joint exam and normal inflammatory markers, points to central pain processing rather than inflammation. Fibromyalgia affects about 2 percent of adults and often travels with inflammatory disease, so the normal exam and labs are what set the inflammatory causes aside here.
+Teaching point: {teach:The 2016 criteria (widespread pain index and symptom severity scale) can be scored in the office visit, and CBC, CMP, TSH, CK, ESR, and CRP are the labs that find the mimics. An ANA in a patient without lupus features is positive in about one healthy adult in eight and tends to raise a question rather than answer one, so it helps to hold it for a specific suspicion.|omit this line}
+Plan: {plan:the diagnosis was explained; graded aerobic exercise as the first treatment (start at 10 minutes, build toward 150 minutes a week), regular sleep hours, and cognitive behavioral therapy or an app-based program where available|the above plus one medication, below|the current plan continued with the exercise reinforced}.
 Medication added: {med:omit this line|duloxetine 30 mg daily for 1 week, then 60 mg daily|amitriptyline 10 to 25 mg at bedtime|pregabalin 75 mg at bedtime, titrated to 150 to 300 mg a day|cyclobenzaprine 5 to 10 mg at bedtime|milnacipran 12.5 mg daily, titrated to 50 mg twice daily}.
-Opioids worsen outcomes in fibromyalgia and I would avoid them. Labs can stay limited to CBC, CMP, TSH, CK, ESR, and CRP, and imaging is not needed for diffuse pain.
+I did not recommend an opioid, since opioids worsen outcomes in fibromyalgia. No further labs or imaging are needed from my side.
 Counseled the patient: {tell:that this is a real condition of the pain processing system, that it does not damage joints, and that the treatments that work best are the ones the patient does rather than takes; the Lifestyle plan for fibromyalgia sheet was provided|omit this line}.
-This patient's pain is real and deserves steady treatment from the clinician who knows the patient best. Please send the patient back if any of these appear: joint swelling, morning stiffness over 60 minutes, an elevated CRP or ESR without another cause, proximal weakness with an elevated CK, dry eyes and mouth with parotid enlargement, Raynaud with digital changes, or a positive specific antibody (anti-CCP, anti-dsDNA, ENA) with symptoms.
-Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the plan above|one follow-up here in 3 months to review the medication and the exercise plan, then back to your care|follow-up here as needed}.`),
+Please send the patient back, or call me, if any of these appear: joint swelling, morning stiffness over 60 minutes, an elevated CRP or ESR without another cause, proximal weakness with an elevated CK, dry eyes and mouth with parotid enlargement, Raynaud with digital changes, or a positive specific antibody (anti-CCP, anti-dsDNA, ENA) with symptoms.
+Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the plan above, and I am glad to see the patient again if the plan stalls|one follow-up here in 3 months to review the medication and the exercise plan, then back to your care|follow-up here as needed}.`),
 
   R("r-urate", "Referral A&P: asymptomatic hyperuricemia", ".refurate",
 `Impression: {imp:asymptomatic hyperuricemia without gout|hyperuricemia with a possible past flare, not confirmed|gout, see plan}.
@@ -5698,7 +5698,22 @@ LLAME AL CONSULTORIO SI TIENE
 - Dolor de pecho o un dolor desgarrador en el pecho o la espalda, que necesita atención de emergencia.`}
 ]);
 })();
-(function(){ DEFAULT_DATA.version = 40; })();
+// ====================== v6.8: LONG-TERM PREDNISONE COUNSELING ======================
+(function(){
+DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
+  {id:"p-predlong", name:"Long-term prednisone: counseling and taper attempt", dot:".predlong", cat:"Counseling", body:
+`Long-term glucocorticoid review. This patient has taken prednisone {dose:~5|2.5|7.5|10|15|20} mg daily for {dur:~over 1 year|6 to 12 months|2 to 5 years|over 5 years} for {indication:~polymyalgia rheumatica|rheumatoid arthritis|giant cell arteritis|systemic lupus erythematosus|vasculitis|myositis|inflammatory arthritis}. {help:Prednisone has kept the disease controlled and the patient feels well on it.|Prednisone has helped, and earlier attempts to lower it brought symptoms back.|Prednisone is doing less than it once did, and the patient is open to a change.}
+We talked through what prednisone has done for this patient and what it asks in return over time: {risks:+the long-term risks in general terms|bone loss and fracture|infection, including shingles and pneumonia|weight gain and fluid retention|higher blood sugar|higher blood pressure|cataract and glaucoma|thinning skin and easy bruising|mood and sleep changes|adrenal suppression, which makes a sudden stop unsafe|cardiovascular risk that rises with dose and years}. The patient had a chance to ask questions, and the decision below was made together.
+Where we landed today: {plan:we agreed to start a slow taper, with the step below, holding or stepping back if symptoms return rather than pushing through|we agreed to try again after an earlier taper did not hold, this time more slowly, with the step below|the patient prefers to stay at the current dose for now and understands and accepts the risks we discussed, including bone loss, infection, and the need to never stop suddenly; this is a reasonable choice for this patient at this time, we will revisit it at each visit, and the door stays open|prednisone continues at the current dose while the steroid-sparing agent below takes effect, with the taper to begin once it does|the patient and I agreed that the current dose is the right balance for now, for the reasons we discussed today}.
+Taper step: {step:omit this line|1 mg every 4 weeks|0.5 mg every 4 weeks|1 mg every 2 weeks|2.5 mg every 4 weeks|alternate-day reduction once below 5 mg|per the taper tab schedule given to the patient}.
+Steroid-sparing therapy: {sparing:omit this line|methotrexate started or optimized|tocilizumab or sarilumab discussed|the current steroid-sparing agent continued and the dose reviewed|not appropriate at this time, reason documented}.
+Protection while on prednisone: {protect:+reviewed, no change today|calcium and vitamin D confirmed|FRAX and DXA per the GIOP plan|bisphosphonate in place or started|blood pressure and glucose reviewed today|annual eye exam advised|vaccines reviewed, Shingrix and pneumococcal in particular|PJP prophylaxis considered at 20 mg or more with other immunosuppression}.
+Adrenal safety: {adrenal:+reviewed today|sick-day rules explained, double the dose for fever or vomiting and seek care if unable to keep tablets down|the patient carries a steroid alert card or wears a bracelet|a morning cortisol will be checked before the last step off|stress dosing for surgery or major illness discussed|never stop suddenly, reinforced warmly}.
+Counseled the patient: {tell:that this medicine has done real work for them, that lowering it slowly protects what they have gained, that a symptom on the way down means we pause rather than fail, and that any decision today can be revisited|that staying at the current dose is their choice and a respected one, and that I will keep offering the taper as circumstances change|omit this line}.
+Follow-up: {fu:4 weeks into the taper|6 to 8 weeks|3 months|sooner for any symptom return, fever, or inability to take the tablets}.`}
+]);
+})();
+(function(){ DEFAULT_DATA.version = 43; })();
 // ====================== CORE ======================
 const KEY = "rheumpad_v1";
 let DATA, FAVS, PRECHART, META = {};
@@ -5929,6 +5944,20 @@ function loadState(){
           if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === OLD39[id]) cur.body = def.body;
         });
       }
+      // v40 -> v41: the fibromyalgia consult note drops the lines that read as correcting the
+      // referrer. Replaced only when the stored body still hashes to the v6.6 text.
+      if ((stored.seededVersion || 1) < 41) {
+        const cur = (DATA.phrases || []).find(x=>x.id === "r-fibro");
+        const def = DEFAULT_DATA.phrases.find(x=>x.id === "r-fibro");
+        if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "1l2t8wz") cur.body = def.body;
+      }
+      // v42 -> v43: the standardized MSK exam takes her line format (pertinent negatives, no range of
+      // motion on wrists, MCPs, ankles, and feet). Replaced only when the stored body still hashes to the v6.1 text.
+      if ((stored.seededVersion || 1) < 43) {
+        const cur = (DATA.phrases || []).find(x=>x.id === "p-mskabn");
+        const def = DEFAULT_DATA.phrases.find(x=>x.id === "p-mskabn");
+        if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "8rq4aq") cur.body = def.body;
+      }
       // v23 -> v24: the letters' duration and hours lists widened. Swap only in a stored
       // copy still carrying the shipped placeholder, so an edited letter keeps its own.
       if ((stored.seededVersion || 1) < 24) {
@@ -6100,7 +6129,8 @@ function negateFinding(t){
   if (/\b(not|no|without|negative)\b/.test(t)) return t;
   if (/positive/.test(t)) return t.replace("positive", "negative");
   if (/ with /.test(t)) return t.replace(" with ", " without ");
-  if (/ tender/.test(t)) return t.replace(/ (mildly |exquisitely )?tender/, " not tender");
+  if (/tenderness\b/.test(t)) return t.replace(/^(@ )?/, "$1no ");
+  if (/ tender\b/.test(t)) return t.replace(/ (mildly |exquisitely )?tender\b/, " not tender");
   return t.replace(/^(@ )?/, "$1no ");
 }
 // ====================== STANDARDIZED REGION EXAM WIDGET ======================
@@ -6117,12 +6147,15 @@ const RX = {
 };
 function regionWidget(label, opts){
   const spec = opts[0] || label;
-  const numbered = / #/.test(spec), noSwell = / -swell/.test(spec);
-  const noun = spec.replace(/ #| -swell/g, "").trim();
-  const extras = opts.slice(1).filter(Boolean);
+  const numbered = / #/.test(spec), noSwell = / -swell/.test(spec), noRom = / -rom/.test(spec), normalRom = / normalrom/.test(spec);
+  const noun = spec.replace(/ #| -swell| -rom| normalrom/g, "").trim();
+  // Extras read "finding" or "finding^negative". A finding with a negative reports the negative
+  // until it is tapped, so the normal line carries the same pertinent negatives every time.
+  const extras = opts.slice(1).filter(Boolean).map(o=>{ const [pos, neg] = o.split("^"); return { pos, neg: neg || "" }; });
+  const ROM = normalRom ? RX.ROM.map(([v, t])=>[v, v === "full" ? "normal range of motion" : t]) : RX.ROM;
   const box = document.createElement("span"); box.className = "rx"; box.dataset.region = "1"; box.title = label + ": the same controls for every joint, left to right: tenderness, swelling, range of motion, extras";
   const state = { R: fresh(), L: fresh(), notExamined: false };
-  function fresh(){ return { tender:"none", swell:"none", rom:"full", extras:new Set(), joints:"" }; }
+  function fresh(){ return { tender:"none", swell:"none", rom:"full", extras:new Set(), negs:new Set(), joints:"" }; }
   const seg = (sideState, key, list, title)=>{
     const g = document.createElement("span"); g.className = "rxseg"; g.title = title;
     list.forEach(([v, t])=>{
@@ -6136,7 +6169,7 @@ function regionWidget(label, opts){
   const rows = {};
   const sync = ()=>{
     ["R","L"].forEach(sd=>{
-      const abn = state[sd].tender !== "none" || state[sd].swell !== "none" || state[sd].rom !== "full" || state[sd].extras.size > 0;
+      const abn = state[sd].tender !== "none" || state[sd].swell !== "none" || state[sd].rom !== "full" || state[sd].extras.size > 0 || state[sd].negs.size > 0;
       rows[sd].classList.toggle("abn", abn);
       const jb = rows[sd].querySelector(".rxj"); if (jb) jb.style.display = (numbered && (state[sd].tender !== "none" || state[sd].swell !== "none")) ? "" : "none";
     });
@@ -6166,7 +6199,7 @@ function regionWidget(label, opts){
   const ne = document.createElement("span"); ne.className = "rxc rxne"; ne.textContent = "not examined"; ne.setAttribute("role", "button");
   ne.onclick = ()=>{ state.notExamined = !state.notExamined; ne.classList.toggle("on", state.notExamined); sync(); };
   const same = document.createElement("span"); same.className = "rxc rxsame"; same.textContent = "L same as R"; same.title = "copy the right side to the left"; same.setAttribute("role", "button");
-  same.onclick = ()=>{ state.L = { tender:state.R.tender, swell:state.R.swell, rom:state.R.rom, extras:new Set(state.R.extras), joints:state.R.joints }; build(); sync(); };
+  same.onclick = ()=>{ state.L = { tender:state.R.tender, swell:state.R.swell, rom:state.R.rom, extras:new Set(state.R.extras), negs:new Set(state.R.negs), joints:state.R.joints }; build(); sync(); };
   const build = ()=>{
     box.textContent = "";
     ["R","L"].forEach(sd=>{
@@ -6174,12 +6207,15 @@ function regionWidget(label, opts){
       const tag = document.createElement("b"); tag.className = "rxside"; tag.textContent = sd; row.appendChild(tag);
       row.appendChild(seg(state[sd], "tender", RX.TENDER, "tenderness to palpation"));
       row.appendChild(seg(state[sd], "swell", RX.SWELL, "swelling"));
-      row.appendChild(seg(state[sd], "rom", RX.ROM, "range of motion"));
+      if (!noRom) row.appendChild(seg(state[sd], "rom", ROM, "range of motion"));
       if (extras.length) {
-        const g = document.createElement("span"); g.className = "rxseg rxextra"; g.title = "extras";
+        const g = document.createElement("span"); g.className = "rxseg rxextra"; g.title = "extras: tap a finding to add it, right-click to state its negative; a finding written with a pertinent negative reads as the negative until tapped";
         extras.forEach(ex=>{
-          const c = document.createElement("span"); c.className = "rxc" + (state[sd].extras.has(ex) ? " on" : ""); c.textContent = ex; c.setAttribute("role", "button");
-          c.onclick = ()=>{ if (state[sd].extras.has(ex)) state[sd].extras.delete(ex); else state[sd].extras.add(ex); c.classList.toggle("on", state[sd].extras.has(ex)); state.notExamined = false; ne.classList.remove("on"); sync(); };
+          const st = state[sd];
+          const c = document.createElement("span"); c.className = "rxc" + (st.extras.has(ex.pos) ? " on" : "") + (st.negs.has(ex.pos) ? " neg" : ""); c.textContent = ex.pos; c.setAttribute("role", "button"); c.title = "right-click: " + (ex.neg || negateFinding(ex.pos));
+          const paint = ()=>{ c.classList.toggle("on", st.extras.has(ex.pos)); c.classList.toggle("neg", st.negs.has(ex.pos)); state.notExamined = false; ne.classList.remove("on"); sync(); };
+          c.onclick = ()=>{ st.negs.delete(ex.pos); if (st.extras.has(ex.pos)) st.extras.delete(ex.pos); else st.extras.add(ex.pos); paint(); };
+          c.oncontextmenu = e=>{ e.preventDefault(); st.extras.delete(ex.pos); if (st.negs.has(ex.pos)) st.negs.delete(ex.pos); else st.negs.add(ex.pos); paint(); };
           g.appendChild(c);
         });
         row.appendChild(g);
@@ -6196,33 +6232,62 @@ function regionWidget(label, opts){
   };
   build(); sync();
   const word = (list, v)=>(list.find(x=>x[0] === v) || [])[1] || "";
+  const uniq = a=>a.filter((x, i)=>x && a.indexOf(x) === i);
+  // "FABER negative" and "FADIR negative" read "FABER and FADIR negative"
+  const mergeNeg = negs=>{
+    const simple = negs.filter(n=>/^\S+ negative$/.test(n)); if (simple.length < 2) return negs;
+    const merged = joinPicks(simple.map(n=>n.replace(/ negative$/, ""))) + " negative";
+    const out = []; let done = false;
+    negs.forEach(n=>{ if (simple.indexOf(n) >= 0) { if (!done) { out.push(merged); done = true; } } else out.push(n); });
+    return out;
+  };
+  const extraBits = st=>{
+    const on = extras.filter(e=>st.extras.has(e.pos)).map(e=>e.pos);
+    const segText = [word(RX.TENDER, st.tender), word(RX.SWELL, st.swell), word(ROM, st.rom)].join(" ");
+    const negs = [];
+    // right-clicked findings state their negative outright, in tap order before the default negatives
+    extras.forEach(e=>{ if (st.negs.has(e.pos)) negs.push(e.neg || negateFinding(e.pos)); });
+    extras.forEach(e=>{
+      if (!e.neg || st.extras.has(e.pos) || st.negs.has(e.pos)) return;
+      if (extras.some(o=>o !== e && o.neg === e.neg && st.extras.has(o.pos))) return;
+      if (segText.indexOf(e.pos) >= 0) return;
+      if (negs.indexOf(e.neg) < 0) negs.push(e.neg);
+    });
+    return on.concat(mergeNeg(negs));
+  };
   const sideText = (sd, forPrint)=>{
     const st = state[sd], sideName = sd === "R" ? "right" : "left";
-    const abn = st.tender !== "none" || st.swell !== "none" || st.rom !== "full" || st.extras.size > 0;
+    const abn = st.tender !== "none" || st.swell !== "none" || st.rom !== "full" || st.extras.size > 0 || st.negs.size > 0;
     const bits = [word(RX.TENDER, st.tender)];
     if (!noSwell || st.swell !== "none") bits.push(word(RX.SWELL, st.swell));
-    bits.push(word(RX.ROM, st.rom));
+    const ex = extraBits(st);
     let text;
     if (numbered && st.joints.trim() && (st.tender !== "none" || st.swell !== "none")) {
-      text = sideName + " " + noun + " " + st.joints.trim() + " " + bits.join(", ") + "; remaining " + sideName + " " + RX.plural(noun) + " nontender without synovitis";
+      if (!noRom) bits.push(word(ROM, st.rom));
+      text = sideName + " " + noun + " " + st.joints.trim() + " " + uniq(bits).join(", ") + ", remaining " + sideName + " " + RX.plural(noun) + " nontender without synovitis";
+      if (ex.length) text += ", " + ex.join(", ");
     } else {
-      text = sideName + " " + (numbered ? RX.plural(noun) : noun) + " " + bits.join(", ");
+      bits.push(...ex);
+      if (!noRom) bits.push(word(ROM, st.rom));
+      text = sideName + " " + (numbered ? RX.plural(noun) : noun) + " " + uniq(bits).join(", ");
     }
-    if (st.extras.size) text += ", " + [...st.extras].join(", ");
     return { abn, text };
   };
   const sameState = ()=>{
     const a = state.R, b = state.L;
-    return a.tender === b.tender && a.swell === b.swell && a.rom === b.rom && a.joints.trim() === b.joints.trim() && a.extras.size === b.extras.size && [...a.extras].every(x=>b.extras.has(x));
+    return a.tender === b.tender && a.swell === b.swell && a.rom === b.rom && a.joints.trim() === b.joints.trim() && a.extras.size === b.extras.size && [...a.extras].every(x=>b.extras.has(x)) && a.negs.size === b.negs.size && [...a.negs].every(x=>b.negs.has(x));
   };
   box._out = forPrint=>{
     if (state.notExamined) return "not examined.";
     const r = sideText("R", forPrint), l = sideText("L", forPrint);
     if (!r.abn && !l.abn) {
-      const bits = ["nontender"]; if (!noSwell) bits.push("no synovitis"); bits.push("full range of motion bilaterally");
+      const bits = ["nontender"]; if (!noSwell) bits.push("no synovitis");
+      bits.push(...extraBits(state.R));
+      if (!noRom) bits.push(word(ROM, "full"));
+      bits[bits.length - 1] += " bilaterally";
       return bits.join(", ") + ".";
     }
-    if (sameState()) return r.text.replace(/^right /, "bilateral ").replace(numbered ? /^$/ : new RegExp("^bilateral " + noun + " "), "bilateral " + RX.plural(noun) + " ").replace(/; remaining right /, "; remaining ") + ".";
+    if (sameState()) return r.text.replace(/^right /, "bilateral ").replace(numbered ? /^$/ : new RegExp("^bilateral " + noun + " "), "bilateral " + RX.plural(noun) + " ").replace(/, remaining right /, ", remaining ") + ".";
     return r.text + "; " + l.text + ".";
   };
   return box;
@@ -10247,6 +10312,17 @@ const SCREEN = {
 };
 
 const CHANGELOG = [
+  {v:"6.9", d:"November 12, 2026", items:[
+    "Right-click works on the region extras too: right-click crepitus and the line says no crepitus, right-click FABER positive and it says FABER negative. The chip greys out with a strike-through, and a second right-click clears it.",
+    "Standardized MSK exam (.mskabn) now writes each region the way the normal exam reads in a note: Shoulders nontender, normal range of motion; Elbows nontender, no synovitis, no lateral or medial epicondyle tenderness, normal range of motion bilaterally; Wrists nontender, no synovitis bilaterally; Hips nontender, FABER and FADIR negative, SI joints nontender, full range of motion bilaterally; Knees cool to touch, no effusions; Ankles no swelling or effusion; Feet negative MTP squeeze; Entheses no entheseal tenderness. A finding with a pertinent negative reads as the negative until tapped. Range of motion dropped from wrists, MCPs, ankles, and feet. The sacroiliac line folded into the hips.",
+    "Within a numbered region the remaining joints now follow a comma, as in 'left MCP 2 tender to palpation, synovitis, remaining left MCPs nontender without synovitis'."
+  ]},
+  {v:"6.8", d:"November 11, 2026", items:[
+    "Long-term prednisone counseling (.predlong). Dose, duration, and indication; what prednisone has done for the patient; the long-term costs as tap chips; where the conversation landed, including a slow taper with a step, a second attempt after a taper that did not hold, continuing while a steroid-sparing agent takes effect, or the patient preferring to stay at the current dose with the risks understood and the door left open; protection and adrenal safety chips; a counseling line; and follow-up. Written warm, for the note."
+  ]},
+  {v:"6.7", d:"November 5, 2026", items:[
+    "The fibromyalgia consult note no longer lectures. The Why paragraph describes the pattern and why it points away from inflammation instead of saying the treatment is the same in any office; the teaching point explains what the ANA does in this setting instead of declaring that naming the diagnosis is a treatment; the opioid line reports what was done; the pain-is-real sentence is gone; and the send-back line invites a call."
+  ]},
   {v:"6.6", d:"November 2, 2026", items:[
     "Hypermobility. A Beighton and five-point questionnaire calculator (nine items by side, the five Hakim and Grahame questions, the 2017 hEDS age thresholds of 6, 5, and 4, and the one-point-below rule) under Calculators. A .hypermobility exam phrase with the Beighton items as tap chips, the questionnaire, the 2017 hEDS criterion 2 features A, B, and C, the exclusions, related features, an assessment from asymptomatic hypermobility to hEDS, and a plan. A patient sheet, Joint hypermobility: what it means, in English and Spanish."
   ]},
