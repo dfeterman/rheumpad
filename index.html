@@ -133,6 +133,13 @@
   .rxc.on{border-color:var(--accent); background:var(--accent-soft); color:var(--ink); font-weight:600;}
   .rxseg .rxc.on:first-child{background:var(--ok-soft, #e2f0dc); border-color:#7fb069;}
   .rxextra .rxc.on{background:#fdf1d6; border-color:#d9a441;}
+  .evrefs{margin:2px 0 8px 20px; padding:0; font-size:.8rem; color:var(--muted);}
+  .evrefs li{margin:3px 0; line-height:1.4;}
+  .evrefs a{color:var(--accent); text-decoration:underline; text-underline-offset:2px;}
+  .evrefs a.evdoi{font-size:.72rem; white-space:nowrap;}
+  a.evcite, span.evcite{font-size:.74rem; font-weight:700; color:var(--accent); text-decoration:none; margin-left:1px; white-space:nowrap;}
+  a.evcite:hover{text-decoration:underline;}
+  .ev-count{font-size:.78rem; color:var(--muted); margin:-6px 0 10px;}
   .rxextra .rxc.neg{background:#f1f1ee; border-color:#b9b9b0; color:var(--ink); text-decoration:line-through; text-decoration-color:#b9b9b0;}
   .rxj{display:inline-block; font-size:.78rem; color:var(--muted); margin-left:4px;}
   .rxtools{display:block; margin:0 0 0 10px;}
@@ -355,7 +362,7 @@
 <body>
 
 <header class="app">
-  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v6.9</b></small></div>
+  <div class="brand"><h1>Rheum<span class="pad">Pad</span></h1><small>charting companion · no PHI · <b id="buildstamp">v7.2</b></small></div>
   <div class="searchwrap"><span class="mag">&#128269;</span>
     <input id="globalsearch" type="text" placeholder="Search phrases, templates, lists… (like typing a dot phrase)">
   </div>
@@ -608,10 +615,11 @@
     <div id="taper-bone" style="display:none;"></div>
     <div class="comp-section"><h4><span>For the note</span><button class="btn small primary" onclick="Taper.copy('note')">Copy</button></h4>
       <div id="taper-note" class="filled" style="margin:0;"></div></div>
-    <div class="comp-section"><h4><span>For the patient, English</span><button class="btn small primary" onclick="Taper.copy('pt')">Copy</button></h4>
-      <div id="taper-pt" class="filled" style="margin:0;"></div></div>
-    <div class="comp-section"><h4><span>Para el paciente, español</span><button class="btn small primary" onclick="Taper.copy('ptes')">Copiar</button></h4>
-      <div id="taper-pt-es" class="filled" style="margin:0;"></div></div>
+    <div class="comp-section" id="taper-ptbox"><h4><span id="taper-pt-head">For the patient</span>
+        <span><button class="btn small" id="taper-print" onclick="Taper.printPt()">Print</button> <button class="btn small primary" id="taper-copypt" onclick="Taper.copyPt()">Copy</button></span></h4>
+      <div class="langtoggle" id="taper-lang"><button data-v="en" class="on" onclick="Taper.setLang('en')">English</button><button data-v="es" onclick="Taper.setLang('es')">Español</button></div>
+      <div id="taper-pt" class="filled" style="margin:0;"></div>
+      <div id="taper-pt-es" class="filled" style="margin:0; display:none;"></div></div>
   </section>
 
   <section class="tab" id="tab-periop">
@@ -683,8 +691,10 @@
     </div>
 
     <h2 class="sect">Evidence cards</h2>
-    <p class="tab-intro">What to say when a patient asks how much any of this really moves the needle. Effect sizes are stated plainly, including where the evidence is weak.</p>
+    <p class="tab-intro">What to say when a patient asks how much any of this changes the disease. Effect sizes are stated plainly, including where the evidence is weak. Every number carries a bracketed source: click the number or the citation and the paper opens in PubMed in a new tab. Pick a condition to see that disease first, with the cards that apply across autoimmune rheumatic disease underneath. The condition follows the disease you pick in the plan builder.</p>
+    <div class="catrow" id="life-ev-dz"></div>
     <div class="catrow" id="life-ev-filter"></div>
+    <p class="ev-count" id="life-ev-count"></p>
     <div id="life-ev"></div>
 
     <p class="modfoot">Lifestyle change supplements disease-modifying therapy. It does not replace it. Decision support only, clinical judgment overrides every output.</p>
@@ -825,6 +835,13 @@
         </select>
         <p class="hint" style="margin:6px 0 0;">Every empty box and every generic blank copies as this marker. Meditech tabs through [bracketed] fields, Epic through ***. Printed handouts use blank lines either way.</p></div>
       </div>
+    </div>
+    <div class="set-block">
+      <h3>Tabs</h3>
+      <p class="hint">Tap a tab to hide it from the bar at the top, and tap again to bring it back. A hidden tab keeps all its content, and search still finds its phrases and handouts. The choice saves in this browser, so each colleague sets their own bar.</p>
+      <div class="pc-chips" id="set-tabs"></div>
+      <p class="hint" id="set-tabs-count" style="margin:8px 0 0;"></p>
+      <button class="btn small" style="margin-top:8px" onclick="Tabs.showAll()">Show every tab</button>
     </div>
     <div class="set-block">
       <h3>Your signature</h3>
@@ -3793,6 +3810,7 @@ var LIFE_DATA = {
     {k:"gen",   n:"General",           hand:"", line:"These habits support every rheumatic disease and lower heart risk, which inflammatory arthritis raises on its own."},
     {k:"ra",    n:"Rheumatoid",        hand:"i5-ra",   line:"Your DMARD stops joint damage. These habits change your pain, your fatigue, how well the medication works, and your heart risk."},
     {k:"psa",   n:"Psoriatic",         hand:"i5-psa",  line:"Weight loss changes psoriatic arthritis more than any other lifestyle change we have data on, and it improves how well biologics work."},
+    {k:"axspa", n:"Axial SpA",         hand:"",        line:"Exercise is part of the treatment in axial spondyloarthritis, next to your medication. People who smoke have faster changes in the spine on x-ray."},
     {k:"gout",  n:"Gout",              hand:"i5-gout", line:"Diet lowers uric acid by about 1 mg/dL. Your medication lowers it by 3 to 5. Both together beat either alone."},
     {k:"oa",    n:"Osteoarthritis",    hand:"i5-oa",   line:"Exercise and weight are the treatment in osteoarthritis. Structured exercise lowers knee pain about as much as an anti-inflammatory pill."},
     {k:"fibro", n:"Fibromyalgia",      hand:"i5-fibro",line:"Exercise has the strongest evidence of any fibromyalgia treatment, including medication. The dose has to start very small."},
@@ -3852,113 +3870,344 @@ var LIFE_DATA = {
     ]}
   ],
 
+  // Every source below was matched in PubMed by journal, year, volume, first page, and first author,
+  // and the title, authors, and pages come from the PubMed record. Links open on click only.
+  REFS: {
+    sugiyama2010: {"a": "Sugiyama D, et al.", "t": "Impact of smoking as a risk factor for developing rheumatoid arthritis: a meta-analysis of observational studies", "j": "Ann Rheum Dis. 2010;69:70-81.", "pmid": "19174392", "doi": "10.1136/ard.2008.096487"},
+    saevarsdottir2011: {"a": "Saevarsdottir S, et al.", "t": "Patients with early rheumatoid arthritis who smoke are less likely to respond to treatment with methotrexate and tumor necrosis factor inhibitors: observations from the Epidemiological Investigation of Rheumatoid Arthritis and the Swedish Rheumatology Register cohorts", "j": "Arthritis Rheum. 2011;63:26-36.", "pmid": "20862678", "doi": "10.1002/art.27758"},
+    gwinnutt2023: {"a": "Gwinnutt JM, et al.", "t": "2021 EULAR recommendations regarding lifestyle behaviours and work participation to prevent progression of rheumatic and musculoskeletal diseases", "j": "Ann Rheum Dis. 2023;82:48-56.", "pmid": "35260387", "doi": "10.1136/annrheumdis-2021-222020"},
+    klareskog2006: {"a": "Klareskog L, et al.", "t": "A new model for an etiology of rheumatoid arthritis: smoking may trigger HLA-DR (shared epitope)-restricted immune reactions to autoantigens modified by citrullination", "j": "Arthritis Rheum. 2006;54:38-46.", "pmid": "16385494", "doi": "10.1002/art.21575"},
+    skoldstam2003: {"a": "Sköldstam L, et al.", "t": "An experimental study of a Mediterranean diet intervention for patients with rheumatoid arthritis", "j": "Ann Rheum Dis. 2003;62:208-14.", "pmid": "12594104", "doi": "10.1136/ard.62.3.208"},
+    estruch2018: {"a": "Estruch R, et al.", "t": "Primary Prevention of Cardiovascular Disease with a Mediterranean Diet Supplemented with Extra-Virgin Olive Oil or Nuts", "j": "N Engl J Med. 2018;378:e34.", "pmid": "29897866", "doi": "10.1056/NEJMoa1800389"},
+    england2023: {"a": "England BR, et al.", "t": "2022 American College of Rheumatology Guideline for Exercise, Rehabilitation, Diet, and Additional Integrative Interventions for Rheumatoid Arthritis", "j": "Arthritis Care Res (Hoboken). 2023;75:1603-1615.", "pmid": "37227116", "doi": "10.1002/acr.25117"},
+    hagen2009: {"a": "Hagen KB, et al.", "t": "Dietary interventions for rheumatoid arthritis", "j": "Cochrane Database Syst Rev. 2009:CD006400.", "pmid": "19160281", "doi": "10.1002/14651858.CD006400.pub2"},
+    diminno2014: {"a": "Di Minno MN, et al.", "t": "Weight loss and achievement of minimal disease activity in patients with psoriatic arthritis starting treatment with tumour necrosis factor α blockers", "j": "Ann Rheum Dis. 2014;73:1157-62.", "pmid": "23771989", "doi": "10.1136/annrheumdis-2012-202812"},
+    klingberg2019: {"a": "Klingberg E, et al.", "t": "Weight loss improves disease activity in patients with psoriatic arthritis and obesity: an interventional study", "j": "Arthritis Res Ther. 2019;21:17.", "pmid": "30635024", "doi": "10.1186/s13075-019-1810-5"},
+    singhs2018: {"a": "Singh S, et al.", "t": "Obesity and response to anti-tumor necrosis factor-α agents in patients with select immune-mediated inflammatory diseases: A systematic review and meta-analysis", "j": "PLoS One. 2018;13:e0195123.", "pmid": "29771924", "doi": "10.1371/journal.pone.0195123"},
+    weng2023: {"a": "Weng Q, et al.", "t": "Comparative efficacy of exercise therapy and oral non-steroidal anti-inflammatory drugs and paracetamol for knee or hip osteoarthritis: a network meta-analysis of randomised controlled trials", "j": "Br J Sports Med. 2023;57:990-996.", "pmid": "36593092", "doi": "10.1136/bjsports-2022-105898"},
+    messier2013: {"a": "Messier SP, et al.", "t": "Effects of intensive diet and exercise on knee joint loads, inflammation, and clinical outcomes among overweight and obese adults with knee osteoarthritis: the IDEA randomized clinical trial", "j": "JAMA. 2013;310:1263-73.", "pmid": "24065013", "doi": "10.1001/jama.2013.277669"},
+    messier2005: {"a": "Messier SP, et al.", "t": "Weight loss reduces knee-joint loads in overweight and obese older adults with knee osteoarthritis", "j": "Arthritis Rheum. 2005;52:2026-32.", "pmid": "15986358", "doi": "10.1002/art.21139"},
+    bidonde2017: {"a": "Bidonde J, et al.", "t": "Aerobic exercise training for adults with fibromyalgia", "j": "Cochrane Database Syst Rev. 2017:CD012700.", "pmid": "28636204", "doi": "10.1002/14651858.CD012700"},
+    busch2013: {"a": "Busch AJ, et al.", "t": "Resistance exercise training for fibromyalgia", "j": "Cochrane Database Syst Rev. 2013:CD010884.", "pmid": "24362925", "doi": "10.1002/14651858.CD010884"},
+    macfarlane2017: {"a": "Macfarlane GJ, et al.", "t": "EULAR revised recommendations for the management of fibromyalgia", "j": "Ann Rheum Dis. 2017;76:318-328.", "pmid": "27377815", "doi": "10.1136/annrheumdis-2016-209724"},
+    fitzgerald2020: {"a": "FitzGerald JD, et al.", "t": "2020 American College of Rheumatology Guideline for the Management of Gout", "j": "Arthritis Care Res (Hoboken). 2020;72:744-760.", "pmid": "32391934", "doi": "10.1002/acr.24180"},
+    major2018: {"a": "Major TJ, et al.", "t": "Evaluation of the diet wide contribution to serum urate levels: meta-analysis of population based cohorts", "j": "BMJ. 2018;363:k3951.", "pmid": "30305269", "doi": "10.1136/bmj.k3951"},
+    howe2011: {"a": "Howe TE, et al.", "t": "Exercise for preventing and treating osteoporosis in postmenopausal women", "j": "Cochrane Database Syst Rev. 2011:CD000333.", "pmid": "21735380", "doi": "10.1002/14651858.CD000333.pub2"},
+    sherrington2019: {"a": "Sherrington C, et al.", "t": "Exercise for preventing falls in older people living in the community", "j": "Cochrane Database Syst Rev. 2019:CD012424.", "pmid": "30703272", "doi": "10.1002/14651858.CD012424.pub2"},
+    leboff2022guide: {"a": "LeBoff MS, et al.", "t": "The clinician's guide to prevention and treatment of osteoporosis", "j": "Osteoporos Int. 2022;33:2049-2102.", "pmid": "35478046", "doi": "10.1007/s00198-021-05900-y"},
+    weaver2016: {"a": "Weaver CM, et al.", "t": "Calcium plus vitamin D supplementation and risk of fractures: an updated meta-analysis from the National Osteoporosis Foundation", "j": "Osteoporos Int. 2016;27:367-76.", "pmid": "26510847", "doi": "10.1007/s00198-015-3386-5"},
+    jackson2006: {"a": "Jackson RD, et al.", "t": "Calcium plus vitamin D supplementation and the risk of fractures", "j": "N Engl J Med. 2006;354:669-83.", "pmid": "16481635", "doi": "10.1056/NEJMoa055218"},
+    leboff2022vital: {"a": "LeBoff MS, et al.", "t": "Supplemental Vitamin D and Incident Fractures in Midlife and Older Adults", "j": "N Engl J Med. 2022;387:299-309.", "pmid": "35939577", "doi": "10.1056/NEJMoa2202106"},
+    kuhn2011: {"a": "Kuhn A, et al.", "t": "Photoprotective effects of a broad-spectrum sunscreen in ultraviolet-induced cutaneous lupus erythematosus: a randomized, vehicle-controlled, double-blind study", "j": "J Am Acad Dermatol. 2011;64:37-48.", "pmid": "21167404", "doi": "10.1016/j.jaad.2009.12.053"},
+    chasset2015: {"a": "Chasset F, et al.", "t": "Influence of smoking on the efficacy of antimalarials in cutaneous lupus: a meta-analysis of the literature", "j": "J Am Acad Dermatol. 2015;72:634-9.", "pmid": "25648824", "doi": "10.1016/j.jaad.2014.12.025"},
+    ghaussy2003: {"a": "Ghaussy NO, et al.", "t": "Cigarette smoking and disease activity in systemic lupus erythematosus", "j": "J Rheumatol. 2003;30:1215-21.", "pmid": "12784392", "doi": null},
+    finan2013: {"a": "Finan PH, et al.", "t": "The association of sleep and pain: an update and a path forward", "j": "J Pain. 2013;14:1539-52.", "pmid": "24290442", "doi": "10.1016/j.jpain.2013.08.007"},
+    irwin2012: {"a": "Irwin MR, et al.", "t": "Sleep loss exacerbates fatigue, depression, and pain in rheumatoid arthritis", "j": "Sleep. 2012;35:537-43.", "pmid": "22467992", "doi": "10.5665/sleep.1742"},
+    trauer2015: {"a": "Trauer JM, et al.", "t": "Cognitive Behavioral Therapy for Chronic Insomnia: A Systematic Review and Meta-analysis", "j": "Ann Intern Med. 2015;163:191-204.", "pmid": "26054060", "doi": "10.7326/M14-2841"},
+    holtlunstad2010: {"a": "Holt-Lunstad J, et al.", "t": "Social relationships and mortality risk: a meta-analytic review", "j": "PLoS Med. 2010;7:e1000316.", "pmid": "20668659", "doi": "10.1371/journal.pmed.1000316"},
+    holtlunstad2015: {"a": "Holt-Lunstad J, et al.", "t": "Loneliness and social isolation as risk factors for mortality: a meta-analytic review", "j": "Perspect Psychol Sci. 2015;10:227-37.", "pmid": "25910392", "doi": "10.1177/1745691614568352"},
+    rausch2018: {"a": "Rausch Osthoff AK, et al.", "t": "2018 EULAR recommendations for physical activity in people with inflammatory arthritis and osteoarthritis", "j": "Ann Rheum Dis. 2018;77:1251-1260.", "pmid": "29997112", "doi": "10.1136/annrheumdis-2018-213585"},
+    hurkmans2009: {"a": "Hurkmans E, et al.", "t": "Dynamic exercise programs (aerobic capacity and/or muscle strength training) in patients with rheumatoid arthritis", "j": "Cochrane Database Syst Rev. 2009:CD006853.", "pmid": "19821388", "doi": "10.1002/14651858.CD006853.pub2"},
+    dejong2003: {"a": "de Jong Z, et al.", "t": "Is a long-term high-intensity exercise program effective and safe in patients with rheumatoid arthritis? Results of a randomized controlled trial", "j": "Arthritis Rheum. 2003;48:2415-24.", "pmid": "13130460", "doi": "10.1002/art.11216"},
+    regnaux2019: {"a": "Regnaux JP, et al.", "t": "Exercise programmes for ankylosing spondylitis", "j": "Cochrane Database Syst Rev. 2019:CD011321.", "pmid": "31578051", "doi": "10.1002/14651858.CD011321.pub2"},
+    ramiro2023: {"a": "Ramiro S, et al.", "t": "ASAS-EULAR recommendations for the management of axial spondyloarthritis: 2022 update", "j": "Ann Rheum Dis. 2023;82:19-34.", "pmid": "36270658", "doi": "10.1136/ard-2022-223296"},
+    sveaas2020: {"a": "Sveaas SH, et al.", "t": "High intensity exercise for 3 months reduces disease activity in axial spondyloarthritis (axSpA): a multicentre randomised trial of 100 patients", "j": "Br J Sports Med. 2020;54:292-297.", "pmid": "30745314", "doi": "10.1136/bjsports-2018-099943"},
+    villaverde2017: {"a": "Villaverde-García V, et al.", "t": "The effect of smoking on clinical and structural damage in patients with axial spondyloarthritis: A systematic literature review", "j": "Semin Arthritis Rheum. 2017;46:569-583.", "pmid": "27979416", "doi": "10.1016/j.semarthrit.2016.11.004"},
+    poddubnyy2012: {"a": "Poddubnyy D, et al.", "t": "Baseline radiographic damage, elevated acute-phase reactant levels, and cigarette smoking status predict spinal radiographic progression in early axial spondylarthritis", "j": "Arthritis Rheum. 2012;64:1388-98.", "pmid": "22127957", "doi": "10.1002/art.33465"},
+    liu2017: {"a": "Liu Y, et al.", "t": "Impact of Obesity on Remission and Disease Activity in Rheumatoid Arthritis: A Systematic Review and Meta-Analysis", "j": "Arthritis Care Res (Hoboken). 2017;69:157-165.", "pmid": "27159376", "doi": "10.1002/acr.22932"},
+    gioxari2018: {"a": "Gioxari A, et al.", "t": "Intake of ω-3 polyunsaturated fatty acids in patients with rheumatoid arthritis: A systematic review and meta-analysis", "j": "Nutrition. 2018;45:114-124.e4.", "pmid": "28965775", "doi": "10.1016/j.nut.2017.06.023"},
+    hahn2022: {"a": "Hahn J, et al.", "t": "Vitamin D and marine omega 3 fatty acid supplementation and incident autoimmune disease: VITAL randomized controlled trial", "j": "BMJ. 2022;376:e066452.", "pmid": "35082139", "doi": "10.1136/bmj-2021-066452"},
+    odwyer2017: {"a": "O'Dwyer T, et al.", "t": "Exercise and physical activity in systemic lupus erythematosus: A systematic review with meta-analyses", "j": "Semin Arthritis Rheum. 2017;47:204-215.", "pmid": "28477898", "doi": "10.1016/j.semarthrit.2017.04.003"},
+    parodis2024: {"a": "Parodis I, et al.", "t": "EULAR recommendations for the non-pharmacological management of systemic lupus erythematosus and systemic sclerosis", "j": "Ann Rheum Dis. 2024;83:720-729.", "pmid": "37433575", "doi": "10.1136/ard-2023-224416"},
+    humphreys2017: {"a": "Humphreys JH, et al.", "t": "Quantifying the hepatotoxic risk of alcohol consumption in patients with rheumatoid arthritis taking methotrexate", "j": "Ann Rheum Dis. 2017;76:1509-1514.", "pmid": "28341765", "doi": "10.1136/annrheumdis-2016-210629"},
+    neogi2014: {"a": "Neogi T, et al.", "t": "Alcohol quantity and type on risk of recurrent gout attacks: an internet-based case-crossover study", "j": "Am J Med. 2014;127:311-8.", "pmid": "24440541", "doi": "10.1016/j.amjmed.2013.12.019"},
+    choi2008: {"a": "Choi HK, Curhan G.", "t": "Soft drinks, fructose consumption, and the risk of gout in men: prospective cohort study", "j": "BMJ. 2008;336:309-12.", "pmid": "18244959", "doi": "10.1136/bmj.39449.819271.BE"},
+    rai2017: {"a": "Rai SK, et al.", "t": "The Dietary Approaches to Stop Hypertension (DASH) diet, Western diet, and risk of gout in men: prospective cohort study", "j": "BMJ. 2017;357:j1794.", "pmid": "28487277", "doi": "10.1136/bmj.j1794"},
+    juraschek2016: {"a": "Juraschek SP, et al.", "t": "Effects of the Dietary Approaches to Stop Hypertension (DASH) Diet and Sodium Intake on Serum Uric Acid", "j": "Arthritis Rheumatol. 2016;68:3002-3009.", "pmid": "27523583", "doi": "10.1002/art.39813"},
+    nielsen2017: {"a": "Nielsen SM, et al.", "t": "Weight loss for overweight and obese individuals with gout: a systematic review of longitudinal studies", "j": "Ann Rheum Dis. 2017;76:1870-1882.", "pmid": "28866649", "doi": "10.1136/annrheumdis-2017-211472"},
+    agca2017: {"a": "Agca R, et al.", "t": "EULAR recommendations for cardiovascular disease risk management in patients with rheumatoid arthritis and other forms of inflammatory joint disorders: 2015/2016 update", "j": "Ann Rheum Dis. 2017;76:17-28.", "pmid": "27697765", "doi": "10.1136/annrheumdis-2016-209775"},
+    avina2008: {"a": "Aviña-Zubieta JA, et al.", "t": "Risk of cardiovascular mortality in patients with rheumatoid arthritis: a meta-analysis of observational studies", "j": "Arthritis Rheum. 2008;59:1690-7.", "pmid": "19035419", "doi": "10.1002/art.24092"},
+    song2018: {"a": "Song H, et al.", "t": "Association of Stress-Related Disorders With Subsequent Autoimmune Disease", "j": "JAMA. 2018;319:2388-2400.", "pmid": "29922828", "doi": "10.1001/jama.2018.7028"},
+    roberts2017: {"a": "Roberts AL, et al.", "t": "Association of Trauma and Posttraumatic Stress Disorder With Incident Systemic Lupus Erythematosus in a Longitudinal Cohort of Women", "j": "Arthritis Rheumatol. 2017;69:2162-2169.", "pmid": "28929625", "doi": "10.1002/art.40222"},
+    wang2018: {"a": "Wang C, et al.", "t": "Effect of tai chi versus aerobic exercise for fibromyalgia: comparative effectiveness randomized controlled trial", "j": "BMJ. 2018;360:k851.", "pmid": "29563100", "doi": "10.1136/bmj.k851"},
+    walrabenstein2023: {"a": "Walrabenstein W, et al.", "t": "A multidisciplinary lifestyle program for rheumatoid arthritis: the 'Plants for Joints' randomized controlled trial", "j": "Rheumatology (Oxford). 2023;62:2683-2691.", "pmid": "36617162", "doi": "10.1093/rheumatology/keac693"},
+    hojgaard2015: {"a": "Højgaard P, et al.", "t": "Association between tobacco smoking and response to tumour necrosis factor α inhibitor treatment in psoriatic arthritis: results from the DANBIO registry", "j": "Ann Rheum Dis. 2015;74:2130-6.", "pmid": "25063827", "doi": "10.1136/annrheumdis-2014-205389"},
+    bernardy2013: {"a": "Bernardy K, et al.", "t": "Cognitive behavioural therapies for fibromyalgia", "j": "Cochrane Database Syst Rev. 2013:CD009796.", "pmid": "24018611", "doi": "10.1002/14651858.CD009796.pub2"},
+    direnzo2018: {"a": "DiRenzo D, et al.", "t": "Systematic Review and Meta-analysis: Mindfulness-Based Interventions for Rheumatoid Arthritis", "j": "Curr Rheumatol Rep. 2018;20:75.", "pmid": "30338418", "doi": "10.1007/s11926-018-0787-4"},
+    evers2003: {"a": "Evers AW, et al.", "t": "Pain coping and social support as predictors of long-term functional disability and pain in early rheumatoid arthritis", "j": "Behav Res Ther. 2003;41:1295-310.", "pmid": "14527529", "doi": "10.1016/s0005-7967(03)00036-6"},
+    humphrey2023: {"a": "Humphrey MB, et al.", "t": "2022 American College of Rheumatology Guideline for the Prevention and Treatment of Glucocorticoid-Induced Osteoporosis", "j": "Arthritis Care Res (Hoboken). 2023;75:2405-2419.", "pmid": "37884467", "doi": "10.1002/acr.25240"},
+    vanhalm2009: {"a": "van Halm VP, et al.", "t": "Rheumatoid arthritis versus diabetes as a risk factor for cardiovascular disease: a cross-sectional study, the CARRE Investigation", "j": "Ann Rheum Dis. 2009;68:1395-400.", "pmid": "18697775", "doi": "10.1136/ard.2008.094151"},
+    kolasinski2020: {"a": "Kolasinski SL, et al.", "t": "2019 American College of Rheumatology/Arthritis Foundation Guideline for the Management of Osteoarthritis of the Hand, Hip, and Knee", "j": "Arthritis Care Res (Hoboken). 2020;72:149-162.", "pmid": "31908149", "doi": "10.1002/acr.24131"},
+    bannuru2019: {"a": "Bannuru RR, et al.", "t": "OARSI guidelines for the non-surgical management of knee, hip, and polyarticular osteoarthritis", "j": "Osteoarthritis Cartilage. 2019;27:1578-1589.", "pmid": "31278997", "doi": "10.1016/j.joca.2019.06.011"},
+    cahill2013: {"a": "Cahill K, et al.", "t": "Pharmacological interventions for smoking cessation: an overview and network meta-analysis", "j": "Cochrane Database Syst Rev. 2013:CD009329.", "pmid": "23728690", "doi": "10.1002/14651858.CD009329.pub2"},
+    kjeldsen1991: {"a": "Kjeldsen-Kragh J, et al.", "t": "Controlled trial of fasting and one-year vegetarian diet in rheumatoid arthritis", "j": "Lancet. 1991;338:899-902.", "pmid": "1681264", "doi": "10.1016/0140-6736(91)91770-u"},
+    costenbader2006: {"a": "Costenbader KH, et al.", "t": "Smoking intensity, duration, and cessation, and the risk of rheumatoid arthritis in women", "j": "Am J Med. 2006;119:503.e1-9.", "pmid": "16750964", "doi": "10.1016/j.amjmed.2005.09.053"},
+    lee2013: {"a": "Lee YC, et al.", "t": "The role of sleep problems in central pain processing in rheumatoid arthritis", "j": "Arthritis Rheum. 2013;65:59-68.", "pmid": "23124650", "doi": "10.1002/art.37733"},
+    zautra2008: {"a": "Zautra AJ, et al.", "t": "Comparison of cognitive behavioral and mindfulness meditation interventions on adaptation to rheumatoid arthritis for patients with and without history of recurrent depression", "j": "J Consult Clin Psychol. 2008;76:408-421.", "pmid": "18540734", "doi": "10.1037/0022-006X.76.3.408"},
+    qaseem2016: {"a": "Qaseem A, et al.", "t": "Management of Chronic Insomnia Disorder in Adults: A Clinical Practice Guideline From the American College of Physicians", "j": "Ann Intern Med. 2016;165:125-33.", "pmid": "27136449", "doi": "10.7326/M15-2175"},
+    evers2014: {"a": "Evers AW, et al.", "t": "Does stress affect the joints? Daily stressors, stress vulnerability, immune and HPA axis activity, and short-term disease and symptom fluctuations in rheumatoid arthritis", "j": "Ann Rheum Dis. 2014;73:1683-8.", "pmid": "23838082", "doi": "10.1136/annrheumdis-2012-203143"},
+    proudman2015: {"a": "Proudman SM, et al.", "t": "Fish oil in recent onset rheumatoid arthritis: a randomised, double-blind controlled trial within algorithm-based drug use", "j": "Ann Rheum Dis. 2015;74:89-95.", "pmid": "24081439", "doi": "10.1136/annrheumdis-2013-204145"},
+    singhja2019: {"a": "Singh JA, et al.", "t": "2018 American College of Rheumatology/National Psoriasis Foundation Guideline for the Treatment of Psoriatic Arthritis", "j": "Arthritis Care Res (Hoboken). 2019;71:2-29.", "pmid": "30499259", "doi": "10.1002/acr.23789"},
+    katz2018: {"a": "Katz P, et al.", "t": "Physical Activity to Reduce Fatigue in Rheumatoid Arthritis: A Randomized Controlled Trial", "j": "Arthritis Care Res (Hoboken). 2018;70:1-10.", "pmid": "28378441", "doi": "10.1002/acr.23230"},
+    becker2005: {"a": "Becker MA, et al.", "t": "Febuxostat compared with allopurinol in patients with hyperuricemia and gout", "j": "N Engl J Med. 2005;353:2450-61.", "pmid": "16339094", "doi": "10.1056/NEJMoa050373"},
+    acr2026oa: {"a":"American College of Rheumatology.","t":"2026 guideline for the management of osteoarthritis of the knee, hip, and hand","j":"Summary approved September 8, 2026. Not indexed in PubMed at the time of writing, see the .oa2026 reference phrase."}
+  },
+
   // Clinician-facing. Same card discipline as the drug cards: what the claim is,
   // how big the effect is, how strong the evidence is, and what to say in clinic.
+  // A bracketed number in the text points at that card's refs list, counted from 1.
+  // g is the condition group the card files under in the condition filter.
+  EV_GROUPS: ["Across ARDs", "RA", "PsA", "axSpA", "Lupus", "Scleroderma", "Gout", "OA", "Fibromyalgia", "Bone"],
+  EV_AUTOIMMUNE: ["RA", "PsA", "axSpA", "Lupus", "Scleroderma"],
+  EV_FROM_DZ: {gen:"all", ra:"RA", psa:"PsA", axspa:"axSpA", gout:"Gout", oa:"OA", fibro:"Fibromyalgia", bone:"Bone", sle:"Lupus"},
+
   EVIDENCE: [
-    {id:"e-smoke-ra", n:"Smoking cessation in RA", pillar:"Tobacco", dz:"Rheumatoid arthritis",
-     claim:"Smoking raises RA risk and lowers response to methotrexate and TNF inhibitors.",
-     effect:"Roughly 2-fold increase in RA risk overall, far higher with the shared epitope. Consistently lower rates of good EULAR response and remission in current smokers.",
-     strength:"Strong. Large cohorts and registry data, consistent direction across countries.",
-     src:"EULAR recommendations on lifestyle in rheumatic disease. multiple national RA registries.",
-     use:"This is the highest-yield lifestyle conversation in RA. Frame it as drug efficacy, not as a moral point. Combination NRT roughly doubles quit rates and varenicline does more."},
+    // ---------- across autoimmune rheumatic disease ----------
+    {id:"e-eular-life", n:"Lifestyle across rheumatic disease", pillar:"Overview", dz:"RA, axSpA, PsA, lupus, systemic sclerosis, gout, OA", g:"Across ARDs",
+     claim:"Lifestyle change belongs in the treatment plan for every rheumatic disease, next to the drug.",
+     effect:"The EULAR task force reviewed six exposures (exercise, diet, weight, alcohol, smoking, work) across seven diseases and issued 18 recommendations. Exercise is safe and helps pain and disability, most clearly in OA and axSpA. The diet advice is a healthy, balanced diet. Small amounts of alcohol are unlikely to worsen outcomes, with a flare signal in RA and gout after moderate intake. Smokers get support to quit [1]. The ACR gives consistent exercise a strong recommendation in RA and a Mediterranean-style diet a conditional one [2].",
+     strength:"Moderate. Guideline level, built on systematic reviews of mostly observational and small trial data.",
+     use:"Open with this when a patient asks whether habits matter in an autoimmune disease. EULAR and the ACR both answer yes, as an addition to the DMARD.",
+     refs:["gwinnutt2023", "england2023"]},
 
-    {id:"e-med-ra", n:"Mediterranean pattern in RA", pillar:"Food", dz:"Rheumatoid arthritis",
-     claim:"A Mediterranean-style pattern gives a modest improvement in pain and morning stiffness.",
-     effect:"Small reductions in pain VAS and morning stiffness across trials. No consistent change in DAS28, ESR, or CRP. The cardiovascular benefit is the larger and better-proven one.",
-     strength:"Moderate for symptoms, strong for cardiovascular endpoints. RA trials are small and hard to blind.",
-     src:"PREDIMED for cardiovascular endpoints. several small randomized dietary trials in RA.",
-     use:"Sell the heart benefit first, since RA raises cardiovascular risk roughly as much as diabetes. Be honest that joint effect is modest so the patient does not stop a DMARD expecting food to cover it."},
+    {id:"e-cv-ia", n:"Heart risk in inflammatory arthritis", pillar:"Heart risk", dz:"RA, PsA, axSpA", g:"Across ARDs",
+     claim:"Inflammatory arthritis raises cardiovascular risk on its own, which raises the payoff of every general lifestyle pillar.",
+     effect:"Cardiovascular death is about 50 percent more frequent in RA than in the general population (meta-SMR 1.50, 24 studies, 111,758 patients) [1]. In the CARRE study, cardiovascular disease was as prevalent in RA as in type 2 diabetes, 12.9 versus 12.4 percent, against 5.0 percent in controls [2]. EULAR extends the higher risk to ankylosing spondylitis and psoriatic arthritis and assigns risk management to the rheumatologist [3]. A Mediterranean diet lowered major cardiovascular events by about 30 percent in high-risk adults without arthritis [4].",
+     strength:"Strong for the excess risk. The diet trial enrolled a general high-risk population, not patients with arthritis.",
+     use:"This card connects general lifestyle medicine to rheumatology. Food, movement, and tobacco advice earn a place through the heart even when the joint effect is small.",
+     refs:["avina2008", "vanhalm2009", "agca2017", "estruch2018"]},
 
-    {id:"e-elim", n:"Elimination diets", pillar:"Food", dz:"Inflammatory arthritis",
-     claim:"Cutting whole food groups improves inflammatory arthritis.",
-     effect:"No durable benefit in controlled trials. Real risk of weight loss, sarcopenia, and micronutrient deficiency.",
-     strength:"Moderate evidence against. Small trials, high dropout, strong placebo response early.",
-     src:"Systematic reviews of dietary interventions in RA.",
-     use:"When a patient reports a reliable individual trigger, take it seriously and document it. Discourage broad group elimination without a tested indication such as celiac disease."},
+    {id:"e-stress-ai", n:"Stress disorders and autoimmune disease onset", pillar:"Stress", dz:"Autoimmune disease", g:"Across ARDs",
+     claim:"Severe stress and trauma precede a higher rate of new autoimmune disease.",
+     effect:"In a Swedish cohort, people with a diagnosed stress-related disorder had 36 percent more autoimmune disease over a mean 10 years (HR 1.36), and 46 percent more with PTSD. The link held when patients were compared with their own siblings [1]. In a longitudinal cohort of women, probable PTSD carried nearly 3 times the risk of incident lupus (HR 2.94) and trauma exposure alone carried HR 2.83, on 73 cases [2].",
+     strength:"Moderate. Large observational cohorts, one with sibling controls. No trial shows that treating stress prevents autoimmune disease.",
+     use:"Patients ask whether stress caused the disease. Say the association is measured and the cause is not settled. Never frame the diagnosis as something the patient brought on.",
+     refs:["song2018", "roberts2017"]},
 
-    {id:"e-wt-psa", n:"Weight loss in psoriatic arthritis", pillar:"Weight", dz:"Psoriatic arthritis",
-     claim:"5 to 10 percent weight loss increases the odds of minimal disease activity and improves biologic response.",
-     effect:"In prospective cohorts, patients achieving 5 to 10 percent loss were substantially more likely to reach MDA at 6 months. Higher BMI predicts lower TNF inhibitor response.",
-     strength:"Moderate to strong for PsA specifically. Larger and more consistent than the weight signal in RA.",
-     src:"Prospective PsA weight-loss cohorts. GRAPPA and EULAR PsA recommendations.",
-     use:"This is the lifestyle lever with the biggest disease-specific number in PsA. Adipose tissue is metabolically active, which is the mechanistic reason it holds here more than elsewhere."},
+    {id:"e-vitd-ai", n:"Vitamin D and omega-3 for preventing autoimmune disease", pillar:"Food", dz:"Autoimmune disease", g:"Across ARDs",
+     claim:"Vitamin D supplements lower the rate of new autoimmune disease in older adults.",
+     effect:"VITAL randomized 25,871 adults (men 50 and older, women 55 and older) to vitamin D 2,000 IU daily, omega-3 1,000 mg daily, both, or placebo for a median 5.3 years. Vitamin D lowered confirmed autoimmune disease by 22 percent (HR 0.78, CI 0.61 to 0.99). Omega-3 lowered the rate by 15 percent, not statistically significant (HR 0.85, CI 0.67 to 1.08) [1]. The same vitamin D dose did not lower fractures in the parent trial [2].",
+     strength:"Moderate. One large randomized trial of prevention in the general population. No data on treating established disease.",
+     use:"Useful for the relative of a patient who asks about prevention. Do not present vitamin D as a treatment for active RA or lupus on this evidence.",
+     refs:["hahn2022", "leboff2022vital"]},
 
-    {id:"e-ex-oa", n:"Exercise in knee and hip OA", pillar:"Movement", dz:"Osteoarthritis",
-     claim:"Structured exercise lowers pain about as much as an NSAID.",
-     effect:"Effect sizes for pain in the same range as oral NSAIDs in network meta-analysis, without gastrointestinal, renal, or cardiovascular risk. Benefit takes 6 to 12 weeks and fades when the program stops.",
-     strength:"Strong. Many randomized trials, consistent effect.",
-     src:"ACR/AF osteoarthritis guideline, which strongly recommends exercise. OARSI guideline.",
-     use:"Say the comparison out loud. Patients who hear that exercise matches a pill are more likely to start. Set the 6 to 12 week expectation, since most dropouts happen at week 3."},
+    {id:"e-sleep-pain", n:"Sleep and pain amplification", pillar:"Sleep", dz:"RA and chronic pain", g:"Across ARDs",
+     claim:"Poor sleep raises pain, independent of inflammation.",
+     effect:"In RA, one night of partial sleep loss raised self-reported pain, the number of painful joints, and clinician-rated joint counts the next day, more than in healthy controls (27 patients, 27 controls) [1]. Patients with RA show weaker central pain inhibition than controls, and sleep problems explain part of the gap [2]. Across prospective studies, poor sleep predicts later pain more reliably than pain predicts poor sleep [3]. CBT for insomnia shortens the time to fall asleep by 19 minutes and time awake at night by 26 minutes [4], and the ACP recommends CBT-I as the first treatment for chronic insomnia [5].",
+     strength:"Strong mechanistically, moderate clinically. The RA experiments are small.",
+     use:"When patient global and physician global diverge, ask about sleep before escalating a biologic. Offer CBT-I ahead of a hypnotic.",
+     refs:["irwin2012", "lee2013", "finan2013", "trauer2015", "qaseem2016"]},
 
-    {id:"e-wt-oa", n:"Weight loss in knee OA", pillar:"Weight", dz:"Osteoarthritis",
-     claim:"10 percent weight loss produces clinically meaningful pain relief, and more when combined with exercise.",
-     effect:"Diet plus exercise beat either alone in the IDEA trial, with greater pain reduction, better function, and lower IL-6.",
-     strength:"Strong for the combination. Weight loss alone is moderate.",
-     src:"IDEA randomized trial. ACR/AF osteoarthritis guideline.",
-     use:"The knee sees roughly 4 pounds of load per pound of body weight per step. That number lands with patients better than a percentage does."},
-
-    {id:"e-ex-fibro", n:"Exercise in fibromyalgia", pillar:"Movement", dz:"Fibromyalgia",
-     claim:"Exercise is the single best-supported treatment for fibromyalgia.",
-     effect:"Aerobic and resistance training improve pain, function, and quality of life more consistently than any pharmacologic agent studied.",
-     strength:"Strong. Multiple Cochrane reviews, though trial quality is mixed and blinding is impossible.",
-     src:"Cochrane reviews of aerobic and resistance exercise in fibromyalgia. EULAR fibromyalgia recommendations, which put exercise first line.",
-     use:"Prescribe the starting dose explicitly, 5 to 10 minutes 3 times a week, and the escalation, 2 to 5 minutes per week. Patients who fail exercise almost always started too high."},
-
-    {id:"e-diet-gout", n:"Diet in gout", pillar:"Food", dz:"Gout",
-     claim:"Diet controls gout.",
-     effect:"Dietary change lowers serum urate by roughly 1 mg/dL at best. Urate-lowering therapy lowers it by 3 to 5. Genetics and renal urate handling explain far more variance than diet does.",
-     strength:"Strong evidence for the modest size of the dietary effect.",
-     src:"ACR gout guideline, which conditionally recommends limiting alcohol, purine, and high-fructose corn syrup.",
-     use:"Correcting this misconception matters. Patients who believe gout is a food failure often decline allopurinol out of shame. Name the genetics first, then offer the diet changes as an add-on."},
-
-    {id:"e-load-bone", n:"Loading and resistance training for bone", pillar:"Movement", dz:"Osteoporosis",
-     claim:"Weight-bearing and resistance exercise preserve bone density and lower fracture risk.",
-     effect:"Small gains in BMD, roughly 1 to 2 percent, and a larger effect on fall risk. Fall prevention drives most of the fracture benefit. Swimming and cycling do not load bone.",
-     strength:"Moderate for BMD, strong for falls.",
-     src:"Bone Health and Osteoporosis Foundation clinician guide. exercise and falls-prevention meta-analyses.",
-     use:"Do not let exercise replace pharmacotherapy in a patient with a fragility fracture. Prescribe balance work by name, since patients hear exercise and think cardio."},
-
-    {id:"e-cal-d", n:"Calcium and vitamin D", pillar:"Food", dz:"Osteoporosis",
-     claim:"Supplements build bone.",
-     effect:"Calcium and vitamin D together give a small fracture reduction, mostly in institutionalized and deficient populations. High-dose calcium supplements are linked to kidney stones. Food sources carry the better risk profile.",
-     strength:"Moderate, with meaningful heterogeneity by baseline status.",
-     src:"BHOF and Endocrine Society guidance. large supplementation trials.",
-     use:"Target 1,000 to 1,200 mg calcium daily, food first, and 800 to 2,000 IU vitamin D adjusted to level. Correct the belief that supplements alone treat osteoporosis."},
-
-    {id:"e-uv-sle", n:"Photoprotection in lupus", pillar:"Environment", dz:"Lupus",
-     claim:"UV exposure triggers cutaneous and systemic lupus flares.",
-     effect:"Provocation studies reproduce lesions with controlled UV exposure. Consistent daily sunscreen use lowers flare frequency in cohort data.",
-     strength:"Moderate to strong. Randomizing lupus patients to sun exposure is not ethical, so the evidence is mechanistic plus observational.",
-     src:"ACR and EULAR lupus recommendations. photoprovocation studies.",
-     use:"Prescribe it like a medication: broad-spectrum SPF 30 or higher, daily, reapplied every 2 hours outdoors, plus clothing. Mention window glass and fluorescent bulbs, which patients rarely consider."},
-
-    {id:"e-smoke-sle", n:"Smoking and hydroxychloroquine", pillar:"Tobacco", dz:"Lupus",
-     claim:"Smoking reduces hydroxychloroquine efficacy in cutaneous lupus.",
-     effect:"Lower cutaneous response rates in smokers across several cohorts, plus higher overall disease activity scores.",
-     strength:"Moderate. Consistent observational signal, mechanism plausible, no randomized data.",
-     src:"Cutaneous lupus cohort studies. EULAR lupus recommendations.",
-     use:"A patient frustrated that hydroxychloroquine is not clearing their rash deserves this conversation before the regimen is escalated."},
-
-    {id:"e-sleep-pain", n:"Sleep and pain amplification", pillar:"Sleep", dz:"All rheumatic disease",
-     claim:"Poor sleep raises pain, independent of disease activity.",
-     effect:"Experimental sleep restriction lowers pain thresholds in healthy volunteers. In RA cohorts, sleep quality predicts patient global scores even when swollen joint counts hold steady.",
-     strength:"Strong mechanistically, moderate clinically.",
-     src:"Experimental sleep deprivation studies. RA patient-reported outcome cohorts.",
-     use:"When patient global and physician global diverge, ask about sleep before escalating a biologic. CBT-I outperforms hypnotics at 6 months and several free versions exist."},
-
-    {id:"e-mind", n:"Mind-body interventions", pillar:"Stress", dz:"All rheumatic disease",
+    {id:"e-mind", n:"Mind-body interventions", pillar:"Stress", dz:"RA and fibromyalgia", g:"Across ARDs",
      claim:"Mindfulness and CBT reduce inflammation.",
-     effect:"Reliable improvement in pain interference, fatigue, and depression. Little to no consistent effect on CRP, ESR, or joint counts.",
-     strength:"Moderate for patient-reported outcomes, weak for inflammatory markers.",
-     src:"Randomized trials of MBSR and CBT in RA and fibromyalgia. EULAR fibromyalgia recommendations.",
-     use:"Offer it for the symptom burden it actually treats. Overselling an anti-inflammatory effect erodes trust when the next CRP is unchanged."},
+     effect:"In RA, mindfulness trials improved depressive symptoms, distress, and self-efficacy. The pooled change in DAS28-CRP was not significant (-0.44, CI -0.99 to 0.12) and neither was the change in pain [1]. In one trial CBT for pain lowered stimulated IL-6, and mindfulness helped most in patients with recurrent depression [2]. In fibromyalgia, CBT gave a small benefit for pain, mood, and disability at the end of treatment and at 6 months (SMD -0.29 to -0.52) [3]. EULAR grades psychological therapy as a weak-for option in fibromyalgia, after exercise [4].",
+     strength:"Moderate for mood and coping, weak for inflammatory markers.",
+     use:"Offer it for the symptom burden it actually treats. Overselling an anti-inflammatory effect erodes trust when the next CRP is unchanged.",
+     refs:["direnzo2018", "zautra2008", "bernardy2013", "macfarlane2017"]},
 
-    {id:"e-connect", n:"Social connection", pillar:"Connection", dz:"All rheumatic disease",
+    {id:"e-connect", n:"Social connection", pillar:"Connection", dz:"All rheumatic disease", g:"Across ARDs",
      claim:"Isolation is a health exposure, not a soft outcome.",
-     effect:"Loneliness carries mortality risk in the range attributed to smoking in meta-analysis. In arthritis cohorts, low social support predicts worse function and higher depression at follow-up.",
-     strength:"Strong for the mortality association, moderate for the arthritis-specific link.",
-     src:"Holt-Lunstad meta-analyses on social relationships and mortality. RA psychosocial cohorts.",
-     use:"Ask who is at home and who came with them. Referral to a foundation-run virtual group costs nothing and removes the transportation barrier."}
+     effect:"Across 148 studies and 308,849 people, stronger social relationships carried 50 percent higher odds of survival (OR 1.50), an effect the authors rank with well-established mortality risk factors [1]. Social isolation, loneliness, and living alone raised mortality by 29, 26, and 32 percent [2]. In 78 patients with early RA, low social support at diagnosis predicted worse function and more pain at 3 and 5 years [3].",
+     strength:"Strong for the mortality association, limited for the arthritis-specific link.",
+     use:"Ask who is at home and who came with them. Referral to a foundation-run virtual group costs nothing and removes the transportation barrier.",
+     refs:["holtlunstad2010", "holtlunstad2015", "evers2003"]},
+
+    // ---------- rheumatoid arthritis ----------
+    {id:"e-smoke-ra", n:"Smoking cessation in RA", pillar:"Tobacco", dz:"Rheumatoid arthritis", g:"RA",
+     claim:"Smoking raises RA risk and lowers response to methotrexate and TNF inhibitors.",
+     effect:"Ever smoking raises RA risk, with an odds ratio of 1.9 in men and 1.3 in women, and 3.9 for RF-positive RA in men who smoke now [1]. Smoking plus two copies of the shared epitope carries a 21-fold risk of anti-CCP-positive RA [2]. Risk stays raised for up to 20 years after quitting [3]. In early RA, current smokers reached a good EULAR response less often: 27 versus 36 percent on methotrexate and 29 versus 43 percent on a TNF inhibitor [4].",
+     strength:"Strong. Large cohorts and registry data, consistent direction across countries.",
+     use:"This is the highest-yield lifestyle conversation in RA. Frame it as drug efficacy, not as a moral point. Past smoking did not lower drug response, which supports quitting before the next treatment change [4]. Varenicline and combination NRT perform equally, and each beats a single form of NRT [5]. EULAR asks clinicians to support every smoker to quit [6].",
+     refs:["sugiyama2010", "klareskog2006", "costenbader2006", "saevarsdottir2011", "cahill2013", "gwinnutt2023"]},
+
+    {id:"e-ex-ra", n:"Exercise in RA", pillar:"Movement", dz:"Rheumatoid arthritis", g:"RA",
+     claim:"Exercise is safe in RA and improves function without speeding joint damage.",
+     effect:"Consistent exercise is the only strong recommendation in the ACR integrative guideline for RA [1]. Aerobic plus strength training improves aerobic capacity and muscle strength, with no harmful effect in any included trial [2]. Two years of high-intensity exercise improved function and did not raise radiographic damage of the large joints, except possibly in joints with considerable damage at baseline [3]. A pedometer added 1,400 to 1,700 steps a day, and fatigue fell in both pedometer groups, though the difference from education alone was not significant [4]. EULAR calls physical activity an integral part of standard care in inflammatory arthritis [5].",
+     strength:"Strong. Guideline level with randomized trials, including a 2-year safety trial.",
+     use:"Patients fear that movement wears the joint out. Say plainly that trials show better function and no added damage. For a large joint with heavy damage already, pick a lower-impact activity.",
+     refs:["england2023", "hurkmans2009", "dejong2003", "katz2018", "rausch2018"]},
+
+    {id:"e-med-ra", n:"Mediterranean pattern in RA", pillar:"Food", dz:"Rheumatoid arthritis", g:"RA",
+     claim:"A Mediterranean-style pattern improves RA symptoms modestly and lowers cardiovascular risk.",
+     effect:"In the one randomized trial, 51 patients, DAS28 fell by 0.56 and HAQ by 0.15 over 12 weeks on a Mediterranean diet, with no change in controls [1]. Cochrane rates the dietary evidence in RA as uncertain because trials are small and at moderate to high risk of bias [2]. The ACR conditionally recommends a Mediterranean-style diet and conditionally recommends against other formal diets and against supplements [3]. In PREDIMED the diet lowered major cardiovascular events by about 30 percent (HR 0.69 with olive oil, 0.72 with nuts) [4].",
+     strength:"Moderate for symptoms, strong for cardiovascular endpoints. RA trials are small and unblinded.",
+     use:"Sell the heart benefit first, since cardiovascular disease is as frequent in RA as in type 2 diabetes [5]. Be honest that the joint effect is modest so the patient does not stop a DMARD expecting food to cover it.",
+     refs:["skoldstam2003", "hagen2009", "england2023", "estruch2018", "vanhalm2009"]},
+
+    {id:"e-pfj", n:"Plant-based lifestyle program in RA", pillar:"Food", dz:"Rheumatoid arthritis", g:"RA",
+     claim:"A whole-food plant-based diet with exercise and stress management lowers RA disease activity.",
+     effect:"Plants for Joints randomized 83 patients with low to moderate disease activity. After 16 weeks the program group improved DAS28 by 0.9 points more than usual care (CI 0.4 to 1.3) and lost 3.9 kg more, with lower LDL and HbA1c. Patient-reported outcomes did not differ [1]. An older trial of fasting followed by a vegetarian diet reported benefit lasting one year [2]. Cochrane judged the vegan and vegetarian evidence uncertain [3].",
+     strength:"Moderate. One modern randomized trial, unblinded, with three interventions bundled together.",
+     use:"Offer it to the motivated patient as an addition to the DMARD. The trial does not separate the effect of the food from the exercise or the weight loss.",
+     refs:["walrabenstein2023", "kjeldsen1991", "hagen2009"]},
+
+    {id:"e-elim", n:"Elimination diets", pillar:"Food", dz:"Rheumatoid arthritis", g:"RA",
+     claim:"Cutting whole food groups improves inflammatory arthritis.",
+     effect:"Cochrane found the effects of vegan and elimination diets uncertain, and elemental diets no better than ordinary food for pain, function, or stiffness. Diet groups had 10 percent more dropouts and lost 3.2 kg more than controls [1]. The ACR conditionally recommends against formally defined diets other than a Mediterranean-style pattern [2].",
+     strength:"Moderate evidence against. Small trials, high dropout, unintended weight loss.",
+     use:"When a patient reports a reliable individual trigger, take the report seriously and document it. Discourage broad group elimination without a tested indication such as celiac disease.",
+     refs:["hagen2009", "england2023"]},
+
+    {id:"e-fishoil-ra", n:"Fish oil and omega-3 in RA", pillar:"Food", dz:"Rheumatoid arthritis", g:"RA",
+     claim:"Omega-3 fatty acids improve RA disease activity.",
+     effect:"Across 20 randomized trials, omega-3 improved eight disease activity markers, with trial quality rated low overall [1]. In recent-onset RA on triple therapy, fish oil at 5.5 g of EPA plus DHA daily cut failure of triple DMARD therapy (HR 0.28) and doubled the rate of ACR remission (HR 2.17), with no difference in DAS28 [2]. The ACR conditionally recommends against dietary supplements in RA and advises established dietary recommendations instead [3].",
+     strength:"Moderate. A signal across many small trials and one well-run trial, at a dose many times a standard capsule.",
+     use:"Two fish meals a week is the food-first advice. A patient who wants to supplement needs to know the trial dose was 5.5 g of EPA plus DHA daily.",
+     refs:["gioxari2018", "proudman2015", "england2023"]},
+
+    {id:"e-wt-ra", n:"Obesity and RA remission", pillar:"Weight", dz:"Rheumatoid arthritis", g:"RA",
+     claim:"Obesity lowers the odds of remission in RA.",
+     effect:"Patients with obesity had 43 percent lower odds of remission (OR 0.57) and 51 percent lower odds of sustained remission (OR 0.49), with worse pain, patient global, and tender joint counts and no difference in swollen joint counts [1]. Across rheumatic diseases, obesity raised the odds of anti-TNF failure by 60 percent [2].",
+     strength:"Moderate. Consistent observational data. Trials of weight loss as an RA treatment are lacking.",
+     use:"Part of the gap is pain and patient global, not synovitis, so check swollen joints before switching drugs. Raise weight as a factor in drug response, never as blame.",
+     refs:["liu2017", "singhs2018"]},
+
+    {id:"e-alc-mtx", n:"Alcohol with methotrexate", pillar:"Alcohol", dz:"Rheumatoid arthritis", g:"RA",
+     claim:"Any alcohol on methotrexate harms the liver.",
+     effect:"In 11,839 patients with RA on methotrexate, drinking under 14 UK units a week was not linked to more transaminitis. From 15 to 21 units the risk possibly rose, and above 21 units the rate rose by 85 percent (HR 1.85) [1]. Fourteen UK units equal 112 g of alcohol, about 8 US standard drinks. EULAR states that small amounts of alcohol are unlikely to worsen outcomes in rheumatic disease [2].",
+     strength:"Moderate. One large UK cohort. Transaminitis is a surrogate for liver injury.",
+     use:"Total abstinence is the conservative advice, and some patients prefer a clear rule. For a patient without other liver risk, the data support a weekly limit. Fatty liver, viral hepatitis, or a second hepatotoxic drug change the answer.",
+     refs:["humphreys2017", "gwinnutt2023"]},
+
+    {id:"e-stress-flare", n:"Daily stress and RA symptoms", pillar:"Stress", dz:"Rheumatoid arthritis", g:"RA",
+     claim:"Stress worsens RA symptoms in the short term.",
+     effect:"In 80 patients followed monthly for 6 months, daily stressors predicted more fatigue the next month, and worrying predicted higher self-reported disease activity, swollen joint count, and pain the next month. Immune and cortisol markers did not explain the link [1].",
+     strength:"Limited. One prospective cohort, no intervention.",
+     use:"A patient who reports a flare after a hard month is describing something measured. Document the stressor, examine the joints, and avoid escalating therapy on symptoms alone.",
+     refs:["evers2014"]},
+
+    // ---------- psoriatic arthritis ----------
+    {id:"e-wt-psa", n:"Weight loss in psoriatic arthritis", pillar:"Weight", dz:"Psoriatic arthritis", g:"PsA",
+     claim:"5 to 10 percent weight loss increases the odds of minimal disease activity and improves biologic response.",
+     effect:"In patients with overweight starting a TNF inhibitor, minimal disease activity at 6 months was reached by 23 percent with under 5 percent weight loss, 45 percent with 5 to 10 percent, and 60 percent with over 10 percent [1]. A very low energy diet with a median loss of 18.7 kg raised MDA from 29 to 54 percent while drug treatment was held constant [2]. Obesity raises the odds of anti-TNF failure by 60 percent [3]. The ACR and NPF conditionally recommend weight loss for patients with PsA who are overweight or obese [4].",
+     strength:"Moderate to strong for PsA specifically. One randomized diet trial and one interventional cohort, same direction.",
+     use:"This is the lifestyle lever with the biggest disease-specific number in PsA. Adipose tissue is metabolically active, which is the proposed reason the effect holds here more than elsewhere.",
+     refs:["diminno2014", "klingberg2019", "singhs2018", "singhja2019"]},
+
+    {id:"e-smoke-psa", n:"Smoking and TNF inhibitor response in PsA", pillar:"Tobacco", dz:"Psoriatic arthritis", g:"PsA",
+     claim:"Smokers with PsA respond less well to TNF inhibitors.",
+     effect:"In the Danish DANBIO registry, current smokers had lower 6-month response than never smokers: EULAR good response 23 versus 34 percent and ACR50 17 versus 24 percent. Smokers stayed on the drug for a median 1.56 years against 2.43 [1]. The ACR and NPF strongly recommend smoking cessation in PsA [2].",
+     strength:"Moderate. One national registry, observational.",
+     use:"Same framing as RA: the drug works better in non-smokers. The effect was largest in men and with infliximab and etanercept.",
+     refs:["hojgaard2015", "singhja2019"]},
+
+    // ---------- axial spondyloarthritis ----------
+    {id:"e-ex-axspa", n:"Exercise in axial spondyloarthritis", pillar:"Movement", dz:"Axial spondyloarthritis", g:"axSpA",
+     claim:"Exercise improves function and symptoms in axSpA and does not flare the disease.",
+     effect:"Against no intervention, exercise programs improved function by 1.3 points on the BASFI, pain by 2.1 points on a 0 to 10 scale, and BASDAI by 0.9 points. Against usual care the added benefit was small [1]. Three months of high-intensity exercise lowered ASDAS by 0.6 and BASDAI by 1.2 in 100 patients, with gains in inflammation and cardiovascular health [2]. ASAS-EULAR places regular exercise and stopping smoking among the first steps of management [3].",
+     strength:"Moderate. Cochrane rates the evidence low to moderate quality. One good trial supports high intensity.",
+     use:"Prescribe exercise at diagnosis, with the NSAID. High intensity proved safe, which matters for the younger patient who lifts or runs.",
+     refs:["regnaux2019", "sveaas2020", "ramiro2023"]},
+
+    {id:"e-smoke-axspa", n:"Smoking and spinal damage in axSpA", pillar:"Tobacco", dz:"Axial spondyloarthritis", g:"axSpA",
+     claim:"Smoking speeds radiographic progression in the spine.",
+     effect:"In early axSpA, smokers had 2.75 times the odds of spinal radiographic progression over 2 years, independent of baseline syndesmophytes and CRP [1]. A systematic review found the effect dose dependent, with odds of 3.57 above 10 cigarettes a day, and worse function in smokers [2].",
+     strength:"Moderate. Observational cohorts with a dose response.",
+     use:"Structural damage in the spine does not reverse. Smoking is one of three measured predictors of progression, with existing syndesmophytes and a raised CRP, and the one the patient controls directly.",
+     refs:["poddubnyy2012", "villaverde2017"]},
+
+    // ---------- lupus and systemic sclerosis ----------
+    {id:"e-uv-sle", n:"Photoprotection in lupus", pillar:"Environment", dz:"Lupus", g:"Lupus",
+     claim:"UV exposure triggers cutaneous lupus lesions, and sunscreen prevents them.",
+     effect:"In 25 photosensitive patients with cutaneous lupus, UV provoked lesions in 16 on untreated skin and in 14 on vehicle-treated skin, and in none on skin treated with a broad-spectrum sunscreen [1]. EULAR names photoprotection as an important part of non-drug care in lupus [2].",
+     strength:"Moderate to strong. A randomized within-patient provocation trial plus guideline consensus. Randomizing patients to sun exposure is not ethical.",
+     use:"Prescribe sunscreen like a medication: broad-spectrum SPF 30 or higher, daily, reapplied every 2 hours outdoors, plus clothing. Mention window glass, which patients rarely consider.",
+     refs:["kuhn2011", "parodis2024"]},
+
+    {id:"e-smoke-sle", n:"Smoking and hydroxychloroquine", pillar:"Tobacco", dz:"Lupus", g:"Lupus",
+     claim:"Smoking reduces hydroxychloroquine efficacy in cutaneous lupus and tracks with higher disease activity.",
+     effect:"Across 10 studies and 1,398 patients, smokers had about half the odds of a cutaneous response to antimalarials (OR 0.53) [1]. Current smokers had higher SLEDAI scores than never smokers, 15.6 versus 9.0, after adjustment that included hydroxychloroquine use [2]. EULAR recommends support for smoking cessation in lupus and systemic sclerosis [3].",
+     strength:"Moderate. Consistent observational signal, no randomized data.",
+     use:"A patient frustrated that hydroxychloroquine is not clearing the rash deserves this conversation before the regimen is escalated.",
+     refs:["chasset2015", "ghaussy2003", "parodis2024"]},
+
+    {id:"e-ex-sle", n:"Exercise in lupus", pillar:"Movement", dz:"Lupus", g:"Lupus",
+     claim:"Exercise worsens lupus activity.",
+     effect:"Across 11 studies and 469 patients, exercise did not worsen disease activity. Fatigue, depression, and fitness improved, and adverse effects were rare [1]. EULAR recommends education and support for physical exercise in lupus [2].",
+     strength:"Moderate evidence against the fear. Small trials with unclear risk of bias.",
+     use:"Exercise is one of the few measures shown to lower lupus fatigue. Start low, and schedule outdoor sessions away from peak sun.",
+     refs:["odwyer2017", "parodis2024"]},
+
+    {id:"e-ssc", n:"Non-drug measures in systemic sclerosis", pillar:"Environment", dz:"Systemic sclerosis", g:"Scleroderma",
+     claim:"Non-drug measures belong in systemic sclerosis care.",
+     effect:"The EULAR task force recommends education, support for physical exercise, smoking cessation, and avoidance of cold exposure for patients with systemic sclerosis, plus mouth and hand exercises. Strength of recommendation ranged from A to D across the statements [1].",
+     strength:"Limited. Consensus recommendations, several resting on low-level evidence.",
+     use:"Give cold avoidance and smoking cessation advice at the first Raynaud visit. Refer for hand exercises early.",
+     refs:["parodis2024"]},
+
+    // ---------- gout ----------
+    {id:"e-diet-gout", n:"Diet in gout", pillar:"Food", dz:"Gout", g:"Gout",
+     claim:"Diet controls gout.",
+     effect:"The DASH diet lowered serum urate by 0.35 mg/dL overall and by 1.3 mg/dL in people starting at 7 mg/dL or above [1]. Diet scores explained 0.3 percent or less of the variation in serum urate, against 23.9 percent for common genetic variants [2]. A DASH pattern was linked to 32 percent lower risk of incident gout in men [3]. On fixed-dose drug therapy, 21 percent of patients on allopurinol 300 mg and 53 percent on febuxostat 80 mg reached a urate under 6 mg/dL [4], and the ACR strongly recommends dose titration to that target [5].",
+     strength:"Strong evidence for the modest size of the dietary effect.",
+     use:"Correcting this misconception matters. Patients who believe gout is a food failure often decline allopurinol out of shame. Name the genetics first, then offer the diet changes as an add-on.",
+     refs:["juraschek2016", "major2018", "rai2017", "becker2005", "fitzgerald2020"]},
+
+    {id:"e-alc-gout", n:"Alcohol and gout flares", pillar:"Alcohol", dz:"Gout", g:"Gout",
+     claim:"Only beer triggers gout flares.",
+     effect:"In 724 patients, flare risk in the next 24 hours rose 36 percent after more than 1 to 2 drinks and 51 percent after more than 2 to 4, compared with none. Wine, beer, and liquor each raised risk [1]. The ACR conditionally recommends limiting alcohol [2].",
+     strength:"Moderate evidence against the beer-only belief. One case-crossover study with a dose response.",
+     use:"Advise a limit on all alcohol, most of all in the first months of urate lowering. Wine is not a safe substitute.",
+     refs:["neogi2014", "fitzgerald2020"]},
+
+    {id:"e-ssb-gout", n:"Sugary drinks and fructose in gout", pillar:"Food", dz:"Gout", g:"Gout",
+     claim:"Sugar-sweetened drinks raise gout risk.",
+     effect:"Men drinking 2 or more sugar-sweetened soft drinks a day had 85 percent higher risk of incident gout (RR 1.85). Diet soft drinks showed no link. Fruit juice and high fructose intake also raised risk [1]. The ACR conditionally recommends limiting high-fructose corn syrup [2].",
+     strength:"Moderate. One large prospective cohort of men.",
+     use:"Swapping sugary drinks for water is the diet change with the clearest gout signal and the lowest cost. The plan builder carries the swap as a Food goal.",
+     refs:["choi2008", "fitzgerald2020"]},
+
+    {id:"e-wt-gout", n:"Weight loss in gout", pillar:"Weight", dz:"Gout", g:"Gout",
+     claim:"Weight loss lowers urate and flares in gout.",
+     effect:"A systematic review of longitudinal studies favored weight loss for patients with gout who are overweight. The change in serum urate ranged from a fall of 2.8 mg/dL to a rise of 0.5 mg/dL, and 6 of 8 studies showed fewer flares. Urate and flares rose for a short time after bariatric surgery [1]. The ACR conditionally recommends a weight loss program [2].",
+     strength:"Limited. Mostly observational studies of low quality.",
+     use:"Recommend gradual loss, and warn that rapid loss, bariatric surgery included, brings flares early. Keep flare prophylaxis in place.",
+     refs:["nielsen2017", "fitzgerald2020"]},
+
+    // ---------- osteoarthritis ----------
+    {id:"e-ex-oa", n:"Exercise in knee and hip OA", pillar:"Movement", dz:"Osteoarthritis", g:"OA",
+     claim:"Structured exercise lowers pain about as much as an NSAID.",
+     effect:"Across 152 randomized trials and 17,431 participants, exercise matched oral NSAIDs and paracetamol for pain and function at 4, 8, and 24 weeks [1]. The 2019 ACR/AF guideline strongly recommends exercise for knee, hip, and hand OA [2], OARSI lists structured land-based exercise as core treatment [3], and the 2026 ACR guideline keeps exercise a strong recommendation for the knee and hip [4].",
+     strength:"Strong. Many randomized trials, consistent effect.",
+     use:"Say the comparison out loud. Exercise matches the pill for pain without the gastrointestinal, renal, or cardiovascular risk of an NSAID [1].",
+     refs:["weng2023", "kolasinski2020", "bannuru2019", "acr2026oa"]},
+
+    {id:"e-wt-oa", n:"Weight loss in knee OA", pillar:"Weight", dz:"Osteoarthritis", g:"OA",
+     claim:"10 percent weight loss produces clinically meaningful pain relief, and more when combined with exercise.",
+     effect:"IDEA randomized 454 adults with knee OA and overweight or obesity. At 18 months the diet plus exercise group had lost 11.4 percent of body weight and reported less pain than exercise alone (3.6 versus 4.7 on a 0 to 20 scale), with better function. Both diet groups had lower IL-6 [1]. Each pound of weight lost removes about 4 pounds of load from the knee per step [2]. The ACR/AF guideline strongly recommends weight loss for knee and hip OA in patients who are overweight [3].",
+     strength:"Strong for the combination. Weight loss alone is moderate.",
+     use:"The 4 pounds per pound number lands with patients better than a percentage does.",
+     refs:["messier2013", "messier2005", "kolasinski2020"]},
+
+    // ---------- fibromyalgia ----------
+    {id:"e-ex-fibro", n:"Exercise in fibromyalgia", pillar:"Movement", dz:"Fibromyalgia", g:"Fibromyalgia",
+     claim:"Exercise is the best-supported treatment for fibromyalgia.",
+     effect:"Exercise is the only therapy with a strong recommendation in the EULAR fibromyalgia guidance. The drug and psychological therapies EULAR supports are graded weak [1]. Aerobic exercise improves health-related quality of life (moderate-quality evidence) and slightly lowers pain and improves function (low-quality evidence) [2]. Resistance training improves pain, tenderness, function, and strength in low-quality trials [3].",
+     strength:"Moderate. A strong recommendation resting on low to moderate quality trials with small effect sizes.",
+     use:"Prescribe the starting dose explicitly, 5 to 10 minutes 3 times a week, and the escalation, 2 to 5 minutes per week. Patients who fail exercise almost always started too high.",
+     refs:["macfarlane2017", "bidonde2017", "busch2013"]},
+
+    {id:"e-taichi-fibro", n:"Tai chi in fibromyalgia", pillar:"Movement", dz:"Fibromyalgia", g:"Fibromyalgia",
+     claim:"Tai chi works at least as well as aerobic exercise for fibromyalgia.",
+     effect:"In 226 adults, tai chi improved the fibromyalgia impact score by 5.5 points more than supervised aerobic exercise at 24 weeks. Twenty-four weeks beat 12, once a week matched twice, and attendance was higher for tai chi [1].",
+     strength:"Moderate. One single-blind randomized trial at one center.",
+     use:"Offer tai chi to the patient who has not tolerated or will not start aerobic exercise. Attendance was the advantage in the trial.",
+     refs:["wang2018"]},
+
+    // ---------- bone ----------
+    {id:"e-load-bone", n:"Loading and resistance training for bone", pillar:"Movement", dz:"Osteoporosis", g:"Bone",
+     claim:"Weight-bearing and resistance exercise preserve bone density and prevent falls.",
+     effect:"In postmenopausal women, resistance training raised femoral neck BMD by about 1 percent and combined programs raised spine BMD by about 3 percent. The trials showed no effect on fracture counts (OR 0.61, CI 0.23 to 1.64) [1]. Exercise lowers the rate of falls by 23 percent in older adults living in the community, and balance and functional exercise do most of the work [2]. The BHOF guide lists weight-bearing and resistance exercise and fall prevention next to drug therapy [3].",
+     strength:"Moderate for BMD, strong for falls.",
+     use:"Do not let exercise replace pharmacotherapy in a patient with a fragility fracture. Prescribe balance work by name, since patients hear exercise and think cardio.",
+     refs:["howe2011", "sherrington2019", "leboff2022guide"]},
+
+    {id:"e-cal-d", n:"Calcium and vitamin D", pillar:"Food", dz:"Osteoporosis", g:"Bone",
+     claim:"Supplements build bone.",
+     effect:"Calcium plus vitamin D lowered total fractures by 15 percent and hip fractures by 30 percent in a meta-analysis of 8 trials [1]. In the Women's Health Initiative the hip fracture reduction was not significant (HR 0.88) and kidney stones rose by 17 percent [2]. Vitamin D alone, 2,000 IU daily, did not lower fractures in healthy adults not selected for deficiency or osteoporosis [3]. For adults on glucocorticoids, the ACR pairs optimized calcium and vitamin D intake with drug therapy chosen by fracture risk [4].",
+     strength:"Moderate, with meaningful heterogeneity by baseline status.",
+     use:"Target 1,000 to 1,200 mg calcium daily, food first [5], and 800 to 2,000 IU vitamin D adjusted to level. Correct the belief that supplements alone treat osteoporosis.",
+     refs:["weaver2016", "jackson2006", "leboff2022vital", "humphrey2023", "leboff2022guide"]}
   ]
 };
 
@@ -5505,116 +5754,97 @@ Entheses: {enth:+no entheseal tenderness|@ Achilles insertion tenderness^no @ Ac
 Joints: {joints:see MSK exam by region|omit this line}.`}
 ]);
 })();
-// ====================== v6.5: REFERRAL A&P LIBRARY, CONSULT NOTE TO THE REFERRING CLINICIAN ======================
-// Written for the assessment and plan of a consult visit: the patient was seen here, and the note goes
-// back to the referring clinician with the impression, what was done, a teaching point, what the
-// patient was told, return criteria, and the disposition. Thanks, teaching, and counseling lines omit.
+// ====================== v7.1: REFERRAL A&P LIBRARY, SHORT AND PLAIN ======================
+// A short note back to the referring clinician after a consult visit: what this is, one plain
+// sentence on why, what was done, when to send the patient back, follow-up, and one teaching pearl
+// in everyday words. No statistics, no citations, no criteria names. The thanks, why, and pearl lines omit.
 (function(){
-const OPEN = "{open:Thank you for referring this patient, whom I saw in clinic today.|Thank you for the referral.|omit this line}";
-const CLOSE = "{close:Thank you for involving me in this patient's care. Please reach out with questions at any time.|Happy to see the patient again whenever it would help.|omit this line}";
-const R = (id, name, dot, body)=>({id, name, dot, cat:"Referral A&P", body:OPEN + "\n" + body + "\n" + CLOSE});
+const OPEN = "{open:Thank you for the referral.|Thank you for referring this patient, seen in clinic today.|omit this line}";
+const R = (id, name, dot, body)=>({id, name, dot, cat:"Referral A&P", body:OPEN + "\n" + body});
 DEFAULT_DATA.phrases = DEFAULT_DATA.phrases.concat([
   R("r-ana", "Referral A&P: positive ANA without features", ".refana",
-`Impression: {imp:positive ANA without an ANA-associated rheumatic disease|positive ANA with nonspecific symptoms and no evidence of lupus or a related disease on history, exam, and labs|positive ANA with findings that need further evaluation, see plan}.
-Findings: ANA titer {titer:~1:80|1:40|1:160|1:320|1:640}, pattern {pattern:homogeneous|speckled|nucleolar|centromere|dense fine speckled (DFS70)|not reported}. {features:No photosensitive or malar rash, oral ulcers, synovitis, serositis, Raynaud, cytopenias, or urine abnormality.|Fatigue and diffuse arthralgia with a normal joint exam.|Findings present, detailed above.} {sero:Extractable nuclear antigen panel, anti-dsDNA, and complements negative or normal.|Specific serologies pending.|Specific serologies not indicated.}
-Why: a positive ANA is common in healthy people. It is positive in 31.7 percent of healthy adults at 1:40, 13.3 percent at 1:80, and 5 percent at 1:160 (Tan 1997), while ANA-associated disease affects about 1 percent of the population. Among patients referred for a positive ANA alone, 9.1 percent had an ANA-associated rheumatic disease and 2.1 percent had lupus, none with a titer below 1:160 (Abeles 2013). A dense fine speckled (DFS70) pattern argues against systemic autoimmune disease.
-Teaching point: {teach:The ANA is a screening test with high sensitivity and low specificity: order it when the history or exam already suggests lupus or a related disease, and read the result with the titer and pattern, since 1:40 and 1:80 are common in health and 1:160 and higher carry more weight. A positive ANA with no symptoms needs follow-up of the patient, not of the test.|omit this line}
-Plan: {plan:no treatment and no further serologic testing; the ANA does not need to be repeated, since a positive result stays positive and the titer does not track disease|extractable nuclear antigen panel, anti-dsDNA, C3, C4, CBC with differential, creatinine, and urinalysis with a protein-to-creatinine ratio ordered today, results to both of us|further evaluation as outlined above}.
-Counseled the patient: {tell:that this result is positive in about one healthy adult in eight at this level, that it does not mean lupus, and that nothing needs to be done unless specific symptoms appear; the patient sheet Your ANA test came back positive was provided|omit this line}.
-Please send the patient back if any of these appear: a photosensitive or malar rash, oral ulcers, joint swelling or morning stiffness over 30 minutes, pleuritic chest pain, Raynaud with digital ulcers, unexplained low blood counts, or proteinuria or hematuria.
-Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 to 12 months|follow-up here in 3 months once the labs return|follow-up here as needed}.`),
+`Assessment: {imp:Positive ANA without signs of lupus or a related autoimmune disease.|Positive ANA with nonspecific symptoms. No autoimmune disease found today.|Positive ANA with findings that need more workup, see below.}
+{why:A positive ANA is common in healthy people and, by itself, does not mean lupus.|omit this line}
+Plan: {plan:No treatment and no more antibody testing. The ANA does not need to be repeated.|Follow-up labs ordered today (ENA panel, dsDNA, complements, CBC, creatinine, urinalysis). I will send the results.|More workup as outlined above.}
+{tell:I reviewed the result with the patient and gave the ANA handout.|omit this line}
+Please send the patient back for: a rash after sun exposure, mouth sores, swollen joints, chest pain with deep breaths, fingers that turn white or blue in the cold, low blood counts, or protein or blood in the urine.
+Follow-up: {dispo:None needed with rheumatology. Back to your care.|Here in 6 to 12 months.|Here in 3 months with the labs.|As needed.}
+{pearl:Pearl: The ANA helps most when the patient already has signs of lupus, such as a sun rash, mouth sores, or swollen joints. A low result like 1:40 or 1:80 is common in healthy people.|omit this line}`),
 
   R("r-back", "Referral A&P: low back pain, inflammatory or mechanical", ".refback",
-`Impression: {imp:mechanical low back pain without features of axial spondyloarthritis|low back pain with inflammatory features, axial spondyloarthritis under evaluation|axial spondyloarthritis, see plan}.
-Findings: {dur:chronic (over 3 months)|subacute (6 to 12 weeks)|recurrent} low back pain in a patient aged {age:~35|25|45|55|65}, with {ibp:0|1|2|3|4|5} of 5 inflammatory back pain features (onset before 45, insidious onset, improvement with exercise, no improvement with rest, night pain that eases on rising). {extra:No psoriasis, uveitis, inflammatory bowel disease, dactylitis, or enthesitis.|With psoriasis.|With a history of anterior uveitis.|With inflammatory bowel disease.|With heel enthesitis or dactylitis.} Morning stiffness {stiff:under 30 minutes|30 to 60 minutes|over 60 minutes}. Spine exam {spine:with full range of motion and nontender sacroiliac joints|with reduced lumbar flexion|with sacroiliac tenderness}. CRP {crp:normal|elevated|pending}. HLA-B27 {b27:not indicated|negative|positive|pending}. {img:No imaging indicated.|AP pelvis radiograph without sacroiliitis.|AP pelvis radiograph with sacroiliitis.|MRI of the sacroiliac joints ordered.}
-Why: four or more of the five features identify inflammatory back pain with about 80 percent sensitivity and 72 percent specificity (ASAS 2009). With fewer than two features and a normal CRP, spondyloarthritis is unlikely.
-Teaching point: {teach:Ask five questions of every back pain patient under 45: did it start slowly, does it improve with activity, does rest fail to help, does it wake you in the second half of the night, and is there morning stiffness over 30 minutes. Four yes answers change the workup from physical therapy to CRP, HLA-B27, and a pelvic film.|omit this line}
-Plan: {plan:physical therapy with a core and hip program, activity as tolerated, and an NSAID as needed; no imaging or serology, and a lumbar MRI is not needed without a neurologic deficit|CRP and HLA-B27 drawn today and an AP pelvis radiograph ordered, with MRI of the sacroiliac joints without contrast if the radiograph is normal|treatment for axial spondyloarthritis started, detailed above}.
-Counseled the patient: {tell:that back pain which improves with movement and comes with long morning stiffness is a different kind of back pain from the common kind, and that back pain which improves with rest is treated with movement and strength work rather than imaging|omit this line}.
-Please send the patient back if any of these appear: new inflammatory features, a positive HLA-B27 with symptoms, back pain alongside psoriasis, uveitis, or inflammatory bowel disease, sacroiliitis on any imaging, or an elevated CRP without another explanation. New weakness, bowel or bladder symptoms, fever, or weight loss need urgent evaluation outside rheumatology.
-Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 to 8 weeks with the results|follow-up here in 3 months|follow-up here as needed}.`),
+`Assessment: {imp:Mechanical low back pain. No signs of inflammatory spine disease.|Low back pain with some inflammatory features. Workup for spondyloarthritis started.|Axial spondyloarthritis, see below.}
+{why:The pain eases with rest, the morning stiffness is brief, and the exam is reassuring, which fits mechanical back pain.|The pain is better with movement and worse with rest, with long morning stiffness, which is the reason for the extra workup.|omit this line}
+Plan: {plan:Physical therapy, staying active, and an NSAID as needed. No imaging or lab work needed.|CRP, HLA-B27, and a pelvis x-ray ordered today, with an MRI of the SI joints if the x-ray is normal.|Treatment started, see above.}
+Please send the patient back for: back pain that improves with exercise and not with rest, morning stiffness over 30 minutes, pain that wakes the patient at night, or back pain along with psoriasis, eye inflammation, or inflammatory bowel disease. New weakness, bowel or bladder changes, fever, or weight loss need urgent evaluation.
+Follow-up: {dispo:None needed with rheumatology. Back to your care.|Here in 6 to 8 weeks with the results.|Here in 3 months.|As needed.}
+{pearl:Pearl: Four questions sort back pain in a patient under 45. Did the pain start slowly? Is the pain better with movement? Is the pain worse with rest? Does the pain wake the patient in the second half of the night? Mostly yes answers are worth a referral.|omit this line}`),
 
   R("r-fibro", "Referral A&P: fibromyalgia", ".reffibro",
-`Impression: {imp:fibromyalgia, with no evidence of an inflammatory or autoimmune disease on history, exam, and labs|fibromyalgia alongside a stable, separately managed rheumatic condition|chronic widespread pain, fibromyalgia likely, with one feature still under evaluation}.
-Findings: widespread pain for {dur:~over 3 months|over 1 year|several years} with {sx:fatigue, unrefreshing sleep, and cognitive symptoms|fatigue and unrefreshing sleep|widespread pain alone}, {exam:a normal joint exam without synovitis|tender points without synovitis|diffuse soft tissue tenderness}, and {labs:normal CBC, CMP, TSH, CK, and inflammatory markers|labs pending|labs not yet obtained}. This meets {crit:the 2016 ACR fibromyalgia criteria (widespread pain index 7 or more with symptom severity 5 or more, or WPI 4 to 6 with SSS 9 or more, symptoms over 3 months)|a clinical picture of fibromyalgia, criteria not formally scored}.
-Why: this pattern, widespread pain over 3 months with fatigue, unrefreshing sleep, and cognitive symptoms alongside a normal joint exam and normal inflammatory markers, points to central pain processing rather than inflammation. Fibromyalgia affects about 2 percent of adults and often travels with inflammatory disease, so the normal exam and labs are what set the inflammatory causes aside here.
-Teaching point: {teach:The 2016 criteria (widespread pain index and symptom severity scale) can be scored in the office visit, and CBC, CMP, TSH, CK, ESR, and CRP are the labs that find the mimics. An ANA in a patient without lupus features is positive in about one healthy adult in eight and tends to raise a question rather than answer one, so it helps to hold it for a specific suspicion.|omit this line}
-Plan: {plan:the diagnosis was explained; graded aerobic exercise as the first treatment (start at 10 minutes, build toward 150 minutes a week), regular sleep hours, and cognitive behavioral therapy or an app-based program where available|the above plus one medication, below|the current plan continued with the exercise reinforced}.
-Medication added: {med:omit this line|duloxetine 30 mg daily for 1 week, then 60 mg daily|amitriptyline 10 to 25 mg at bedtime|pregabalin 75 mg at bedtime, titrated to 150 to 300 mg a day|cyclobenzaprine 5 to 10 mg at bedtime|milnacipran 12.5 mg daily, titrated to 50 mg twice daily}.
-I did not recommend an opioid, since opioids worsen outcomes in fibromyalgia. No further labs or imaging are needed from my side.
-Counseled the patient: {tell:that this is a real condition of the pain processing system, that it does not damage joints, and that the treatments that work best are the ones the patient does rather than takes; the Lifestyle plan for fibromyalgia sheet was provided|omit this line}.
-Please send the patient back, or call me, if any of these appear: joint swelling, morning stiffness over 60 minutes, an elevated CRP or ESR without another cause, proximal weakness with an elevated CK, dry eyes and mouth with parotid enlargement, Raynaud with digital changes, or a positive specific antibody (anti-CCP, anti-dsDNA, ENA) with symptoms.
-Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the plan above, and I am glad to see the patient again if the plan stalls|one follow-up here in 3 months to review the medication and the exercise plan, then back to your care|follow-up here as needed}.`),
+`Assessment: {imp:Fibromyalgia. No signs of an inflammatory or autoimmune disease on exam and labs.|Fibromyalgia along with a stable rheumatic condition.|Widespread pain, likely fibromyalgia, with one item still being checked.}
+{why:The joint exam and the inflammation labs are normal, which is reassuring.|omit this line}
+Plan: {plan:I explained the diagnosis. First steps are gentle aerobic exercise that builds slowly, regular sleep hours, and pain coping skills.|The first steps (gentle exercise, regular sleep, pain coping skills) plus one medication, below.|Current plan continued.}
+Medication: {med:omit this line|duloxetine 30 mg daily for 1 week, then 60 mg daily|amitriptyline 10 to 25 mg at bedtime|pregabalin 75 mg at bedtime, increased slowly|cyclobenzaprine 5 to 10 mg at bedtime}.
+{tell:The patient received the fibromyalgia handout.|omit this line}
+Please send the patient back, or call me, for: swollen joints, morning stiffness over an hour, high inflammation markers without a cause, new muscle weakness, or a new rash.
+Follow-up: {dispo:None needed with rheumatology. Back to your care, and I am glad to see the patient again any time.|One visit here in 3 months, then back to your care.|As needed.}
+{pearl:Pearl: For widespread pain with a normal joint exam, a CBC, metabolic panel, TSH, CK, sed rate, and CRP cover the common look-alikes.|omit this line}`),
 
   R("r-urate", "Referral A&P: asymptomatic hyperuricemia", ".refurate",
-`Impression: {imp:asymptomatic hyperuricemia without gout|hyperuricemia with a possible past flare, not confirmed|gout, see plan}.
-Findings: serum urate {urate:~8.2|7.0|7.5|9.0|10.0} mg/dL in a patient {hx:with no history of gout flares, tophi, or urate stones|with a possible past flare that was never confirmed|with chronic kidney disease stage 3 or higher}. Joint exam {exam:without tophi, synovitis, or first MTP changes|with findings detailed above}. Contributors: {contrib:+none identified|thiazide or loop diuretic|low-dose aspirin|alcohol, especially beer|sugar-sweetened beverages or high-fructose corn syrup|chronic kidney disease|obesity|cyclosporine or tacrolimus}.
-Why: most people with hyperuricemia never develop gout, and the 2020 ACR gout guideline recommends against urate-lowering therapy for asymptomatic hyperuricemia, including with chronic kidney disease or kidney stones. Allopurinol and febuxostat carry their own risks (hypersensitivity, a cardiovascular signal) without a proven benefit here.
-Teaching point: {teach:A urate level is a risk factor, not a disease. Treat flares, tophi, and stones; address the diuretic, alcohol, and sugary drinks; and let the number alone sit, however high it looks. A first typical podagra flare with normal kidneys responds to colchicine, an NSAID, or a short prednisone course in your office.|omit this line}
-Plan: {plan:no urate-lowering therapy; the contributors above addressed, the diuretic flagged for review with its prescriber, alcohol and sweetened drinks limited, weight loss supported if overweight, and the urate rechecked only if a flare occurs|no urate-lowering therapy; blood pressure, lipids, glucose, and kidney function reviewed, since hyperuricemia travels with metabolic syndrome|urate-lowering therapy started for confirmed gout, detailed above}.
-Counseled the patient: {tell:that a high uric acid raises the chance of gout but most people with it never get gout, and that the step that helps most is changing what drives it rather than starting a daily pill|omit this line}.
-Please send the patient back if any of these appear: a first flare with chronic kidney disease stage 3 or higher, a flare with urate above 9 mg/dL, two or more flares a year, tophi, urate stones, erosions on a radiograph, or a flare that is hard to treat because of anticoagulation, kidney disease, or diabetes.
-Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 months|follow-up here as needed}.`),
+`Assessment: {imp:High uric acid without gout.|High uric acid with a possible past gout flare, not confirmed.|Gout, see below.}
+{why:Most people with a high uric acid never get gout, and medication is not recommended without flares, tophi, or kidney stones.|omit this line}
+Plan: {plan:No uric acid medication. Limit alcohol and sugary drinks, and review any water pill. Recheck the uric acid only after a flare.|No uric acid medication. Blood pressure, blood sugar, cholesterol, and kidney function are worth a check, since they often travel with a high uric acid.|Gout treatment started, see above.}
+Please send the patient back for: a gout flare along with kidney disease, two or more flares a year, tophi, uric acid kidney stones, or a flare that is hard to treat.
+Follow-up: {dispo:None needed with rheumatology. Back to your care.|Here in 6 months.|As needed.}
+{pearl:Pearl: Uric acid is worth treating once there is gout, tophi, or kidney stones. A first classic big toe flare responds well to colchicine, an NSAID, or a short course of prednisone.|omit this line}`),
 
   R("r-oa", "Referral A&P: osteoarthritis", ".refoa",
-`Impression: {imp:osteoarthritis without evidence of inflammatory arthritis|osteoarthritis with a feature under further evaluation, see plan|erosive hand osteoarthritis}.
-Findings: {site:knee|hip|hand|knee and hand|first CMC joint} osteoarthritis, {sev:mild|moderate|severe} symptoms, with {feat:bony enlargement, crepitus, and morning stiffness under 30 minutes|activity-related pain and a gel phenomenon|Heberden and Bouchard nodes}. MCPs and wrists {mcp:spared|involved, see plan}. {img:Radiographs show joint space narrowing and osteophytes consistent with the diagnosis.|Radiographs were not needed for a typical presentation.|Radiographs show erosive changes of the hand DIP and PIP joints.} Inflammatory markers {crp:normal|not indicated|elevated, see plan}.
-Why: osteoarthritis is a clinical diagnosis, and the 2026 ACR guideline treatments work the same from any prescriber.
-Teaching point: {teach:Osteoarthritis spares the MCPs and wrists and brings stiffness that lasts minutes, not an hour. When a patient with knee or hand pain has MCP or wrist swelling, stiffness over an hour, or a high CRP, think inflammatory arthritis and send the patient early.|omit this line}
-Plan, per the 2026 ACR osteoarthritis guideline: exercise and strength training and, when overweight, weight loss of 5 to 10 percent (both strongly recommended); topical diclofenac for the knee and hand before any oral agent; an oral NSAID at the lowest effective dose with food when needed; {more:+acetaminophen up to 3 g daily|duloxetine 30 to 60 mg daily for persistent pain|intra-articular glucocorticoid injection performed today|physical therapy referral placed|a knee brace or thumb orthosis|a GLP-1 receptor agonist for knee osteoarthritis with obesity, alongside diet and exercise, discussed|tai chi or yoga}. The guideline recommends against glucosamine, chondroitin, hyaluronic acid, platelet-rich plasma, stem cells, opioids, vitamin D, and fish oil.
-Counseled the patient: {tell:that this is wear and repair in the joint, that exercise and weight loss are the treatments with the strongest evidence, and that the gel works for knees and hands with far less risk than pills; the Osteoarthritis sheet was provided|omit this line}.
-Please send the patient back if any of these appear: morning stiffness over 30 to 60 minutes, warmth or synovitis on exam, an elevated CRP or ESR without another cause, or symmetric MCP or wrist involvement. When pain limits daily function despite the plan above, orthopedics is the right referral for arthroplasty.
-Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 3 months to review the injection response|follow-up here as needed}.`),
+`Assessment: {imp:Osteoarthritis. No signs of inflammatory arthritis.|Osteoarthritis with one item still being checked, see below.|Erosive osteoarthritis of the hands.} Joints involved: {site:knee|hip|hand|knee and hand|base of the thumb}.
+Plan: exercise and strengthening, weight loss if overweight, and {more:+topical diclofenac gel|an oral NSAID at the lowest dose that works, with food|acetaminophen as needed|duloxetine for ongoing pain|a steroid injection, done today|a physical therapy referral|a brace or thumb splint}.
+{avoid:omit this line|Glucosamine, chondroitin, and PRP injections are not recommended.}
+{tell:The patient received the osteoarthritis handout.|omit this line}
+Please send the patient back for: morning stiffness over 30 to 60 minutes, warm or swollen joints, swelling of the knuckles or wrists, or high inflammation markers. For pain that limits daily life despite this plan, orthopedics is the next step.
+Follow-up: {dispo:None needed with rheumatology. Back to your care.|Here in 3 months to review the injection.|As needed.}
+{pearl:Pearl: Osteoarthritis stiffness lasts minutes and spares the knuckles and wrists. Stiffness over an hour, or swelling of the knuckles or wrists, points toward inflammatory arthritis.|omit this line}`),
 
   R("r-esr", "Referral A&P: elevated ESR or CRP without a diagnosis", ".refesr",
-`Impression: {imp:elevated ESR without an inflammatory rheumatic disease on history, exam, and labs|elevated ESR under evaluation, repeat and workup pending|polymyalgia rheumatica, see plan|giant cell arteritis suspected, see plan}.
-Findings: ESR {esr:~45|30|60|80|100} mm/h and CRP {crp:~normal|12|25|50} mg/L in a patient aged {age:~70|50|60|80} with {sx:no localizing symptoms|fatigue alone|the symptoms detailed above}. {gca:No headache, jaw claudication, scalp tenderness, or visual symptoms.|Cranial symptoms present, see plan.} {pmr:No shoulder or hip girdle stiffness.|Shoulder and hip girdle stiffness present.} Exam {exam:without synovitis, rash, lymphadenopathy, or organomegaly|with findings detailed above}.
-Why: the upper limit of ESR rises with age, roughly age divided by 2 for men and age plus 10 divided by 2 for women (Miller 1983), so an ESR of 40 is within range for a 70-year-old woman. ESR also rises with anemia, kidney disease, obesity, pregnancy, and monoclonal proteins, while CRP does not, so a high ESR with a normal CRP points toward those causes rather than inflammation.
-Teaching point: {teach:Interpret the ESR against age (age over 2 for men, age plus 10 over 2 for women) and against the CRP: both high means inflammation, ESR high with CRP normal points to anemia, kidney disease, obesity, or a monoclonal protein. The two diagnoses that cannot wait are giant cell arteritis and polymyalgia rheumatica in a patient over 50, so ask about headache, jaw pain with chewing, vision change, and shoulder and hip stiffness every time.|omit this line}
-Plan: {plan:repeat ESR and CRP in 4 to 6 weeks, since a single value often normalizes; no autoantibody testing without a clinical question|CBC with differential, CMP, urinalysis, SPEP with free light chains, hepatitis B and C, HIV, and TSH ordered today, with a chest radiograph given cough or weight loss|the above plus age-appropriate cancer screening coordinated with your office|prednisone started today for polymyalgia rheumatica, taper per the taper tab|prednisone 40 to 60 mg daily started today and temporal artery ultrasound or biopsy arranged for suspected giant cell arteritis}.
-Counseled the patient: {tell:that this blood test rises with many things including age, that a single value is repeated before anyone acts on it, and to call the same day for a new headache, jaw pain with chewing, or any change in vision|omit this line}.
-Please send the patient back, or call the same day, if a patient 50 or older develops a new headache, jaw claudication, scalp tenderness, or visual symptoms (start prednisone 40 to 60 mg daily and call), or bilateral shoulder and hip girdle pain with morning stiffness over 45 minutes. Please send the patient back for joint swelling, rash with fever, mononeuritis, or an ESR over 100 without an explanation after the workup. A monoclonal protein or low blood counts belong with hematology.
-Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 weeks with the repeat labs|follow-up here in 4 weeks on prednisone|follow-up here as needed}.`),
+`Assessment: {imp:High sed rate without signs of an inflammatory rheumatic disease.|High sed rate, repeat test and workup pending.|Polymyalgia rheumatica, see below.|Possible giant cell arteritis, see below.}
+{why:The sed rate rises with age, anemia, kidney disease, and body weight, so a mild rise often has no rheumatic cause.|omit this line}
+Plan: {plan:Repeat the sed rate and CRP in 4 to 6 weeks. No antibody testing needed.|Basic workup ordered today (CBC, metabolic panel, urinalysis, protein electrophoresis, hepatitis and HIV screen, TSH). I will send the results.|Prednisone started for polymyalgia rheumatica.|Prednisone 40 to 60 mg daily started and temporal artery testing arranged.}
+Please call the same day if a patient over 50 has a new headache, jaw pain with chewing, scalp tenderness, or a change in vision. Please send the patient back for morning stiffness of the shoulders and hips, swollen joints, or a rash with fever.
+Follow-up: {dispo:None needed with rheumatology. Back to your care.|Here in 6 weeks with the repeat labs.|Here in 4 weeks on prednisone.|As needed.}
+{pearl:Pearl: A quick upper limit for the sed rate is age divided by 2 for men, and age plus 10, divided by 2, for women. A high sed rate with a normal CRP often comes from anemia, kidney disease, or body weight.|omit this line}`),
 
   R("r-rf", "Referral A&P: positive RF or anti-CCP without synovitis", ".refrf",
-`Impression: {imp:positive rheumatoid factor without rheumatoid arthritis|positive anti-CCP with arthralgia and no synovitis, at risk for rheumatoid arthritis|seronegative arthralgia, serology of uncertain significance|early rheumatoid arthritis, see plan}.
-Findings: {test:rheumatoid factor positive|anti-CCP positive|rheumatoid factor and anti-CCP both positive} at {titer:~low titer|high titer, over 3 times the upper limit} in a patient with {exam:arthralgia and a normal joint exam without synovitis|no joint symptoms|morning stiffness and a joint exam without definite synovitis}. MCP and MTP squeeze {squeeze:negative|positive}. Inflammatory markers {crp:normal|elevated|pending}. {xr:No radiographs indicated.|Radiographs of the hands and feet without erosions.|Radiographs of the hands and feet ordered.} Hepatitis C antibody {hcv:negative|ordered|not indicated}.
-Why: rheumatoid factor is positive in about 5 percent of healthy adults, more often with age, hepatitis C, chronic infections, and other autoimmune diseases, so an isolated low-titer RF carries little weight. Anti-CCP is about 95 percent specific for rheumatoid arthritis, and a high-titer anti-CCP with arthralgia predicts arthritis within a few years in a substantial minority. There is no preventive treatment to start on serology alone outside a trial.
-Teaching point: {teach:Rheumatoid factor alone is a weak test; anti-CCP is the strong one. Order both together when you suspect rheumatoid arthritis, and when either is positive, examine the MCPs, PIPs, wrists, and MTPs with a squeeze test at every visit, because swelling, not the antibody, is what starts treatment.|omit this line}
-Plan: {plan:no treatment; a joint exam at each visit in your office with attention to the MCPs, PIPs, wrists, and MTPs|no treatment; the patient will be followed here as an at-risk patient given the anti-CCP and arthralgia|treatment for rheumatoid arthritis started, detailed above}.
-Counseled the patient: {tell:that this antibody is found in some healthy people, that it does not by itself mean rheumatoid arthritis, and that joint swelling or morning stiffness lasting more than half an hour should prompt a call the same week|omit this line}.
-Please send the patient back if any of these appear: any joint swelling, or 3 or more of the EULAR 2016 clinically suspect arthralgia features (symptoms under 1 year, MCP symptoms, morning stiffness of 60 minutes or more, symptoms worst in the early morning, difficulty making a fist, a positive MCP squeeze, a first-degree relative with rheumatoid arthritis). An early visit matters, since treatment in the first 3 months of arthritis changes the long-term outcome.
-Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 months as an at-risk patient|follow-up here in 3 months|follow-up here as needed}.`),
+`Assessment: {imp:Positive rheumatoid factor without rheumatoid arthritis.|Positive anti-CCP with joint pain and no swelling. Higher risk for rheumatoid arthritis.|Early rheumatoid arthritis, see below.}
+{why:Rheumatoid factor is positive in some healthy people, more often with age, and does not mean rheumatoid arthritis without swollen joints.|Anti-CCP is the more specific test, so I will keep following this patient even though the joints are not swollen today.|omit this line}
+Plan: {plan:No treatment. A look at the hands and feet for swelling at regular visits is all that is needed.|No treatment today. I will follow the patient here.|Treatment started, see above.}
+Please send the patient back for: any swollen joint, morning stiffness over an hour, or trouble making a fist. Sooner is better, since early treatment matters.
+Follow-up: {dispo:None needed with rheumatology. Back to your care.|Here in 6 months.|Here in 3 months.|As needed.}
+{pearl:Pearl: Anti-CCP is the stronger of the two tests for rheumatoid arthritis. With either test positive, swelling is the finding that matters, and a gentle squeeze across the knuckles at each visit is a quick check.|omit this line}`),
 
   R("r-raynaud", "Referral A&P: Raynaud phenomenon", ".refraynaud",
-`Impression: {imp:primary Raynaud phenomenon|Raynaud phenomenon with a feature of secondary disease, under evaluation|secondary Raynaud phenomenon, see plan}.
-Findings: Raynaud phenomenon, {onset:onset before age 30|onset after age 40}, {sym:symmetric and episodic with cold or stress|asymmetric or with an atypical trigger}, {tissue:without digital ulcers, pits, or tissue loss|with digital pitting or ulceration}, {nail:nailfold capillaries normal on dermatoscopy|nailfold capillaries dilated, dropped out, or hemorrhagic}. {skin:No puffy fingers, sclerodactyly, or telangiectasia.|Puffy fingers present.|Skin thickening present.} ANA {ana:~negative|1:80|1:160|1:320|pending}, pattern {pattern:~not applicable|nucleolar|centromere|speckled|homogeneous}, ESR {esr:normal|elevated|pending}.
-Why: primary Raynaud affects 3 to 5 percent of adults, mostly young women, and does not progress to connective tissue disease. The features that point to secondary Raynaud are onset after 40, asymmetry, digital ulcers or pits, abnormal nailfold capillaries, a positive ANA (centromere or nucleolar patterns in particular), and a high ESR. Patients with both a positive ANA and abnormal capillaries progressed to definite systemic sclerosis in a majority over long-term follow-up (Koenig 2008).
-Teaching point: {teach:Separate primary from secondary Raynaud with five observations: age of onset, symmetry, any ulcer or pit, the nailfold capillaries (a dermatoscope or the otoscope on the nail bed shows dilated loops or dropout), and the ANA. Primary needs reassurance and warmth; any secondary feature needs a visit.|omit this line}
-Plan: {plan:whole-body cold avoidance rather than gloves alone, smoking cessation, and a review of vasoconstrictors (decongestants, stimulants, beta blockers, triptans)|the above plus amlodipine 5 mg daily, titrated to 10 mg, or nifedipine extended release 30 to 60 mg daily, since attacks limit daily life|ANA with reflex ENA (anticentromere, anti-Scl-70, anti-RNA polymerase III), ESR, CBC, and urinalysis ordered today, and the patient will be followed here}. Aspirin and topical nitrates are options for ulcers.
-Counseled the patient: {tell:that color changes in the fingers with cold are common and usually harmless, that keeping the whole body warm matters more than gloves, and that any sore or ulcer on a fingertip should be seen promptly|omit this line}.
-Please send the patient back if any of these appear: a digital ulcer or pit, puffy fingers or skin thickening, reflux or dysphagia out of proportion, shortness of breath, or a change to asymmetric attacks. Critical digital ischemia needs same-day attention.
-Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 6 to 12 months given a positive ANA|follow-up here in 3 months with the results|follow-up here as needed}.`),
+`Assessment: {imp:Primary Raynaud. No signs of an underlying autoimmune disease.|Raynaud with one feature that needs a closer look, workup started.|Raynaud from an underlying condition, see below.}
+{why:The attacks affect both hands, there are no finger sores, and the exam is normal, which fits the common harmless type.|omit this line}
+Plan: {plan:Keep the whole body warm, not only the hands. Stop smoking. Avoid decongestants and stimulants where possible.|Warmth and smoking cessation as first steps, plus amlodipine 5 mg daily for frequent attacks.|ANA and related labs ordered today. I will follow the patient here.}
+Please send the patient back for: a sore or pit on a fingertip, puffy or tight skin on the fingers, new trouble swallowing or shortness of breath, or attacks on one side only. A finger that stays blue or white and painful needs same-day care.
+Follow-up: {dispo:None needed with rheumatology. Back to your care.|Here in 6 to 12 months.|Here in 3 months with the results.|As needed.}
+{pearl:Pearl: Raynaud that starts before age 30, affects both hands, and leaves no finger sores is almost always the harmless type. Onset after 40, fingertip sores, or tight skin on the fingers are the reasons to refer.|omit this line}`),
 
   R("r-arthralgia", "Referral A&P: arthralgia with a normal exam and labs", ".refarthralgia",
-`Impression: {imp:arthralgia without evidence of inflammatory arthritis on history, exam, and labs|post-viral arthralgia, expected to resolve|medication-associated arthralgia|arthralgia with a feature under evaluation, see plan}.
-Findings: {pattern:polyarticular|oligoarticular|migratory|small joint} arthralgia for {dur:~3 months|6 weeks|6 months|over 1 year} with {stiff:morning stiffness under 30 minutes|morning stiffness 30 to 60 minutes|no morning stiffness}, a joint exam {exam:without synovitis, warmth, or effusion|with tenderness but no swelling}, MCP and MTP squeeze {squeeze:negative|positive}, full fist closure {fist:bilaterally|limited}, and {labs:normal CBC, CMP, ESR, CRP, RF, and anti-CCP|normal inflammatory markers, serologies pending|labs pending}. {assoc:No psoriasis, inflammatory bowel disease, recent infection, or new medication.|A recent viral illness within 6 weeks.|A new medication (statin, aromatase inhibitor, checkpoint inhibitor, or fluoroquinolone).|Perimenopausal.}
-Why: arthralgia with a normal exam and normal labs is rarely inflammatory arthritis. Post-viral arthralgia (parvovirus, chikungunya, COVID) settles over weeks to months, and aromatase inhibitors and statins cause arthralgia in about a quarter of users.
-Teaching point: {teach:Pain without swelling, stiffness under 30 minutes, and normal inflammatory markers is not arthritis yet. The exam, not the labs, carries the decision, so document the MCP squeeze and fist closure, and ask the patient to photograph any swelling, since swelling that comes and goes is the finding most often missed.|omit this line}
-Plan: {plan:an NSAID or acetaminophen for symptoms and a repeat joint exam in 6 to 8 weeks in your office; no imaging or further serology|hand and foot radiographs ordered given symptoms past 3 months, with ESR and CRP to be rechecked|the medication reviewed with its prescriber, since the timeline fits a drug cause|further evaluation as outlined above}. The patient was asked to photograph any joint swelling when it happens.
-Counseled the patient: {tell:that aching joints with a normal exam and normal labs are common and most often settle, and that a photograph of any swelling, taken when it happens, is the most useful thing to bring to the next visit|omit this line}.
-Please send the patient back if any of these appear: swelling seen by a clinician or on a photograph, a positive anti-CCP, or 3 or more of the EULAR 2016 clinically suspect arthralgia features (symptoms under 1 year, MCP symptoms, morning stiffness of 60 minutes or more, symptoms worst in the early morning, difficulty making a fist, a positive MCP squeeze, a first-degree relative with rheumatoid arthritis). Psoriasis, inflammatory bowel disease, uveitis, or dactylitis alongside the pain would move the visit up.
-Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 3 months|follow-up here in 6 to 8 weeks with the results|follow-up here as needed}.`),
+`Assessment: {imp:Joint pain without signs of inflammatory arthritis on exam and labs.|Joint pain after a viral illness, expected to settle.|Joint pain likely related to a medication.|Joint pain with one item still being checked, see below.}
+{why:There is no joint swelling on exam and the inflammation labs are normal, which is reassuring.|omit this line}
+Plan: {plan:An NSAID or acetaminophen as needed. No imaging or more lab work needed.|Hand and foot x-rays ordered, with repeat inflammation labs.|Medication reviewed as a possible cause.|More workup as outlined above.} I asked the patient to take a photo of any joint swelling.
+Please send the patient back for: joint swelling seen in clinic or in a photo, morning stiffness over an hour, trouble making a fist, or a positive anti-CCP.
+Follow-up: {dispo:None needed with rheumatology. Back to your care.|Here in 3 months.|Here in 6 to 8 weeks with the results.|As needed.}
+{pearl:Pearl: Joint pain without swelling, with stiffness under 30 minutes and normal inflammation labs, is unlikely to be inflammatory arthritis. A photo of the swelling, taken by the patient, helps more than any lab.|omit this line}`),
 
   R("r-b27", "Referral A&P: HLA-B27 positive without inflammatory back pain", ".refb27",
-`Impression: {imp:HLA-B27 carrier without spondyloarthritis|HLA-B27 positive with anterior uveitis and no musculoskeletal disease|HLA-B27 positive, spondyloarthritis under evaluation}.
-Findings: HLA-B27 positive, tested for {why:mechanical back pain|a family history of spondyloarthritis|anterior uveitis|psoriasis|no clear indication}, in a patient with {ibp:0|1|2|3} of 5 inflammatory back pain features and {extra:no uveitis, psoriasis, inflammatory bowel disease, enthesitis, or dactylitis|a history of anterior uveitis|psoriasis|inflammatory bowel disease}. Spine and sacroiliac exam {spine:normal|with findings detailed above}. CRP {crp:normal|elevated|not indicated}. {img:No imaging indicated.|AP pelvis radiograph without sacroiliitis.|AP pelvis radiograph ordered.}
-Why: HLA-B27 is carried by 6 to 8 percent of people of European ancestry, and fewer than 5 percent of carriers ever develop spondyloarthritis. The test is informative when inflammatory back pain or a spondyloarthritis feature is already present; on its own it is neither a diagnosis nor a reason for an MRI.
-Teaching point: {teach:HLA-B27 is a test to confirm a suspicion, not to screen a back. Order it when inflammatory back pain, uveitis, psoriasis, or inflammatory bowel disease is already on the table; a positive result in a patient without those features changes nothing.|omit this line}
-Plan: {plan:no further testing; the result reviewed with the patient and the symptoms that would warrant a recheck explained|CRP and an AP pelvis radiograph given the uveitis history|further evaluation as outlined above}.
-Counseled the patient: {tell:that this gene is carried by about one person in fifteen and most carriers never develop arthritis, and that it only matters alongside specific symptoms, which were reviewed|omit this line}.
-Please send the patient back if any of these appear: inflammatory back pain (onset before 45, insidious, better with exercise, not better with rest, night pain), heel enthesitis or dactylitis, anterior uveitis alongside back or joint symptoms, peripheral arthritis, or an elevated CRP. Ophthalmology manages the uveitis itself, and I am glad to join when it recurs or when musculoskeletal symptoms appear.
-Disposition: {dispo:no rheumatology follow-up is needed; the patient returns to your care with the criteria above|follow-up here in 12 months|follow-up here as needed}.`)
+`Assessment: {imp:HLA-B27 positive without spondyloarthritis.|HLA-B27 positive with uveitis and no joint or spine disease.|HLA-B27 positive, workup for spondyloarthritis started.}
+{why:Many healthy people carry HLA-B27 and most never develop arthritis. The result matters only with matching symptoms.|omit this line}
+Plan: {plan:No more testing. I reviewed the result and the symptoms to watch for with the patient.|CRP and a pelvis x-ray ordered.|More workup as outlined above.}
+Please send the patient back for: back pain that is worse with rest and better with movement, morning stiffness over 30 minutes, heel pain, a swollen finger or toe, or eye inflammation along with back or joint pain.
+Follow-up: {dispo:None needed with rheumatology. Back to your care.|Here in 12 months.|As needed.}
+{pearl:Pearl: HLA-B27 helps most when the patient already has inflammatory back pain, eye inflammation, psoriasis, or inflammatory bowel disease. A positive result without one of those rarely changes the plan.|omit this line}`)
 ]);
 })();
 // ====================== v6.6: HYPERMOBILITY ======================
@@ -5713,7 +5943,7 @@ Counseled the patient: {tell:that this medicine has done real work for them, tha
 Follow-up: {fu:4 weeks into the taper|6 to 8 weeks|3 months|sooner for any symptom return, fever, or inability to take the tablets}.`}
 ]);
 })();
-(function(){ DEFAULT_DATA.version = 43; })();
+(function(){ DEFAULT_DATA.version = 45; })();
 // ====================== CORE ======================
 const KEY = "rheumpad_v1";
 let DATA, FAVS, PRECHART, META = {};
@@ -5950,6 +6180,26 @@ function loadState(){
         const cur = (DATA.phrases || []).find(x=>x.id === "r-fibro");
         const def = DEFAULT_DATA.phrases.find(x=>x.id === "r-fibro");
         if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === "1l2t8wz") cur.body = def.body;
+      }
+      // v44 -> v45: each referral note gained one plain teaching pearl as its last line. Replaced only
+      // when the stored body still hashes to the v7.1 text.
+      if ((stored.seededVersion || 1) < 45) {
+        const OLD44 = {"r-ana": "qutq3i", "r-back": "1xwll3", "r-fibro": "pjmazw", "r-urate": "1jdzixr", "r-oa": "8wx35c", "r-esr": "1vp9cvr", "r-rf": "160cbl7", "r-raynaud": "1op5prq", "r-arthralgia": "1upbc0m", "r-b27": "6fbf5b"};
+        Object.keys(OLD44).forEach(id=>{
+          const cur = (DATA.phrases || []).find(x=>x.id === id);
+          const def = DEFAULT_DATA.phrases.find(x=>x.id === id);
+          if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === OLD44[id]) cur.body = def.body;
+        });
+      }
+      // v43 -> v44: the referral A&P library went short and plain (no statistics, citations, or
+      // teaching points). Each phrase is replaced only when the stored body still hashes to the v6.7 text.
+      if ((stored.seededVersion || 1) < 44) {
+        const OLD43 = {"r-ana": "1ee28vo", "r-back": "umd8m9", "r-fibro": "9ob664", "r-urate": "1ihul02", "r-oa": "qdyfn1", "r-esr": "1tn8p8r", "r-rf": "9qyssu", "r-raynaud": "1ujweyh", "r-arthralgia": "wn1sh4", "r-b27": "1bcpfyq"};
+        Object.keys(OLD43).forEach(id=>{
+          const cur = (DATA.phrases || []).find(x=>x.id === id);
+          const def = DEFAULT_DATA.phrases.find(x=>x.id === id);
+          if (cur && def && typeof cur.body === "string" && CARD_HASH(cur.body) === OLD43[id]) cur.body = def.body;
+        });
       }
       // v42 -> v43: the standardized MSK exam takes her line format (pertinent negatives, no range of
       // motion on wrists, MCPs, ankles, and feet). Replaced only when the stored body still hashes to the v6.1 text.
@@ -8455,6 +8705,45 @@ const Calc = {
 };
 
 // ====================== TAPER BUILDER ======================
+// Which tabs show in the bar. A view preference kept in META, per browser, never part of the
+// exported library. Settings cannot be hidden, since the way back lives there.
+const Tabs = {
+  LOCKED: ["settings"],
+  buttons(){ return [...document.querySelectorAll("nav.tabs button")]; },
+  hidden(){ return ((META && META.hiddenTabs) || []).filter(k=>this.LOCKED.indexOf(k) < 0); },
+  apply(){
+    const h = this.hidden();
+    this.buttons().forEach(b=>{ b.style.display = h.indexOf(b.dataset.tab) > -1 ? "none" : ""; });
+    if (h.indexOf(App.currentTab) > -1) {
+      const first = this.buttons().find(b=>h.indexOf(b.dataset.tab) < 0);
+      if (first) App.showTab(first.dataset.tab);
+    }
+  },
+  toggle(k){
+    if (this.LOCKED.indexOf(k) > -1) return;
+    const h = this.hidden(); const i = h.indexOf(k);
+    if (i > -1) h.splice(i, 1); else h.push(k);
+    META.hiddenTabs = h; saveState(); this.apply(); this.render();
+  },
+  showAll(){ META.hiddenTabs = []; saveState(); this.apply(); this.render(); toast("Every tab is showing"); },
+  render(){
+    const host = document.getElementById("set-tabs"); if (!host) return;
+    host.innerHTML = "";
+    const h = this.hidden();
+    this.buttons().forEach(b=>{
+      const k = b.dataset.tab; if (this.LOCKED.indexOf(k) > -1) return;
+      const c = document.createElement("button");
+      const off = h.indexOf(k) > -1;
+      c.className = "chip" + (off ? "" : " on"); c.dataset.k = k;
+      c.textContent = b.textContent; c.title = off ? "hidden, tap to show" : "showing, tap to hide";
+      c.onclick = ()=>this.toggle(k);
+      host.appendChild(c);
+    });
+    const cnt = document.getElementById("set-tabs-count");
+    if (cnt) cnt.textContent = h.length ? h.length + (h.length === 1 ? " tab hidden." : " tabs hidden.") : "Every tab is showing.";
+  }
+};
+
 const Taper = {
   // rows hold the editable schedule. custom flips true the moment you touch a row,
   // and from then on the generator fields stop rewriting what you built.
@@ -8903,6 +9192,28 @@ const Taper = {
       ". Anti-inflammatory equivalence only. Durations of action differ, so this is not a taper schedule.";
   },
 
+  // One patient box, two languages. The toggle picks which text shows, copies, and prints.
+  lang: "en",
+  setLang(v){
+    this.lang = v === "es" ? "es" : "en";
+    const es = this.lang === "es";
+    document.querySelectorAll("#taper-lang button").forEach(b=>b.classList.toggle("on", b.dataset.v === this.lang));
+    document.getElementById("taper-pt").style.display = es ? "none" : "";
+    document.getElementById("taper-pt-es").style.display = es ? "" : "none";
+    document.getElementById("taper-pt-head").textContent = es ? "Para el paciente" : "For the patient";
+    document.getElementById("taper-print").textContent = es ? "Imprimir" : "Print";
+    document.getElementById("taper-copypt").textContent = es ? "Copiar" : "Copy";
+  },
+  copyPt(){ this.copy(this.lang === "es" ? "ptes" : "pt"); },
+  printPt(){
+    const el = document.getElementById(this.lang === "es" ? "taper-pt-es" : "taper-pt");
+    const txt = el ? el.textContent : "";
+    if (!txt || txt.startsWith("Enter a start")) { toast("Fill the taper fields first"); return; }
+    // the first line is the heading (YOUR PREDNISONE SCHEDULE), which becomes the sheet title
+    const lines = txt.split("\n");
+    const head = lines[0].charAt(0) + lines[0].slice(1).toLowerCase();
+    App.printSheet(head, lines.slice(1).join("\n"), this.lang);
+  },
   copy(which){
     const ids = {note: "taper-note", ptes: "taper-pt-es", pills: "tp-pills", pt: "taper-pt", equiv: "eq-out"};
     const el = document.getElementById(ids[which] || ids.pt);
@@ -9776,6 +10087,7 @@ const LIFE = {
         this.dz = d.k;
         dh.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on", x.dataset.k === d.k));
         this.render();
+        this.setEvDz(LIFE_DATA.EV_FROM_DZ[d.k] || "all");
       };
       dh.appendChild(c);
     });
@@ -9891,6 +10203,7 @@ const LIFE = {
   DZ_ES: {
     gen:  "Estos hábitos ayudan en todas las enfermedades reumáticas y bajan el riesgo del corazón, que la artritis inflamatoria sube por su cuenta.",
     ra:   "Su medicamento detiene el daño en las articulaciones. Estos hábitos cambian su dolor, su cansancio, qué tan bien funciona el medicamento y su riesgo del corazón.",
+    axspa:"El ejercicio es parte del tratamiento en la espondiloartritis axial, junto con su medicamento. Las personas que fuman tienen cambios más rápidos en la columna en las radiografías.",
     psa:  "Bajar de peso cambia la artritis psoriásica más que cualquier otro cambio de hábito que se haya estudiado, y mejora qué tan bien funcionan los biológicos.",
     gout: "La dieta baja el ácido úrico alrededor de 1 mg/dL. Su medicamento lo baja de 3 a 5. Los dos juntos funcionan mejor que cualquiera solo.",
     oa:   "El ejercicio y el peso son el tratamiento en la osteoartritis. El ejercicio estructurado baja el dolor de rodilla casi tanto como una pastilla antiinflamatoria.",
@@ -9937,7 +10250,7 @@ const LIFE = {
   },
 
   DZ_NOTE: {
-    gen:"rheumatic disease", ra:"rheumatoid arthritis", psa:"psoriatic arthritis",
+    gen:"rheumatic disease", ra:"rheumatoid arthritis", psa:"psoriatic arthritis", axspa:"axial spondyloarthritis",
     gout:"gout", oa:"osteoarthritis", fibro:"fibromyalgia",
     bone:"osteoporosis and bone health", sle:"systemic lupus erythematosus"
   },
@@ -9992,12 +10305,62 @@ const LIFE = {
     this.renderGoals(); this.render();
   },
 
+  evDz: "all",
+
+  ref(k){ return LIFE_DATA.REFS[k] || null; },
+  refUrl(r){ return r && r.pmid ? "https://pubmed.ncbi.nlm.nih.gov/" + r.pmid + "/" : ""; },
+  refText(r){ return r.a + " " + r.t + ". " + r.j; },
+  extLink(href, text, cls){
+    const a = document.createElement("a");
+    a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = text; if (cls) a.className = cls;
+    return a;
+  },
+  // Text with [n] markers. Each marker becomes a link to source n of that card.
+  cited(host, text, e){
+    const re = /\[(\d+)\]/g; let last = 0, m;
+    while ((m = re.exec(text))) {
+      host.appendChild(document.createTextNode(text.slice(last, m.index)));
+      const r = this.ref(e.refs[+m[1] - 1]); const url = this.refUrl(r);
+      if (r && url) { const a = this.extLink(url, "[" + m[1] + "]", "evcite"); a.title = this.refText(r); host.appendChild(a); }
+      else { const sp = document.createElement("span"); sp.className = "evcite"; sp.textContent = "[" + m[1] + "]"; if (r) sp.title = this.refText(r); host.appendChild(sp); }
+      last = m.index + m[0].length;
+    }
+    host.appendChild(document.createTextNode(text.slice(last)));
+  },
+  evRows(){
+    const ai = LIFE_DATA.EV_AUTOIMMUNE.indexOf(this.evDz) > -1;
+    const rows = LIFE_DATA.EVIDENCE.filter(e=>{
+      if (this.evFilter !== "all" && e.pillar !== this.evFilter) return false;
+      if (this.evDz === "all") return true;
+      return e.g === this.evDz || (ai && e.g === "Across ARDs");
+    });
+    // the picked condition first, then the cards that apply across autoimmune disease
+    if (this.evDz !== "all") rows.sort((x, y)=>(x.g === this.evDz ? 0 : 1) - (y.g === this.evDz ? 0 : 1));
+    return rows;
+  },
+  setEvDz(v){
+    this.evDz = v;
+    const host = document.getElementById("life-ev-dz");
+    if (host) host.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on", x.dataset.v === v));
+    this.renderEvidence();
+  },
+
   initEvidence(){
     const host = document.getElementById("life-ev-filter");
     if (!host) return;
+    const dzHost = document.getElementById("life-ev-dz");
+    if (dzHost) {
+      [["all","All conditions"]].concat(LIFE_DATA.EV_GROUPS.map(g=>[g, g])).forEach(([v, label])=>{
+        const c = document.createElement("button");
+        c.className = "chip" + (v === this.evDz ? " on" : "");
+        c.textContent = label; c.dataset.v = v;
+        c.onclick = ()=>this.setEvDz(v);
+        dzHost.appendChild(c);
+      });
+    }
     const pillars = [];
     LIFE_DATA.EVIDENCE.forEach(e=>{ if (pillars.indexOf(e.pillar) < 0) pillars.push(e.pillar); });
-    const opts = [["all","All"]].concat(pillars.map(p=>[p, p]));
+    const opts = [["all","All pillars"]].concat(pillars.map(p=>[p, p]));
     opts.forEach(([v, label])=>{
       const c = document.createElement("button");
       c.className = "chip" + (v === this.evFilter ? " on" : "");
@@ -10012,36 +10375,55 @@ const LIFE = {
     this.renderEvidence();
   },
 
+  evCopyText(e){
+    let t = e.n + ". " + e.claim + " " + e.effect + " Evidence: " + e.strength + "\nSources:";
+    e.refs.forEach((k, i)=>{ const r = this.ref(k); if (!r) return; t += "\n" + (i + 1) + ". " + this.refText(r) + (r.pmid ? " " + this.refUrl(r) : ""); });
+    return t;
+  },
+
   renderEvidence(){
     const host = document.getElementById("life-ev");
     host.innerHTML = "";
-    const rows = LIFE_DATA.EVIDENCE.filter(e=>this.evFilter === "all" || e.pillar === this.evFilter);
-    if (!rows.length) { host.innerHTML = '<div class="empty">Nothing filed under that pillar yet.</div>'; return; }
+    const rows = this.evRows();
+    const cnt = document.getElementById("life-ev-count");
+    if (cnt) {
+      const used = {}; rows.forEach(e=>e.refs.forEach(k=>{ used[k] = 1; }));
+      cnt.textContent = rows.length + (rows.length === 1 ? " card, " : " cards, ") + Object.keys(used).length + " sources";
+    }
+    if (!rows.length) { host.innerHTML = '<div class="empty">No card under that combination yet. Clear one of the two filters.</div>'; return; }
     rows.forEach(e=>{
-      const sec = document.createElement("div"); sec.className = "comp-section";
+      const sec = document.createElement("div"); sec.className = "comp-section evcard"; sec.dataset.id = e.id;
       const h4 = document.createElement("h4");
       const nm = document.createElement("span"); nm.textContent = e.n;
       const st = document.createElement("span");
       const against = /against/i.test(e.strength);
       const strong = /^strong/i.test(e.strength);
-      st.className = "actbadge " + (strong && !against ? "go" : "hold");
-      st.textContent = against ? "Evidence against" : (strong ? "Strong" : "Moderate");
+      const limited = /^limited/i.test(e.strength);
+      st.className = "actbadge " + (strong && !against ? "go" : (limited ? "none" : "hold"));
+      st.textContent = against ? "Evidence against" : (strong ? "Strong" : (limited ? "Limited" : "Moderate"));
       h4.appendChild(nm); h4.appendChild(st); sec.appendChild(h4);
 
-      const rowsOut = [
-        ["Claim", e.claim],
-        ["Effect size", e.effect],
-        ["Strength", e.strength],
-        ["Source", e.src],
-        ["In clinic", e.use]
-      ];
-      rowsOut.forEach(([k, v])=>{
+      [["Claim", e.claim], ["Effect size", e.effect], ["Strength", e.strength], ["In clinic", e.use]].forEach(([k, v])=>{
         const p = document.createElement("p");
         p.style.cssText = "font-size:.86rem; margin-top:6px;";
         const b = document.createElement("b"); b.textContent = k + ": ";
-        p.appendChild(b); p.appendChild(document.createTextNode(v));
+        p.appendChild(b); this.cited(p, v, e);
         sec.appendChild(p);
       });
+
+      const sh = document.createElement("p"); sh.style.cssText = "font-size:.86rem; margin-top:8px;";
+      const sb = document.createElement("b"); sb.textContent = "Sources"; sh.appendChild(sb); sec.appendChild(sh);
+      const ol = document.createElement("ol"); ol.className = "evrefs";
+      e.refs.forEach(k=>{
+        const r = this.ref(k); if (!r) return;
+        const li = document.createElement("li"); const url = this.refUrl(r);
+        if (url) {
+          li.appendChild(this.extLink(url, this.refText(r)));
+          if (r.doi) { li.appendChild(document.createTextNode(" ")); li.appendChild(this.extLink("https://doi.org/" + r.doi, "full text", "evdoi")); }
+        } else li.textContent = this.refText(r);
+        ol.appendChild(li);
+      });
+      sec.appendChild(ol);
 
       const tag = document.createElement("span"); tag.className = "guidetag";
       tag.textContent = e.pillar + " · " + e.dz;
@@ -10049,8 +10431,8 @@ const LIFE = {
 
       const btn = document.createElement("button");
       btn.className = "btn"; btn.style.cssText = "margin-left:8px; font-size:.75rem; padding:3px 10px;";
-      btn.textContent = "Copy";
-      btn.onclick = ()=>copyText(e.n + ". " + e.claim + " " + e.effect + " Evidence: " + e.strength + " Source: " + e.src);
+      btn.textContent = "Copy with sources";
+      btn.onclick = ()=>copyText(this.evCopyText(e));
       sec.appendChild(btn);
 
       host.appendChild(sec);
@@ -10312,6 +10694,20 @@ const SCREEN = {
 };
 
 const CHANGELOG = [
+  {v:"7.2", d:"November 20, 2026", items:[
+    "Each referral A&P note ends with one teaching pearl in everyday words, such as the four back pain questions, the quick sed rate limit by age, and what separates harmless Raynaud from the kind to refer. The pearl is on by default and drops with one click.",
+    "Taper Builder: the patient instructions sit in one box with an English and Español toggle, a Print button, and a Copy button. Print makes a one-page sheet with your clinic name and no patient identifiers.",
+    "Settings has a new Tabs block. Tap a tab to hide it from the bar and tap again to bring it back. Hidden tabs keep their content. The choice saves in this browser."
+  ]},
+  {v:"7.1", d:"November 19, 2026", items:[
+    "Referral A&P library rewritten short and plain for community practice. Each of the ten notes is now five to seven lines: a thank-you, the assessment in everyday words, one sentence on why, the plan, when to send the patient back, and follow-up. The statistics, citations, criteria names, findings grids, and teaching points are gone. The thank-you and the why line omit with one click. A phrase you edited keeps your wording."
+  ]},
+  {v:"7.0", d:"November 17, 2026", items:[
+    "Lifestyle evidence cards now carry their sources. Every number in a card ends in a bracketed marker, and the marker and the citation under the card both open the paper in PubMed in a new tab, with a second link to the full text. 77 sources, each matched to its PubMed record. The app still makes no network call of its own: a link opens only when you click it.",
+    "The cards doubled from 17 to 34 and lean toward autoimmune rheumatic disease. New: lifestyle across rheumatic disease (EULAR and ACR positions), heart risk in inflammatory arthritis, stress disorders and autoimmune onset, vitamin D and omega-3 for prevention (VITAL), exercise in RA, the Plants for Joints program, fish oil in RA, obesity and RA remission, alcohol with methotrexate, daily stress and RA symptoms, smoking and TNF inhibitor response in PsA, exercise in axSpA, smoking and spinal damage in axSpA, exercise in lupus, non-drug measures in systemic sclerosis, alcohol and gout flares, sugary drinks in gout, weight loss in gout, and tai chi in fibromyalgia.",
+    "A condition filter sits above the pillar filter. Picking an autoimmune condition shows that disease first and the cross-disease cards under it. The filter follows the disease picked in the plan builder, and the plan builder gained Axial SpA in English and Spanish.",
+    "Several older cards changed where the source did not carry the old wording: the Mediterranean diet card now reports the DAS28 change from the one trial, the fibromyalgia exercise card moved from Strong to Moderate, the bone card states that trials show no effect on fracture counts, and the smoking card states that varenicline and combination NRT perform equally. Claims with no source were removed."
+  ]},
   {v:"6.9", d:"November 12, 2026", items:[
     "Right-click works on the region extras too: right-click crepitus and the line says no crepitus, right-click FABER positive and it says FABER negative. The chip greys out with a strike-through, and a second right-click clears it.",
     "Standardized MSK exam (.mskabn) now writes each region the way the normal exam reads in a note: Shoulders nontender, normal range of motion; Elbows nontender, no synovitis, no lateral or medial epicondyle tenderness, normal range of motion bilaterally; Wrists nontender, no synovitis bilaterally; Hips nontender, FABER and FADIR negative, SI joints nontender, full range of motion bilaterally; Knees cool to touch, no effusions; Ankles no swelling or effusion; Feet negative MTP squeeze; Entheses no entheseal tenderness. A finding with a pertinent negative reads as the negative until tapped. Range of motion dropped from wrists, MCPs, ankles, and feet. The sacroiliac line folded into the hips.",
@@ -10729,6 +11125,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   App.checkBackup();
   // A colleague opening this for the first time lands on the guide, not on a wall of cards
   if (FIRST_RUN) App.showTab("start");
+  Tabs.render(); Tabs.apply();
 });
 
 </script>
